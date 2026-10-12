@@ -150,9 +150,13 @@ function boot(): void {
     if (prefs.live) startBus();
     // Native wrapper app only: keep this device registered for pushes.
     registerPush();
-    // Counters when coming back to the app after a while.
+    // Counters when coming back to the app after a while: not on every
+    // quick switch away and back.
+    let refreshedAt = Date.now();
     document.addEventListener("visibilitychange", () => {
-      if (!document.hidden) void refreshUser();
+      if (document.hidden || Date.now() - refreshedAt < 60000) return;
+      refreshedAt = Date.now();
+      void refreshUser();
     });
   }
 }

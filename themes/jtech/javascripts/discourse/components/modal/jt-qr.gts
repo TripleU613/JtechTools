@@ -3,6 +3,7 @@ import { action } from "@ember/object";
 import { type TrustedHTML, trustHTML } from "@ember/template";
 import type { ComponentLike } from "@glint/template";
 import { themePrefix } from "virtual:theme";
+import { escapeExpression } from "discourse/lib/utilities";
 import DButton from "discourse/ui-kit/d-button";
 import DModalBase from "discourse/ui-kit/d-modal";
 import { i18n } from "discourse-i18n";
@@ -41,7 +42,7 @@ export default class JtQr extends Component<JtQrSignature> {
       })
     );
     return trustHTML(
-      `<svg viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" role="img" aria-label="${escape(i18n(themePrefix("jt.qr.label")))}"><rect width="100%" height="100%" fill="#fff"/><path d="${path}" fill="#000"/></svg>`
+      `<svg viewBox="0 0 ${size} ${size}" shape-rendering="crispEdges" role="img" aria-label="${escapeExpression(i18n(themePrefix("jt.qr.label")))}"><rect width="100%" height="100%" fill="#fff"/><path d="${path}" fill="#000"/></svg>`
     );
   }
 
@@ -93,8 +94,4 @@ export default class JtQr extends Component<JtQrSignature> {
       </:footer>
     </DModal>
   </template>
-}
-
-function escape(text: string) {
-  return text.replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 }

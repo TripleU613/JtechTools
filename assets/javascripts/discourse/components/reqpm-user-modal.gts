@@ -14,6 +14,7 @@ import type DialogService from "discourse/dialog-holder/services/dialog";
 import avatar from "discourse/helpers/avatar";
 import icon from "discourse/helpers/d-icon";
 import { popupAjaxError } from "discourse/lib/ajax-error";
+import { shortDate } from "discourse/lib/formatter";
 import getURL from "discourse/lib/get-url";
 import { i18n } from "discourse-i18n";
 import { KINDS, type ReqpmKindId } from "../lib/reqpm-kinds";
@@ -35,15 +36,8 @@ const isEmpty = (list: unknown[] | null | undefined): boolean =>
   !list || list.length === 0;
 const joinList = (list: string[]): string => list.join(", ");
 
-function shortDate(value: string | null | undefined): string {
-  if (!value) {
-    return "";
-  }
-  return new Date(value).toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
+function dateLabel(value: string | null | undefined): string {
+  return value ? shortDate(value) : "";
 }
 
 interface ReqpmUserModalSignature {
@@ -157,11 +151,11 @@ export default class ReqpmUserModal extends Component<ReqpmUserModalSignature> {
   }
 
   get pendingSince(): string {
-    return shortDate(this.outgoing?.created_at);
+    return dateLabel(this.outgoing?.created_at);
   }
 
   get retryDate(): string {
-    return shortDate(this.data?.retry_at);
+    return dateLabel(this.data?.retry_at);
   }
 
   get profileUrl(): string {

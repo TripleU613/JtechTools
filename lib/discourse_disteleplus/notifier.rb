@@ -50,7 +50,6 @@ module DiscourseDisteleplus
               disteleplus: true,
             }.to_json,
           )
-        recipient.publish_notifications_state
         enqueue_push(recipient, message, notification)
       end
     rescue StandardError => e

@@ -82,7 +82,6 @@ module DiscourseReqpm
           excerpt: I18n.t("reqpm.notifications.#{kind}"),
         }.merge(extra).to_json,
       )
-      user.publish_notifications_state
     end
 
     def self.parse(raw)

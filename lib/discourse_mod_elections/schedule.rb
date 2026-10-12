@@ -11,9 +11,7 @@ module DiscourseModElections
 
     def self.months
       SiteSetting
-        .mod_elections_schedule_months
-        .to_s
-        .split("|")
+        .mod_elections_schedule_months_map
         .map(&:to_i)
         .select { |month| (1..12).cover?(month) }
         .uniq

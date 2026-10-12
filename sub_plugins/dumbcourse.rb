@@ -60,6 +60,8 @@ after_initialize do
   # Hook: Notification created
   on(:notification_created) do |notification|
     next unless SiteSetting.dumbcourse_push_enabled
+    # Most people have no device registered: no job for them.
+    next if DiscourseDumbcourse::PushSender.devices(notification.user_id).empty?
 
     Jobs.enqueue_in(2.seconds, :dumbcourse_push_notify, notification_id: notification.id)
   end

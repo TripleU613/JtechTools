@@ -139,7 +139,6 @@ module ::DiscourseModCategories
           topic_title: topic_title,
           target_username: target_username,
         )
-        staff_user.publish_notifications_state
       end
     rescue StandardError => e
       ::Rails.logger.warn(

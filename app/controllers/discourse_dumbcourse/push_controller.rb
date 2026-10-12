@@ -31,7 +31,7 @@ module DiscourseDumbcourse
       # Store the mapping: user_id -> { device_id, topic }
       # Use a mutex to prevent concurrent registrations from overwriting each other
       DistributedMutex.synchronize("dumbcourse_push_devices_#{current_user.id}") do
-        devices = PluginStore.get("dumbcourse", "push_devices_#{current_user.id}") || {}
+        devices = DiscourseDumbcourse::PushSender.devices(current_user.id)
         if !devices.key?(device_id) && devices.size >= 10
           return render json: { error: "too many devices" }, status: :unprocessable_entity
         end
@@ -40,7 +40,7 @@ module DiscourseDumbcourse
           registered_at: Time.now.iso8601,
           user_agent: request.user_agent,
         }
-        PluginStore.set("dumbcourse", "push_devices_#{current_user.id}", devices)
+        DiscourseDumbcourse::PushSender.store_devices(current_user.id, devices)
         Rails.logger.info(
           "[Dumbcourse Push] Registered device=#{device_id} topic=#{topic} user=#{current_user.id} total_devices=#{devices.size}",
         )
@@ -57,9 +57,9 @@ module DiscourseDumbcourse
       return render json: { error: "device_id required" }, status: :bad_request if device_id.blank?
 
       DistributedMutex.synchronize("dumbcourse_push_devices_#{current_user.id}") do
-        devices = PluginStore.get("dumbcourse", "push_devices_#{current_user.id}") || {}
+        devices = DiscourseDumbcourse::PushSender.devices(current_user.id)
         devices.delete(device_id)
-        PluginStore.set("dumbcourse", "push_devices_#{current_user.id}", devices)
+        DiscourseDumbcourse::PushSender.store_devices(current_user.id, devices)
       end
 
       render json: { success: true }
@@ -69,7 +69,7 @@ module DiscourseDumbcourse
     # Check registration status for current user
     def status
       device_id = params[:device_id].to_s.strip
-      devices = PluginStore.get("dumbcourse", "push_devices_#{current_user.id}") || {}
+      devices = DiscourseDumbcourse::PushSender.devices(current_user.id)
 
       if device_id.present?
         device = devices[device_id]
@@ -108,7 +108,7 @@ module DiscourseDumbcourse
     # POST /<base>/push/test
     # Send a test push via Redis publish and return subscriber counts
     def test_push
-      devices = PluginStore.get("dumbcourse", "push_devices_#{current_user.id}") || {}
+      devices = DiscourseDumbcourse::PushSender.devices(current_user.id)
       return render json: { error: "No devices registered" }, status: :not_found if devices.empty?
 
       results = []

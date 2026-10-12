@@ -25,13 +25,22 @@ module DiscourseDumbcourse
       chat_quoted: :quotes,
     }.freeze
 
+    # A user's registered devices: { device_id => { "topic" => …, … } }.
+    def self.devices(user_id)
+      PluginStore.get("dumbcourse", "push_devices_#{user_id}") || {}
+    end
+
+    def self.store_devices(user_id, devices)
+      PluginStore.set("dumbcourse", "push_devices_#{user_id}", devices)
+    end
+
     def self.send_to_user(user_id, title:, message:, click_url: nil, priority: "default")
       unless SiteSetting.dumbcourse_push_enabled
         Rails.logger.info("[Dumbcourse Push] Push disabled, skipping for user #{user_id}")
         return
       end
 
-      devices = PluginStore.get("dumbcourse", "push_devices_#{user_id}") || {}
+      devices = self.devices(user_id)
       if devices.empty?
         Rails.logger.info("[Dumbcourse Push] No devices for user #{user_id}")
         return

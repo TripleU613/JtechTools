@@ -56,28 +56,25 @@ module Jobs
       return if author.nil? || author.bot?
 
       question = DiscourseDisteleplus::Polls.question_text(poll_message.raw).presence
-      notification =
-        Notification.create!(
-          notification_type: Notification.types[:custom],
-          user_id: author.id,
-          high_priority: true,
-          data: {
-            message:
-              I18n.t(
-                "disteleplus.poll_closed_notification",
-                question: question,
-                default: "Your poll closed: #{question}",
-              ),
-            title: I18n.t("disteleplus.title", default: "Disteleplus"),
-            url: "/disteleplus#m#{announcement.id}",
-            excerpt: question,
-            disteleplus_message_id: announcement.id,
-            disteleplus: true,
-            disteleplus_kind: "poll_closed",
-          }.to_json,
-        )
-      author.publish_notifications_state
-      notification
+      Notification.create!(
+        notification_type: Notification.types[:custom],
+        user_id: author.id,
+        high_priority: true,
+        data: {
+          message:
+            I18n.t(
+              "disteleplus.poll_closed_notification",
+              question: question,
+              default: "Your poll closed: #{question}",
+            ),
+          title: I18n.t("disteleplus.title", default: "Disteleplus"),
+          url: "/disteleplus#m#{announcement.id}",
+          excerpt: question,
+          disteleplus_message_id: announcement.id,
+          disteleplus: true,
+          disteleplus_kind: "poll_closed",
+        }.to_json,
+      )
     rescue StandardError => e
       Rails.logger.warn("#{DiscourseDisteleplus::LOG_TAG} poll close notify failed: #{e.message}")
     end

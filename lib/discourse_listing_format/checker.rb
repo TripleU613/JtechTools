@@ -25,9 +25,7 @@ module ::DiscourseListingFormat
     # Admins can paste a topic's address instead of its number.
     def self.topic_ids
       SiteSetting
-        .listing_format_topics
-        .to_s
-        .split("|")
+        .listing_format_topics_map
         .filter_map do |entry|
           entry = entry.strip
           id = entry.match?(/\A\d+\z/) ? entry : entry[TOPIC_URL, 1]
@@ -37,12 +35,12 @@ module ::DiscourseListingFormat
     end
 
     def self.fields
-      SiteSetting.listing_format_fields.to_s.split("|").map(&:strip).reject(&:empty?).uniq
+      SiteSetting.listing_format_fields_map.map(&:strip).reject(&:empty?).uniq
     end
 
     # Sections that may be left empty, such as the pictures.
     def self.optional_fields
-      optional = SiteSetting.listing_format_optional_fields.to_s.split("|").map(&:strip)
+      optional = SiteSetting.listing_format_optional_fields_map.map(&:strip)
       fields.select { |field| optional.any? { |name| name.casecmp?(field) } }
     end
 
@@ -54,22 +52,19 @@ module ::DiscourseListingFormat
       names = fields
       result = {}
       {
-        false => SiteSetting.listing_format_single_choice,
-        true => SiteSetting.listing_format_multiple_choice,
-      }.each do |multiple, setting|
-        setting
-          .to_s
-          .split("|")
-          .each do |entry|
-            name, options = entry.split(":", 2)
-            field = names.find { |f| f.casecmp?(name.to_s.strip) }
-            options = options.to_s.split(",").map(&:strip).reject(&:empty?).uniq
-            details = options.select { |o| o.end_with?("*") }.map { |o| o.delete_suffix("*").strip }
-            options = options.map { |o| o.delete_suffix("*").strip }.uniq
-            if field && options.any?
-              result[field] = { multiple: multiple, options: options, details: details }
-            end
+        false => SiteSetting.listing_format_single_choice_map,
+        true => SiteSetting.listing_format_multiple_choice_map,
+      }.each do |multiple, entries|
+        entries.each do |entry|
+          name, options = entry.split(":", 2)
+          field = names.find { |f| f.casecmp?(name.to_s.strip) }
+          options = options.to_s.split(",").map(&:strip).reject(&:empty?).uniq
+          details = options.select { |o| o.end_with?("*") }.map { |o| o.delete_suffix("*").strip }
+          options = options.map { |o| o.delete_suffix("*").strip }.uniq
+          if field && options.any?
+            result[field] = { multiple: multiple, options: options, details: details }
           end
+        end
       end
       result
     end

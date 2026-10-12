@@ -25,14 +25,13 @@ module DiscourseDisteleplus
       return false if topic.category.nil? || topic.category.read_restricted
       return false if SiteSetting.disteleplus_forum_post_first_post_only && !post.is_first_post?
 
-      categories =
-        SiteSetting.disteleplus_forum_post_categories.to_s.split("|").map(&:to_i).reject(&:zero?)
+      categories = SiteSetting.disteleplus_forum_post_categories_map.reject(&:zero?)
       if categories.any?
         ids = [topic.category_id, topic.category.parent_category_id].compact
         return false if (ids & categories).empty?
       end
 
-      tags = SiteSetting.disteleplus_forum_post_tags.to_s.split("|").map(&:downcase).compact_blank
+      tags = SiteSetting.disteleplus_forum_post_tags_map.map(&:downcase).compact_blank
       if tags.any?
         topic_tags = topic.tags.pluck(:name).map(&:downcase)
         return false if (topic_tags & tags).empty?

@@ -64,6 +64,17 @@ function field(
   </div>`;
 }
 
+// Where showError writes: one on each sign-in screen.
+function errorSlot(): SafeHtml {
+  return html`<p
+    id="authError"
+    class="notice error"
+    role="alert"
+    hidden
+    tabindex="-1"
+  ></p>`;
+}
+
 function showError(message: string): void {
   const el = byId("authError");
   if (!el) {
@@ -174,14 +185,7 @@ export function loginRoute(ctx: RouteContext): void {
 
   s.render(
     html`<section class="auth">
-      ${brand()}
-      <p
-        id="authError"
-        class="notice error"
-        role="alert"
-        hidden
-        tabindex="-1"
-      ></p>
+      ${brand()} ${errorSlot()}
       ${a.local
         ? html`<form class="card form" data-login>
             ${field(
@@ -398,14 +402,7 @@ export function emailLinkRoute(ctx: RouteContext): void {
   s.title("Email a sign-in link", { back: true });
   s.render(
     html`<section class="auth">
-      ${brand()}
-      <p
-        id="authError"
-        class="notice error"
-        role="alert"
-        hidden
-        tabindex="-1"
-      ></p>
+      ${brand()} ${errorSlot()}
       <form class="card form" data-email>
         ${field(
           "login",
@@ -506,13 +503,7 @@ export function emailLoginTokenRoute(ctx: RouteContext): Promise<void> {
           ${brand(
             info.token_email ? `Sign in as ${info.token_email}` : "Sign in"
           )}
-          <p
-            id="authError"
-            class="notice error"
-            role="alert"
-            hidden
-            tabindex="-1"
-          ></p>
+          ${errorSlot()}
           <form class="card form" data-confirm>
             ${info.second_factor_required
               ? field(
@@ -566,14 +557,7 @@ export function emailCodeRoute(ctx: RouteContext): void {
   s.title("Email me a code", { back: true });
   s.render(
     html`<section class="auth">
-      ${brand()}
-      <p
-        id="authError"
-        class="notice error"
-        role="alert"
-        hidden
-        tabindex="-1"
-      ></p>
+      ${brand()} ${errorSlot()}
       <form class="card form" data-code>
         <div id="step1">
           ${field(
@@ -822,14 +806,7 @@ export function linkRoute(ctx: RouteContext): void {
   s.title("Sign in another device", { back: true });
   s.render(
     html`<section class="auth">
-      ${brand()}
-      <p
-        id="authError"
-        class="notice error"
-        role="alert"
-        hidden
-        tabindex="-1"
-      ></p>
+      ${brand()} ${errorSlot()}
       <form class="card form" data-link>
         ${field(
           "pairCode",
@@ -955,14 +932,7 @@ export function signupRoute(ctx: RouteContext): void {
   const showName = a.fullNameVisible || a.fullNameRequired;
   s.render(
     html`<section class="auth">
-      ${brand()}
-      <p
-        id="authError"
-        class="notice error"
-        role="alert"
-        hidden
-        tabindex="-1"
-      ></p>
+      ${brand()} ${errorSlot()}
       <form class="card form" data-signup>
         ${field(
           "suEmail",
@@ -1154,14 +1124,7 @@ export function forgotRoute(ctx: RouteContext): void {
   s.title("Reset password", { back: true });
   s.render(
     html`<section class="auth">
-      ${brand()}
-      <p
-        id="authError"
-        class="notice error"
-        role="alert"
-        hidden
-        tabindex="-1"
-      ></p>
+      ${brand()} ${errorSlot()}
       <form class="card form" data-forgot>
         ${field(
           "login",
@@ -1224,14 +1187,7 @@ export function resetTokenRoute(ctx: RouteContext): Promise<void> {
       if (!s.alive()) return;
       s.render(
         html`<section class="auth">
-          ${brand()}
-          <p
-            id="authError"
-            class="notice error"
-            role="alert"
-            hidden
-            tabindex="-1"
-          ></p>
+          ${brand()} ${errorSlot()}
           <form class="card form" data-reset>
             ${field(
               "newPass",
@@ -1326,14 +1282,7 @@ export function activateRoute(ctx: RouteContext): void {
   s.title("Activate account", { back: false });
   s.render(
     html`<section class="auth">
-      ${brand()}
-      <p
-        id="authError"
-        class="notice error"
-        role="alert"
-        hidden
-        tabindex="-1"
-      ></p>
+      ${brand()} ${errorSlot()}
       <button type="button" class="btn primary block" data-act="activate">
         ${icon("check")}Activate my account
       </button>

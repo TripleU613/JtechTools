@@ -896,10 +896,8 @@ module ::DiscourseModCategories
             url,
             "discourse_mod_categories.#{key}_alert",
           )
-          # The standard /notifications poll picks up the new unread row so
-          # both the bell dot and the in-dropdown shield-tab pip refresh
-          # together. No separate /mod-note-unread-count channel is needed.
-          staff_user.publish_notifications_state
+          # Core publishes the new unread count once the row commits, which
+          # refreshes the bell dot and the shield-tab pip together.
         end
     end
 

@@ -15,7 +15,7 @@ module DiscourseDisteleplus
   module EventFeed
     def self.on?(event)
       DiscourseDisteleplus.enabled? &&
-        SiteSetting.disteleplus_event_messages.to_s.split("|").include?(event.to_s)
+        SiteSetting.disteleplus_event_messages_map.include?(event.to_s)
     end
 
     def self.post!(raw)

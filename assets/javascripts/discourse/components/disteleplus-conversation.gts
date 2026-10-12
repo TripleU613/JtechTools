@@ -21,6 +21,7 @@ import icon from "discourse/helpers/d-icon";
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 import { getAbsoluteURL } from "discourse/lib/get-url";
+import { clipboardCopy } from "discourse/lib/utilities";
 import lightbox from "discourse/lib/lightbox";
 import { emojiUrlFor } from "discourse/lib/text";
 import { TextareaAutocompleteHandler } from "discourse/lib/textarea-text-manipulation";
@@ -999,15 +1000,13 @@ export default class DisteleplusConversation extends Component<DisteleplusConver
   @action
   copyText(message: DisteleplusMessage) {
     this.closeContextMenu();
-    navigator.clipboard?.writeText(message.raw || "");
+    clipboardCopy(message.raw || "");
   }
 
   @action
   copyLink(message: DisteleplusMessage) {
     this.closeContextMenu();
-    navigator.clipboard?.writeText(
-      `${getAbsoluteURL("/disteleplus")}#m${message.id}`
-    );
+    clipboardCopy(`${getAbsoluteURL("/disteleplus")}#m${message.id}`);
   }
 
   @action
