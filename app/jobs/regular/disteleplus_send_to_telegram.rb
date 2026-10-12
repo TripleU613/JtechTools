@@ -10,12 +10,7 @@ module Jobs
   # its caption); each gets its own MessageLink row and the first one — the
   # lowest telegram_message_id — is the edit target.
   class DisteleplusSendToTelegram < ::Jobs::Base
-    # Bot API cap on files the bot itself sends.
-    MAX_SEND_BYTES = 50 * 1024 * 1024
-
-    IMAGE_EXT = %w[png jpg jpeg gif webp].freeze
-    VIDEO_EXT = %w[mp4 mov webm].freeze
-    AUDIO_EXT = %w[mp3 m4a ogg wav flac].freeze
+    Sender = DiscourseDisteleplus::TelegramUploadSender
 
     def execute(args)
       return unless DiscourseDisteleplus.enabled?
@@ -208,7 +203,7 @@ module Jobs
 
     # → [telegram_message, kind] (either may be nil on failure).
     def send_upload(upload, caption, reply_to)
-      max_bytes = [SiteSetting.disteleplus_max_upload_mb.megabytes, MAX_SEND_BYTES].min
+      max_bytes = [SiteSetting.disteleplus_max_upload_mb.megabytes, Sender::MAX_SEND_BYTES].min
       if upload.filesize.to_i > max_bytes
         # Too big to push — send the forum URL instead (login-gated when
         # secure uploads are on; documented in the README).
@@ -217,7 +212,7 @@ module Jobs
         return send_text(text, reply_to), :text
       end
 
-      io = upload_io(upload)
+      io = Sender.upload_io(upload)
       if io.nil?
         return [
           send_text([caption, "📎 #{upload.original_filename}"].compact.join("\n"), reply_to),
@@ -229,7 +224,7 @@ module Jobs
       # to OGG/OPUS when needed); everything else routes by extension.
       method, field, io, filename, mime =
         DiscourseDisteleplus::VoiceNotes.telegram_send_plan(upload, io)
-      method, field = send_method_for(upload) if method.nil?
+      method, field = Sender.send_method_for(upload) if method.nil?
       filename = upload.original_filename if filename.blank?
 
       fields = { chat_id: @chat_id }
@@ -247,33 +242,6 @@ module Jobs
         io.close if io.respond_to?(:close)
         io.unlink if io.respond_to?(:unlink)
       end
-    end
-
-    def send_method_for(upload)
-      ext = upload.extension.to_s.downcase
-      if IMAGE_EXT.include?(ext) && ext != "gif"
-        %w[sendPhoto photo]
-      elsif ext == "gif"
-        %w[sendAnimation animation]
-      elsif VIDEO_EXT.include?(ext)
-        %w[sendVideo video]
-      elsif AUDIO_EXT.include?(ext)
-        %w[sendAudio audio]
-      else
-        %w[sendDocument document]
-      end
-    end
-
-    def upload_io(upload)
-      if Discourse.store.external?
-        Discourse.store.download(upload)
-      else
-        path = Discourse.store.path_for(upload)
-        path && File.exist?(path) ? File.open(path, "rb") : nil
-      end
-    rescue StandardError => e
-      Rails.logger.warn("#{DiscourseDisteleplus::LOG_TAG} upload read failed: #{e.message}")
-      nil
     end
 
     def reply_target(message)

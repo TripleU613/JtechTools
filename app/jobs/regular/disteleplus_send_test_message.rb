@@ -20,7 +20,7 @@ module Jobs
         text:
           I18n.t(
             "disteleplus.test_message",
-            site: CGI.escapeHTML(SiteSetting.title),
+            site: DiscourseDisteleplus::Formatter.escape_html(SiteSetting.title),
             url: Discourse.base_url + "/disteleplus",
           ),
         parse_mode: "HTML",

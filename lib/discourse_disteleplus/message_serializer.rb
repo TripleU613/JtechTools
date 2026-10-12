@@ -31,15 +31,22 @@ module DiscourseDisteleplus
 
     # Who has played this voice note, and when. Only voice notes ever record
     # listens, so this stays an empty array for ordinary messages.
+    # The conversation's loaders preload listens and reactions with their
+    # users; anything else loads them here, in one query each.
     def self.serialize_listens(message)
-      message
-        .listens
-        .includes(:user)
-        .limit(LISTENED_BY_CAP)
-        .filter_map do |listen|
-          user = serialize_user(listen.user)
-          user&.merge(listened_at: listen.created_at&.iso8601)
-        end
+      listens = message.listens
+      listens =
+        (
+          if listens.loaded?
+            listens.first(LISTENED_BY_CAP)
+          else
+            listens.includes(:user).limit(LISTENED_BY_CAP)
+          end
+        )
+      listens.filter_map do |listen|
+        user = serialize_user(listen.user)
+        user&.merge(listened_at: listen.created_at&.iso8601)
+      end
     end
 
     def self.serialize_user(user)
@@ -71,17 +78,17 @@ module DiscourseDisteleplus
     end
 
     def self.serialize_reactions(message, viewer)
-      message
-        .reactions
-        .includes(:user)
+      reactions = message.reactions
+      reactions = reactions.includes(:user) unless reactions.loaded?
+      reactions
         .group_by(&:emoji)
-        .map do |emoji, reactions|
+        .map do |emoji, group|
           {
             emoji: emoji,
-            count: reactions.length,
-            reacted: viewer ? reactions.any? { |reaction| reaction.user_id == viewer.id } : false,
+            count: group.length,
+            reacted: viewer ? group.any? { |reaction| reaction.user_id == viewer.id } : false,
             users:
-              reactions.map do |reaction|
+              group.map do |reaction|
                 serialize_user(reaction.user)&.merge(reacted_at: reaction.created_at)
               end,
           }

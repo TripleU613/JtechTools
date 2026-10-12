@@ -19,10 +19,10 @@ module DiscourseDisteleplus
       limit = [max_bytes.to_i, MAX_SEND_BYTES].min
       return send_link(upload, caption, chat_id, topic_id) if upload.filesize.to_i > limit
 
-      io = upload_io(upload)
+      io = self.class.upload_io(upload)
       return send_link(upload, caption, chat_id, topic_id) if io.nil?
 
-      method, field = send_method_for(upload)
+      method, field = self.class.send_method_for(upload)
       fields = { chat_id: chat_id, caption: caption, parse_mode: "HTML" }
       thread_id = DiscourseDisteleplus.telegram_thread_id(topic_id)
       fields[:message_thread_id] = thread_id if thread_id
@@ -59,7 +59,9 @@ module DiscourseDisteleplus
       Delivery.new(message: result.result, file_copied: false)
     end
 
-    def send_method_for(upload)
+    # The Bot API method and field for an upload, by its extension. Also used
+    # by the job that mirrors forum messages.
+    def self.send_method_for(upload)
       ext = upload.extension.to_s.downcase
       if IMAGE_EXT.include?(ext)
         %w[sendPhoto photo]
@@ -74,7 +76,7 @@ module DiscourseDisteleplus
       end
     end
 
-    def upload_io(upload)
+    def self.upload_io(upload)
       if Discourse.store.external?
         Discourse.store.download(upload)
       else
@@ -82,7 +84,7 @@ module DiscourseDisteleplus
         path && File.exist?(path) ? File.open(path, "rb") : nil
       end
     rescue StandardError => e
-      Rails.logger.warn("#{DiscourseDisteleplus::LOG_TAG} forum upload read failed: #{e.message}")
+      Rails.logger.warn("#{DiscourseDisteleplus::LOG_TAG} upload read failed: #{e.message}")
       nil
     end
   end

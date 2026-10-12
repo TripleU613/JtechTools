@@ -186,11 +186,12 @@ module DiscourseDisteleplus
       raise Discourse::NotFound unless SiteSetting.disteleplus_read_receipts_enabled
       rate_limit!("read-states", 30, 1.minute)
 
+      # Groups are preloaded too: Access.allowed? reads each user's group ids.
       states =
         UserState
           .where.not(user_id: current_user.id)
           .where.not(last_read_message_id: nil)
-          .includes(:user)
+          .includes(user: :groups)
           .order(last_read_message_id: :desc)
           .limit(100)
           .filter_map do |state|
@@ -243,7 +244,10 @@ module DiscourseDisteleplus
           .to_a
           .reverse
       target =
-        Message.includes(:user, :uploads, reply_to: :user, reactions: :user).where(id: id).to_a
+        Message
+          .includes(:user, :uploads, reply_to: :user, reactions: :user, listens: :user)
+          .where(id: id)
+          .to_a
       after =
         Message
           .includes(:user, :uploads, reply_to: :user, reactions: :user)

@@ -113,7 +113,7 @@ RSpec.describe Jobs::DisteleplusSendToTelegram do
 
       before do
         message.message_uploads.create!(upload: voice_upload)
-        allow_any_instance_of(described_class).to receive(:upload_io).and_return(
+        allow(DiscourseDisteleplus::TelegramUploadSender).to receive(:upload_io).and_return(
           StringIO.new("ogg"),
         )
         allow(api).to receive(:call_multipart).and_return(media_result)

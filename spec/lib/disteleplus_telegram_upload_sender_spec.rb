@@ -20,7 +20,7 @@ RSpec.describe DiscourseDisteleplus::TelegramUploadSender do
 
   it "uploads the file into the configured Telegram topic" do
     io = StringIO.new("binary")
-    allow(sender).to receive(:upload_io).and_return(io)
+    allow(described_class).to receive(:upload_io).and_return(io)
     allow(api).to receive(:call_multipart).and_return(telegram_result)
 
     delivery =

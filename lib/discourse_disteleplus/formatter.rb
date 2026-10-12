@@ -141,8 +141,10 @@ module DiscourseDisteleplus
       ::Emoji.gsub_emoji_to_unicode(text) || text
     end
 
+    # For Telegram's HTML: text and double-quoted attributes alike. The
+    # one escaper every Telegram message goes through.
     def self.escape_html(text)
-      text.gsub("&", "&amp;").gsub("<", "&lt;").gsub(">", "&gt;")
+      text.to_s.gsub("&", "&amp;").gsub("<", "&lt;").gsub(">", "&gt;").gsub('"', "&quot;")
     end
   end
 end

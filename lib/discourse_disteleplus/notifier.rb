@@ -93,12 +93,14 @@ module DiscourseDisteleplus
 
     def self.mark_read(user, through_id)
       # post_number is a 4-byte column; the message id lives in the JSON data.
-      Notification
-        .where(user_id: user.id, notification_type: Notification.types[:custom], read: false)
-        .where("data LIKE ?", '%"disteleplus":true%')
-        .where("(data::json->>'disteleplus_message_id')::bigint <= ?", through_id.to_i)
-        .update_all(read: true)
-      user.publish_notifications_state
+      updated =
+        Notification
+          .where(user_id: user.id, notification_type: Notification.types[:custom], read: false)
+          .where("data LIKE ?", '%"disteleplus":true%')
+          .where("(data::json->>'disteleplus_message_id')::bigint <= ?", through_id.to_i)
+          .update_all(read: true)
+      # Every read advances this; most of them have nothing left to clear.
+      user.publish_notifications_state if updated > 0
     end
 
     # Reuses core PostAlerter.push_notification so we inherit its gate stack:

@@ -3,9 +3,7 @@
 module DiscourseDisteleplus
   module Access
     def self.allowed_group_ids
-      ids = SiteSetting.disteleplus_allowed_groups_map
-      ids = SiteSetting.disteleplus_allowed_groups.to_s.split("|").map(&:to_i) if ids.blank?
-      ids.map(&:to_i).reject(&:zero?).uniq
+      SiteSetting.disteleplus_allowed_groups_map.reject(&:zero?).uniq
     end
 
     def self.allowed?(user)

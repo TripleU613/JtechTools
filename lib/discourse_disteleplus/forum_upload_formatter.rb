@@ -56,7 +56,7 @@ module DiscourseDisteleplus
     end
 
     def self.escape(value)
-      value.to_s.gsub("&", "&amp;").gsub("<", "&lt;").gsub(">", "&gt;").gsub('"', "&quot;")
+      Formatter.escape_html(value)
     end
   end
 end
