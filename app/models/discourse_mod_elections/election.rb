@@ -69,10 +69,12 @@ end
 #
 #  id                  :bigint           not null, primary key
 #  nominations_open_at :datetime         not null
+#  previewed_at        :datetime
 #  published_at        :datetime
 #  reminder_sent_at    :datetime
 #  result              :jsonb
 #  seats               :integer          not null
+#  seed                :bigint
 #  status              :integer          default("scheduled"), not null
 #  voting_close_at     :datetime         not null
 #  voting_open_at      :datetime         not null

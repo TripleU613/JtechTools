@@ -87,6 +87,7 @@ interface Me {
     void_reason: string | null;
     updated_at: string;
   } | null;
+  receipt: { counted: boolean; reason: string | null } | null;
 }
 
 interface Page {
@@ -128,7 +129,7 @@ function blockedText(reason: string, page: Page): string {
       );
     case "record":
       return (
-        "Accounts suspended or silenced in the last " +
+        "Accounts an admin suspended or silenced in the last " +
         l.candidate_clean_record_days +
         " days can't run."
       );
@@ -577,11 +578,11 @@ function ballot(s: Screen, page: Page, e: Election, me: Me): void {
 
 // Whether the reader's own ballot went into the count, never what was on it.
 function receipt(me: Me | null): SafeHtml | string {
-  if (!me || !me.ballot) return "";
+  if (!me || !me.receipt) return "";
   return html`<p class="hint pad">
-    ${me.ballot.voided
-      ? "An admin set your ballot aside: " + (me.ballot.void_reason || "")
-      : "Your ballot was counted."}
+    ${me.receipt.counted
+      ? "Your ballot was counted."
+      : "An admin set your ballot aside: " + (me.receipt.reason || "")}
   </p>`;
 }
 
@@ -608,7 +609,9 @@ function tieText(
 
 function results(e: Election, r: Result, me: Me | null): SafeHtml {
   const names: Record<string, string> = {};
-  r.candidates.forEach((c) => (names[String(c.id)] = c.username || "?"));
+  r.candidates.forEach(
+    (c) => (names[String(c.id)] = c.username || "A deleted account")
+  );
   const n = (id: number | null) =>
     id === null ? "?" : names[String(id)] || "?";
   const stageLabel = (st: Stage) =>

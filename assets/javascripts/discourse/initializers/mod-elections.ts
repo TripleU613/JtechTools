@@ -32,7 +32,8 @@ export default {
     const siteSettings = container.lookup(
       "service:site-settings"
     ) as ModElectionsSiteSettings;
-    if (!siteSettings.mod_elections_enabled) {
+    // The master switch (jtech_enabled) turns every module off.
+    if (!siteSettings.jtech_enabled || !siteSettings.mod_elections_enabled) {
       return;
     }
     const currentUser = container.lookup(

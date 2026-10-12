@@ -56,7 +56,7 @@ A stored result (`elections.result`, jsonb):
   "seats": 3, "quota": 7.0, "total": 24.0, "ballots": 11,
   "outcome": "counted", "seed": 633132630957860,
   "elected": [3, 4, 1], "exhausted": 3.1,
-  "candidates": [{ "id": 1, "user_id": 12, "username": "chaim", "incumbent": false }],
+  "candidates": [{ "id": 1, "user_id": 12, "incumbent": false }],
   "stages": [
     {
       "number": 4, "action": "exclusion", "candidate": null, "excluded": [2],
@@ -67,30 +67,37 @@ A stored result (`elections.result`, jsonb):
 }
 ```
 
-`action` is `first`, `unopposed`, `surplus` (`candidate` is whose) or `exclusion` (`excluded` is who). The candidates' names are kept as they were at the count, so a later rename or deletion can't change the published page.
+`action` is `first`, `unopposed`, `surplus` (`candidate` is whose) or `exclusion` (`excluded` is who). Candidates are stored by id only; `Presenter.result_json` adds each one's username, avatar and (with `enable_names` on) name as the account is now, for the page, the admin tab, the topic post and Telegram. So a renamed account shows its new name, an anonymized one shows anonymized, and a deleted one as "a deleted account".
 
 **Countback** (`Countback.replacement`) counts the same ballots again with the people who left the seat excluded from the start, and takes the first newly elected candidate who can still serve and isn't already a moderator. `fill!` does it under the lock and records the seat on the stored result's `countbacks`.
 
 ## Publishing and trust levels (`Seats`)
 
-`Publisher.preview` counts and returns `Seats.plan`: who joins, who stays, who leaves (with their strike, trust level afterwards, and `on_ballot`: false for someone made a moderator after nominations opened), and `problems`: winners who can't serve any more (deleted, admin, suspended, silenced, inactive). `publish!` refuses with `winners_cannot_serve` while there are any; the admin takes them off the ballot and the count moves on.
+`Publisher.preview` (a POST: the first one sets `previewed_at`, after which ballots can't be set aside or restored, since two previews either side of that would show what was on the ballot) counts and returns `Seats.plan`: who joins, who stays, who leaves (with their strike, trust level afterwards, and `on_ballot`: false for someone made a moderator after nominations opened), and `problems`: winners who can't serve any more (deleted, admin, suspended, silenced, inactive). `publish!` refuses with `winners_cannot_serve` while there are any; the admin takes them off the ballot and the count moves on.
 
-Publishing, under the lock: grants and revokes moderation (`grant_moderation!` / `revoke_moderation!`, logged with `StaffActionLogger`), locks winners at trust level 4 when `mod_elections_former_mods_keep_tl4` is on, gives a strike to each sitting moderator who ran and lost (`mod_elections_strikes` user custom field) and at `mod_elections_strikes_before_tl3` strikes unlocks them back to trust level 3. Admins are never touched. Ballot IP addresses are cleared. Then, after the commit: the topic post, notifications and the Telegram notice.
+Publishing, under the lock: grants and revokes moderation (`grant_moderation!` / `revoke_moderation!`, logged with `StaffActionLogger`), locks winners at trust level 4 when `mod_elections_former_mods_keep_tl4` is on, gives a strike to each sitting moderator who ran and lost (`mod_elections_strikes` user custom field) and at `mod_elections_strikes_before_tl3` strikes unlocks them back to trust level 3. Admins are never touched. Then `unlink_ballots!` (below). After the commit: the topic post, notifications and the Telegram notice.
 
-`Seats.vacate!` marks a seat stepped down or removed. Removed for abuse goes straight to trust level 3, unlocked; either way the person leaves any later election's ballot (`Nominations.leave_ballots!`: removed is disqualified with a reason, stepped down is withdrawn).
+`Seats.vacate!` marks a seat stepped down or removed, under the election's lock (like a countback filling it). Removed for abuse goes straight to trust level 3, unlocked; either way the person leaves any later election's ballot (`Nominations.leave_ballots!`: removed is disqualified with a reason, stepped down is withdrawn). Someone made an admin since keeps their rights and trust level.
+
+Every admin action goes in the staff action log through `StaffLog.log`, which puts the person an entry is about in the log's user column (core's `log_custom` keeps it only as text): `mod_election_create`, `_end_phase`, `_cancel`, `_disqualify`, `_reinstate`, `_void_ballot`, `_restore_ballot`, `_publish`, `_vacate`, `_countback`.
 
 ## Privacy
 
 | Data | Who sees it |
 | --- | --- |
-| A ballot's ranking | Its voter only (`me.ballot` on the page). Never in any other JSON, topic post, notification or log |
-| That someone voted | Its voter; admins only through the address report while the election is closed |
-| Ballot IP addresses | Admins, grouped by address, while the election is closed. Cleared when the results are published or the election is cancelled |
+| A ballot's ranking | Its voter only (`me.ballot` on the page), until results are published. Never in any other JSON, topic post, notification or log (`ranking` is in `filter_parameters`) |
+| That someone voted | Its voter; admins only through the address report, and only while the election is closed |
+| What became of a ballot (`me.receipt`) | Its voter, once voting has closed: counted, or set aside with the admin's reason |
+| Ballot IP addresses | Admins, grouped by address, while the election is closed |
 | Weight (trust level when nominations opened) | Its voter |
 | Stage tallies, turnout, quota, seed | Everyone, once published |
 | Candidate statements, disqualification reasons | Everyone who can see the page |
 
-Notifications carry only the election id, the step and a link. The MessageBus message carries only `{ changed: true }`.
+Notifications carry only the election id, the step and a link. The MessageBus message carries only `{ changed: true }`. The Telegram notice when voting closes says nothing about the count (that chat can include moderators, who are candidates).
+
+**Ballots forget their voters.** A ballot is tied to its account only while the election runs, so nobody votes twice. `Publisher.unlink_ballots!`, when results are published, copies each voter's receipt to their voter-list row (`receipt`, `receipt_reason`), clears the ranking and reason of every ballot set aside (they weren't counted), and clears every ballot's `user_id`, `ip_address` and `voided_by_id` and sets its timestamps to the moment of publishing. What's left is what the count and a countback need: weights and rankings. A cancelled election's ballots are deleted. Until then a database query (Data Explorer, say) can read them: the promise is that the forum's own pages and tools never show who ranked whom, and that after the count nothing links them at all. With very few ballots, the published stages can still give away how individuals voted; that's in the nature of publishing a count.
+
+**Moderators are candidates.** Only an admin's suspension or silence (the system's automatic ones count as an admin's) counts against the clean-record rule for running, so a sitting moderator can't keep a rival off the ballot. A current suspension or silence still stops someone running or voting, whoever gave it; the admin tab lists those a moderator gave a candidate or a voter since nominations opened (`moderator_actions`) so admins can undo any that look like campaigning.
 
 **Deleted accounts.** The foreign keys set `user_id` to null, so a deleted voter's ballot stays and a count can't change after the fact. A deleted candidate shows as "a deleted account"; on a ballot still open (`:user_destroyed` → `Nominations.drop_deleted!`) they're withdrawn, so votes for them move on. Once voting has closed the count is left alone and the admin's preview lists them as a winner who can't serve.
 
@@ -98,7 +105,8 @@ Notifications carry only the election id, the step and a link. The MessageBus me
 
 - `GET /jtech-elections/current.json` (`?id=` for a past one): anyone who can see the forum. `scheduled` elections are never shown.
 - `POST|PUT|DELETE /jtech-elections/:id/candidacy.json`, `PUT|DELETE /jtech-elections/:id/ballot.json`: signed in, from the member's own browser session (no API keys, no impersonation), rate limited (30 a minute, 200 an hour).
-- `/jtech-elections/admin/…`: admins only (`AdminConstraint` and `Admin::AdminController`). The reads work with the module off, so an admin can always see what happened; the writes refuse with `module_off`.
+- `/jtech-elections/admin/…`: admins only (`AdminConstraint` and `Admin::AdminController`). The reads work with the module off, so an admin can always see what happened; the writes (the preview included, since it fixes the ballots) refuse with `module_off`. The address report and setting ballots aside or back work only while the election is closed, and setting aside only before the first preview.
+- Creating an election (the schedule, or an admin by hand) checks for an unfinished one and creates it under one `DistributedMutex`, so two can't both get through.
 
 ## Testing
 

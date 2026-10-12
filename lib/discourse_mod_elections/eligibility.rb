@@ -45,12 +45,22 @@ module DiscourseModElections
       nil
     end
 
+    # Suspensions and silences, from the staff log.
+    def self.punishments
+      UserHistory.where(
+        action: [UserHistory.actions[:suspend_user], UserHistory.actions[:silence_user]],
+      )
+    end
+
+    # Only an admin's suspension or silence counts (the system's automatic
+    # ones are an admin's too): sitting moderators are candidates, and a
+    # minute's silence mustn't keep a rival off the ballot for months.
     def self.recently_punished?(user, now)
       days = SiteSetting.mod_elections_candidate_clean_record_days
       return false if days.zero?
-      UserHistory
+      punishments
         .where(target_user_id: user.id)
-        .where(action: [UserHistory.actions[:suspend_user], UserHistory.actions[:silence_user]])
+        .where(acting_user_id: User.where(admin: true).select(:id))
         .where("created_at >= ?", now - days.days)
         .exists?
     end

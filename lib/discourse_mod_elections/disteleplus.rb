@@ -3,8 +3,9 @@
 module DiscourseModElections
   # The two steps staff act on, in the Telegram reports topic too when
   # Disteleplus is on and sends admin notices: voting has closed (check the
-  # ballots and publish) and the results are out. Counts and names only,
-  # nothing about anyone's ballot.
+  # ballots and publish) and the results are out. Nothing about the count
+  # before it's published (that chat can include moderators, who are
+  # candidates), and nothing about anyone's ballot.
   module Disteleplus
     def self.available?
       defined?(::DiscourseDisteleplus::Reports) && ::DiscourseDisteleplus::Reports.admin_notices?
@@ -17,7 +18,6 @@ module DiscourseModElections
         "closed",
         I18n.t(
           "mod_elections.telegram.closed",
-          ballots: election.ballots.counted.count,
           url: "#{Discourse.base_url}/admin/plugins/jtech-tools/mod-elections",
         ),
       )
@@ -25,9 +25,9 @@ module DiscourseModElections
 
     def self.results(election)
       return unless available?
-      result = election.result || {}
+      result = Presenter.result_json(election.result) || {}
       by_id = Array(result["candidates"]).index_by { |c| c["id"] }
-      names = Array(result["elected"]).map { |id| by_id.dig(id, "username") }.compact
+      names = Array(result["elected"]).filter_map { |id| by_id.dig(id, "username") }
       notice(
         election,
         "results",

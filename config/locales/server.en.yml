@@ -997,8 +997,9 @@ en:
       run. Sitting moderators can always run.
     mod_elections_candidate_min_account_age_days: How old an account has to
       be to run.
-    mod_elections_candidate_clean_record_days: Accounts suspended or
-      silenced within this many days can't run. 0 only checks whether they
+    mod_elections_candidate_clean_record_days: Accounts an admin suspended
+      or silenced within this many days can't run. A moderator's don't count,
+      since sitting moderators are candidates too. 0 only checks whether they
       are suspended or silenced right now.
     mod_elections_statement_max_length: Longest statement a candidate can
       write about themselves. 0 turns statements off.
@@ -1174,7 +1175,7 @@ en:
       not_running: "You're not running in this election."
       trust_level: "You need a higher trust level to run."
       account_age: "Your account is too new to run."
-      record: "Accounts suspended or silenced recently can't run."
+      record: "Accounts an admin suspended or silenced recently can't run."
       statement_too_long: "Keep your statement to %{max} characters."
       not_on_roll: "You weren't on the voter list when nominations opened."
       empty_ballot: "Rank at least one candidate."
@@ -1184,6 +1185,7 @@ en:
       reason_required: "Give a reason. It's shown to the candidate and on the elections page."
       finished: "This election is already over."
       not_closed: "Voting hasn't closed yet."
+      count_previewed: "The count has been previewed, so the ballots are fixed: a ballot set aside now would show, in the difference between two previews, what was on it. Publish, or cancel the election."
       no_votes: "Nobody voted. Cancel the election instead, so the moderators stay as they are."
       not_seated: "That person isn't in a seat."
       no_open_seat: "Every seat is taken."
@@ -1196,5 +1198,5 @@ en:
     reasons:
       removed: "Removed as a moderator."
     telegram:
-      closed: "Voting has closed with %{ballots} ballots. <a href=\"%{url}\">Check the ballots and publish the results</a>."
+      closed: "Voting has closed. <a href=\"%{url}\">Check the ballots and publish the results</a>."
       results: "The results are published. Elected: %{winners}. <a href=\"%{url}\">The count</a>"

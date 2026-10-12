@@ -251,7 +251,7 @@ Discourse::Application.routes.append do
       get "/elections/:id/ip-report" => "admin#ip_report"
       post "/elections/:id/ballots/:ballot_id/void" => "admin#void_ballot"
       post "/elections/:id/ballots/:ballot_id/restore" => "admin#restore_ballot"
-      get "/elections/:id/preview" => "admin#preview"
+      post "/elections/:id/preview" => "admin#preview"
       post "/elections/:id/publish" => "admin#publish"
     end
   end

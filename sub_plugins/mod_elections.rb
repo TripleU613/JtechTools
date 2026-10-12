@@ -27,6 +27,11 @@ register_asset "stylesheets/mod-elections.scss"
   shield-halved
 ].each { |name| register_svg_icon(name) }
 
+# A ballot's ranking arrives as `ranking`; masking the key keeps who ranked
+# whom out of the Rails request log and error reports. Set at load time so
+# it is in place before the first request builds its parameter filter.
+Rails.application.config.filter_parameters += [:ranking]
+
 module ::DiscourseModElections
   STRIKES_FIELD = "mod_elections_strikes"
   LOG_TAG = "[jtech-tools mod-elections]"
@@ -39,6 +44,7 @@ module ::DiscourseModElections
 end
 
 require_relative "../lib/discourse_mod_elections/error"
+require_relative "../lib/discourse_mod_elections/staff_log"
 require_relative "../lib/discourse_mod_elections/stv"
 require_relative "../lib/discourse_mod_elections/schedule"
 require_relative "../lib/discourse_mod_elections/state"

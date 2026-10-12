@@ -2,7 +2,8 @@
 
 module DiscourseModElections
   # One voter's ranking. Never shown to anyone but its voter; admins see only
-  # that a ballot exists when they check for alt accounts.
+  # that a ballot exists when they check for alt accounts. When results are
+  # published it loses its user and address, so no ballot says whose it was.
   class Ballot < ActiveRecord::Base
     self.table_name = "jtech_election_ballots"
 

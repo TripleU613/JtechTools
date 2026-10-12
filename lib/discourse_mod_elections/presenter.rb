@@ -67,9 +67,34 @@ module DiscourseModElections
         voting_close_at: election.voting_close_at,
         topic_url: topic_url(election, guardian),
         candidates: order(candidates, election, user).map { |c| candidate_json(c) },
-        result: election.published? ? election.result : nil,
+        result: election.published? ? result_json(election.result) : nil,
         turnout: election.published? ? turnout(election) : nil,
       }
+    end
+
+    # A stored count with each candidate's account as it is now: a renamed
+    # or anonymized account shows as it is today, a deleted one as nobody in
+    # particular.
+    def self.result_json(result)
+      return if result.nil?
+      candidates = Array(result["candidates"])
+      users = User.where(id: candidates.filter_map { |c| c["user_id"] }).index_by(&:id)
+      result.merge(
+        "candidates" =>
+          candidates.map do |candidate|
+            user = users[candidate["user_id"]]
+            candidate.slice("id", "user_id", "incumbent").merge(
+              "username" => user&.username,
+              "name" => name_of(user),
+              "avatar_template" => user&.avatar_template,
+            )
+          end,
+      )
+    end
+
+    # Real names only where the forum shows them.
+    def self.name_of(user)
+      user.name if user && SiteSetting.enable_names
     end
 
     def self.topic_url(election, guardian)
@@ -103,7 +128,8 @@ module DiscourseModElections
 
     def self.me_json(election, user)
       candidate = election.candidates.find_by(user_id: user.id)
-      weight = Roll.weight_for(election, user)
+      voter = Voter.find_by(election_id: election.id, user_id: user.id)
+      weight = voter&.weight
       ballot = Ballot.find_by(election_id: election.id, user_id: user.id)
       {
         candidate:
@@ -126,7 +152,19 @@ module DiscourseModElections
               void_reason: ballot.void_reason,
               updated_at: ballot.updated_at,
             },
+        receipt: receipt_json(election, ballot, voter),
       }
+    end
+
+    # What became of your ballot, once voting has closed: counted, or set
+    # aside and why. After publishing the ballot no longer says whose it
+    # was, so this comes from the voter list.
+    def self.receipt_json(election, ballot, voter)
+      if election.closed? && ballot
+        { counted: !ballot.voided?, reason: ballot.void_reason }
+      elsif election.published? && voter&.receipt
+        { counted: voter.receipt == "counted", reason: voter.receipt_reason }
+      end
     end
 
     def self.turnout(election)
@@ -156,7 +194,7 @@ module DiscourseModElections
       {
         id: user.id,
         username: user.username,
-        name: user.name,
+        name: name_of(user),
         avatar_template: user.avatar_template,
       }
     end
@@ -245,8 +283,37 @@ module DiscourseModElections
           ballots_weight: ballots.counted.sum(:weight),
           voided: ballots.where.not(voided_at: nil).count,
         },
-        result: election.result,
+        result: result_json(election.result),
+        previewed_at: election.previewed_at,
+        moderator_actions: moderator_actions(election),
       }
+    end
+
+    # Suspensions and silences a moderator (not an admin) gave a candidate
+    # or a voter since nominations opened. Sitting moderators are
+    # candidates, so admins see these and can undo any that look like
+    # campaigning.
+    def self.moderator_actions(election)
+      return [] if election.scheduled?
+      base =
+        Eligibility
+          .punishments
+          .where("user_histories.created_at >= ?", election.nominations_open_at)
+          .where(acting_user_id: User.where(moderator: true, admin: false).select(:id))
+      base
+        .where(target_user_id: election.voters.select(:user_id))
+        .or(base.where(target_user_id: election.candidates.select(:user_id)))
+        .includes(:acting_user, :target_user)
+        .order(:created_at)
+        .limit(50)
+        .map do |entry|
+          {
+            action: entry.action == UserHistory.actions[:suspend_user] ? "suspend" : "silence",
+            at: entry.created_at,
+            by: basic_user(entry.acting_user),
+            user: basic_user(entry.target_user),
+          }
+        end
     end
 
     def self.ip_report(election)

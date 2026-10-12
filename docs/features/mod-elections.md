@@ -8,7 +8,7 @@ Every few months the forum elects its moderators. Anyone in good standing can ru
 
 1. **Nominations** open at midnight on the 1st of each scheduled month (January, April, July and October by default) and last a week. The sitting moderators are on the ballot already and can drop out. Anyone else who can run signs up on `/elections` and writes a few lines about themselves.
 2. **Vote Week** follows. Voters rank as many candidates as they like, best first, and can change or take back their ballot until it ends. Each voter sees the candidates in their own shuffled order, so nobody is always at the top.
-3. **The count.** When Vote Week ends, admins get a notification. On the Mod elections tab they check for ballots cast from one address, set aside any that are alt accounts (with a reason the voter sees), preview the count and the moderator changes it makes, then publish.
+3. **The count.** When Vote Week ends, admins get a notification. On the Mod elections tab they check for ballots cast from one address, set aside any that are alt accounts (with a reason the voter sees), preview the count and the moderator changes it makes, then publish. The first preview fixes the ballots: none can be set aside or counted again after it, so nobody can compare two previews to work out what was on one ballot.
 
 Publishing makes the winners moderators and takes moderator rights from the sitting moderators who weren't elected. All the seats are up every time. The preview marks any moderator who was never on this ballot (made a moderator after nominations opened), since publishing ends their seat too. If a winner can't take the seat any more (their account was deleted, suspended or silenced, or they became an admin), publishing waits: the preview says who and why, the admin takes them off the ballot with a reason, and the count gives the seat to the next in line.
 
@@ -22,7 +22,7 @@ If a category is set, each election gets a topic there: the schedule when nomina
 
 ## Who can run and who can vote
 
-- **Running:** trust level 2 or higher, an account at least 90 days old, and no suspension or silence in the last 180 days. Sitting moderators can always run. Admins can't. An admin can take a candidate off the ballot, but has to give a reason, and it's shown on the page.
+- **Running:** trust level 2 or higher, an account at least 90 days old, and no suspension or silence from an admin in the last 180 days (a moderator's don't count: sitting moderators are candidates too, and the tab lists any suspension or silence a moderator gives a candidate or a voter during the election). Sitting moderators can always run. Admins can't. An admin can take a candidate off the ballot, but has to give a reason, and it's shown on the page.
 - **Voting:** the voter list is fixed when nominations open. It has every account at least 30 days old at trust level 1 or higher, not suspended, silenced or staged, and not an admin. **A vote counts as much as the voter's trust level** at that moment, so trust level 3 counts 3 and trust level 0 doesn't vote. New accounts and level-ups during the election change nothing. Accounts suspended or silenced since can't vote. Candidates vote too, just not for themselves.
 
 All of these are settings.
@@ -38,7 +38,7 @@ The count is the single transferable vote, as used for Ireland's elections:
 
 Ranking someone lower never hurts your higher choices: your next choice only counts once your earlier ones have won or are out. A tie goes to whoever did better at the earliest stage where they differed, and if they were level at every stage, it's drawn by lot. The lot's seed is drawn when voting closes and published with the results, so the preview and the published count always agree, and anyone can check a draw. Every tie is listed under the count: which stage, who was level, what it decided (who went out, whose extra votes moved first, or who is listed first among people elected together) and whether an earlier stage or the lot settled it.
 
-The results show every stage, with a bar under each number for how close it was to the quota, the turnout and the quota. Who ranked whom is never shown to anyone: ballots are tied to accounts so nobody votes twice, and admins see only who voted from which address, never a ballot's contents. The addresses are deleted when the results are published.
+The results show every stage, with a bar under each number for how close it was to the quota, the turnout and the quota. Who ranked whom is never shown to anyone. Ballots are tied to accounts only while the election runs, so nobody votes twice; admins see only who voted from which address, once voting has closed, never a ballot's contents. When the results are published every ballot loses its account and address: each voter can still see whether theirs was counted, but nothing links anyone to a ranking any more. A cancelled election's ballots are deleted. With very few voters, the published stages can still give away how individuals voted.
 
 If fewer people run than there are seats, they're elected unopposed and the rest stay empty until admins appoint someone. If nobody voted in a contested election, it can't be published: cancel it and the moderators stay as they are.
 
@@ -74,7 +74,7 @@ Admin → Plugins → Jtech Tools → **Mod elections**. The full text of each s
 | `mod_elections_voting_days` | `7` | How long Vote Week lasts, starting when nominations close. |
 | `mod_elections_candidate_min_trust_level` | `2` | Lowest trust level that can run. |
 | `mod_elections_candidate_min_account_age_days` | `90` | How old an account has to be to run. |
-| `mod_elections_candidate_clean_record_days` | `180` | Accounts suspended or silenced within this many days can't run. |
+| `mod_elections_candidate_clean_record_days` | `180` | Accounts an admin suspended or silenced within this many days can't run. |
 | `mod_elections_statement_max_length` | `1000` | Longest statement a candidate can write about themselves. |
 | `mod_elections_voter_min_account_age_days` | `30` | How old an account has to be, when nominations open, to vote. |
 | `mod_elections_former_mods_keep_tl4` | `true` | Moderators who leave their seat keep trust level 4, locked. |

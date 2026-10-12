@@ -43,26 +43,47 @@ module DiscourseModElections
     end
 
     def self.void!(ballot, reason, actor)
-      raise Error.new(:finished) unless ballot.election.unfinished?
       reason = reason.to_s.strip
       raise Error.new(:reason_required) if reason.blank?
-      ballot.update!(voided_at: Time.zone.now, voided_by: actor, void_reason: reason.truncate(500))
-      StaffActionLogger.new(actor).log_custom(
+      with_ballots_open(ballot.election) do
+        ballot.update!(
+          voided_at: Time.zone.now,
+          voided_by: actor,
+          void_reason: reason.truncate(500),
+        )
+      end
+      StaffLog.log(
+        actor,
         "mod_election_void_ballot",
-        target_user_id: ballot.user_id,
+        user_id: ballot.user_id,
         election_id: ballot.election_id,
         reason: reason,
       )
     end
 
     def self.restore!(ballot, actor)
-      raise Error.new(:finished) unless ballot.election.unfinished?
-      ballot.update!(voided_at: nil, voided_by: nil, void_reason: nil)
-      StaffActionLogger.new(actor).log_custom(
+      with_ballots_open(ballot.election) do
+        ballot.update!(voided_at: nil, voided_by: nil, void_reason: nil)
+      end
+      StaffLog.log(
+        actor,
         "mod_election_restore_ballot",
-        target_user_id: ballot.user_id,
+        user_id: ballot.user_id,
         election_id: ballot.election_id,
       )
+    end
+
+    # Ballots are set aside, or put back, between the close of voting (so
+    # nobody learns during Vote Week who has voted) and the first preview
+    # of the count (after which a difference between two previews would
+    # show what was on a ballot), under the lock publishing takes.
+    def self.with_ballots_open(election)
+      election.with_lock do
+        raise Error.new(:finished) unless election.unfinished?
+        raise Error.new(:not_closed) unless election.closed?
+        raise Error.new(:count_previewed) if election.previewed_at.present?
+        yield
+      end
     end
   end
 end

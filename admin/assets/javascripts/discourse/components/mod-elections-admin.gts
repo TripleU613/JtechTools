@@ -76,8 +76,20 @@ interface AdminCandidate extends ModElectionCandidate {
   trust_level: number | null;
 }
 
+// A suspension or silence a moderator gave a candidate or a voter during
+// the election.
+interface ModeratorAction {
+  action: "suspend" | "silence";
+  at: string;
+  by: ModElectionUser | null;
+  user: ModElectionUser | null;
+}
+
 interface AdminElection extends AdminElectionRow {
   topic_id: number | null;
+  // When the count was first previewed; ballots are fixed from then.
+  previewed_at: string | null;
+  moderator_actions: ModeratorAction[];
   candidates: AdminCandidate[];
   turnout: {
     voters: number;
@@ -235,6 +247,22 @@ export default class ModElectionsAdmin extends Component {
 
   get isClosed(): boolean {
     return this.current?.status === "closed";
+  }
+
+  get ballotsFixed(): boolean {
+    return !!this.current?.previewed_at;
+  }
+
+  get moderatorActions(): { at: string; text: string }[] {
+    return (this.current?.moderator_actions || []).map((entry) => ({
+      at: longDate(entry.at),
+      text: i18n(`admin.mod_elections.moderator_actions.${entry.action}`, {
+        by: entry.by?.username || "?",
+        username:
+          entry.user?.username ||
+          i18n("admin.mod_elections.preview.problems.someone"),
+      }),
+    }));
   }
 
   get problems(): { candidateId: number; text: string }[] {
@@ -406,13 +434,19 @@ export default class ModElectionsAdmin extends Component {
     });
   }
 
+  // The first preview fixes the ballots (the server refuses to set any
+  // aside after it), so the tab reloads the election to show that.
   @action
   loadPreview() {
     const election = this.current!;
     this.run(async () => {
       this.preview = await ajax(
-        `${BASE}/elections/${election.id}/preview.json`
+        `${BASE}/elections/${election.id}/preview.json`,
+        { type: "POST" }
       );
+      if (!election.previewed_at) {
+        this.current = await ajax(`${BASE}/elections/${election.id}.json`);
+      }
     });
   }
 
@@ -656,6 +690,20 @@ export default class ModElectionsAdmin extends Component {
                   }}</p>
               {{/if}}
 
+              {{#if this.moderatorActions.length}}
+                <div class="mod-elections-admin__problems">
+                  <p>{{i18n "admin.mod_elections.moderator_actions.title"}}</p>
+                  <ul class="mod-elections-admin__moderator-actions">
+                    {{#each this.moderatorActions as |entry|}}
+                      <li>{{entry.text}}
+                        <span
+                          class="mod-elections-muted"
+                        >{{entry.at}}</span></li>
+                    {{/each}}
+                  </ul>
+                </div>
+              {{/if}}
+
               {{#if this.isClosed}}
                 <h4>{{i18n "admin.mod_elections.ip.title"}}</h4>
                 {{#if this.ipReport.length}}
@@ -690,12 +738,18 @@ export default class ModElectionsAdmin extends Component {
                                       "admin.mod_elections.ip.voided"
                                       reason=ballot.void_reason
                                     }}</span>
-                                  <DButton
-                                    class="btn-default btn-small"
-                                    @action={{fn this.restoreBallot ballot}}
-                                    @disabled={{this.busy}}
-                                    @label="admin.mod_elections.ip.restore"
-                                  />
+                                  {{#unless this.ballotsFixed}}
+                                    <DButton
+                                      class="btn-default btn-small"
+                                      @action={{fn this.restoreBallot ballot}}
+                                      @disabled={{this.busy}}
+                                      @label="admin.mod_elections.ip.restore"
+                                    />
+                                  {{/unless}}
+                                {{else if this.ballotsFixed}}
+                                  <span class="mod-elections-muted">{{i18n
+                                      "admin.mod_elections.ip.counted"
+                                    }}</span>
                                 {{else if (this.isAsking "void" ballot.id)}}
                                   <input
                                     class="mod-elections-admin__reason"
@@ -749,6 +803,11 @@ export default class ModElectionsAdmin extends Component {
                     @icon="list-ol"
                     @label="admin.mod_elections.preview.button"
                   />
+                  <span class="mod-elections-muted">{{if
+                      this.ballotsFixed
+                      (i18n "admin.mod_elections.preview.fixed")
+                      (i18n "admin.mod_elections.preview.fixes")
+                    }}</span>
                 </div>
 
                 {{#if this.preview}}

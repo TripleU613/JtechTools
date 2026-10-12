@@ -118,6 +118,9 @@ export interface ModElectionMe {
   weight: number | null;
   vote_blocked: string | null;
   ballot: ModElectionBallot | null;
+  // Once voting has closed: whether your ballot was counted, or set aside
+  // and why. After publishing it's all that's left linking you to a ballot.
+  receipt: { counted: boolean; reason: string | null } | null;
 }
 
 export interface ModElectionLimits {
@@ -163,6 +166,7 @@ export type ModElectionsCurrentUser = User & {
 };
 
 export type ModElectionsSiteSettings = SiteSettingsService & {
+  jtech_enabled: boolean;
   mod_elections_enabled: boolean;
   mod_elections_statement_max_length: number;
 };

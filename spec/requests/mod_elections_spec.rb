@@ -29,6 +29,11 @@ RSpec.describe "Mod elections endpoints" do
     election.reload
   end
 
+  it "keeps rankings out of the request log" do
+    filter = ActiveSupport::ParameterFilter.new(Rails.application.config.filter_parameters)
+    expect(filter.filter("ranking" => %w[1 2])).to eq("ranking" => "[FILTERED]")
+  end
+
   it "is not there while switched off" do
     SiteSetting.mod_elections_enabled = false
     get "/jtech-elections/current.json"
@@ -129,6 +134,16 @@ RSpec.describe "Mod elections endpoints" do
       expect(response.parsed_body.dig("extras", "reason")).to eq("account_age")
 
       member.update!(created_at: 1.year.ago)
+      # A sitting moderator's silence doesn't count: they're candidates too.
+      UserHistory.create!(
+        action: UserHistory.actions[:silence_user],
+        target_user_id: member.id,
+        acting_user_id: moderator.id,
+      )
+      post "/jtech-elections/#{election.id}/candidacy.json"
+      expect(response.status).to eq(200)
+      delete "/jtech-elections/#{election.id}/candidacy.json"
+
       UserHistory.create!(
         action: UserHistory.actions[:suspend_user],
         target_user_id: member.id,
@@ -286,6 +301,18 @@ RSpec.describe "Mod elections endpoints" do
           }
 
       sign_in(admin)
+      # During Vote Week it would say who has voted.
+      get "/jtech-elections/admin/elections/#{election.id}/ip-report.json"
+      expect(response.parsed_body.dig("extras", "reason")).to eq("not_closed")
+      void_url = ->(id) do
+        "/jtech-elections/admin/elections/#{election.id}/ballots/#{id}/void.json"
+      end
+      post void_url.call(DiscourseModElections::Ballot.find_by(user: alt).id),
+           params: {
+             reason: "Too early",
+           }
+      expect(response.parsed_body.dig("extras", "reason")).to eq("not_closed")
+
       post "/jtech-elections/admin/elections/#{election.id}/end-phase.json"
       expect(response.parsed_body["status"]).to eq("closed")
 
@@ -306,9 +333,25 @@ RSpec.describe "Mod elections endpoints" do
         expect(response.status).to eq(200)
       end
 
-      get "/jtech-elections/admin/elections/#{election.id}/preview.json"
+      post "/jtech-elections/admin/elections/#{election.id}/preview.json"
       expect(response.parsed_body.dig("result", "elected")).to eq([mod_candidate.id])
       expect(response.parsed_body.dig("plan", "stay").map { |u| u["id"] }).to eq([moderator.id])
+      expect(response.parsed_body.dig("result", "candidates").map { |c| c["username"] }).to include(
+        moderator.username,
+      )
+
+      # The ballots are fixed now: a ballot set aside between two previews
+      # would show, in the difference, what was on it.
+      restore_url = "/jtech-elections/admin/elections/#{election.id}/ballots/"
+      post "#{restore_url}#{group["ballots"].first["id"]}/restore.json"
+      expect(response.parsed_body.dig("extras", "reason")).to eq("count_previewed")
+      post void_url.call(DiscourseModElections::Ballot.find_by(user: other).id),
+           params: {
+             reason: "Late doubts",
+           }
+      expect(response.parsed_body.dig("extras", "reason")).to eq("count_previewed")
+      get "/jtech-elections/admin/elections/#{election.id}.json"
+      expect(response.parsed_body["previewed_at"]).to be_present
 
       post "/jtech-elections/admin/elections/#{election.id}/publish.json"
       expect(response.status).to eq(200)
@@ -318,6 +361,56 @@ RSpec.describe "Mod elections endpoints" do
       get "/jtech-elections/current.json", params: { id: election.id }
       expect(response.parsed_body.dig("election", "result", "elected")).to eq([mod_candidate.id])
       expect(response.parsed_body.dig("election", "turnout", "ballots")).to eq(1)
+
+      # No ballot says whose it was any more, or where it came from; the
+      # set-aside ones keep no ranking.
+      ballots = DiscourseModElections::Ballot.where(election: election)
+      expect(ballots.pluck(:user_id, :ip_address, :voided_by_id).flatten.compact).to be_empty
+      expect(ballots.where.not(voided_at: nil).pluck(:ranking)).to eq([[], []])
+      expect(ballots.counted.pluck(:ranking)).to eq([[mod_candidate.id]])
+
+      # Each voter still sees what became of theirs.
+      sign_in(other)
+      get "/jtech-elections/current.json", params: { id: election.id }
+      expect(response.parsed_body["me"]).to include(
+        "ballot" => nil,
+        "receipt" => {
+          "counted" => true,
+          "reason" => nil,
+        },
+      )
+      sign_in(alt)
+      get "/jtech-elections/current.json", params: { id: election.id }
+      expect(response.parsed_body.dig("me", "receipt")).to eq(
+        "counted" => false,
+        "reason" => "Same household, alt accounts",
+      )
+    end
+
+    it "deletes the ballots of a cancelled election" do
+      open_voting(election)
+      DiscourseModElections::Voting.cast!(other, election, [election.candidates.first.id])
+
+      DiscourseModElections::Publisher.cancel!(election, admin)
+
+      expect(DiscourseModElections::Ballot.where(election: election)).to be_empty
+    end
+
+    it "lists suspensions and silences a moderator gave candidates or voters" do
+      DiscourseModElections::Nominations.run!(member, election, "")
+      UserSilencer.new(member, moderator, reason: "campaigning").silence
+      UserSilencer.new(newbie, admin, reason: "spam").silence
+
+      sign_in(admin)
+      get "/jtech-elections/admin/elections/#{election.id}.json"
+
+      expect(response.parsed_body["moderator_actions"]).to contain_exactly(
+        include(
+          "action" => "silence",
+          "by" => include("username" => moderator.username),
+          "user" => include("username" => member.username),
+        ),
+      )
     end
 
     it "lets an admin take a candidate off the ballot with a public reason" do
@@ -445,7 +538,7 @@ RSpec.describe "Mod elections endpoints" do
       sign_in(other)
       get "/jtech-elections/current.json", params: { id: election.id }
 
-      expect(response.parsed_body.dig("me", "ballot")).to include("voided" => false)
+      expect(response.parsed_body.dig("me", "receipt")).to eq("counted" => true, "reason" => nil)
       expect(response.parsed_body.dig("election", "turnout", "ballots")).to eq(2)
     end
 
@@ -460,6 +553,36 @@ RSpec.describe "Mod elections endpoints" do
       expect(body["timezone"]).to eq("Pacific/Auckland")
       expect(body["history"].map { |row| row["label"] }).to eq(["February 2026"])
       expect(body["next_opening"]).to eq(DiscourseModElections::Schedule.next_opening.as_json)
+    end
+
+    it "shows the winners as their accounts are now, real names only where the forum shows them" do
+      member.update!(name: "Real Name")
+      UsernameChanger.change(member, "renamed_member", admin)
+      SiteSetting.enable_names = false
+
+      get "/jtech-elections/current.json", params: { id: election.id }
+      winner =
+        response
+          .parsed_body
+          .dig("election", "result", "candidates")
+          .find { |c| c["user_id"] == member.id }
+      expect(winner).to include("username" => "renamed_member", "name" => nil)
+      expect(election.reload.result.to_json).not_to include("renamed_member")
+    end
+
+    it "leaves an admin's trust level alone when their old seat is recorded as left" do
+      seat = election.candidates.find_by(user: member)
+      member.update!(admin: true)
+      level = member.reload.trust_level
+
+      sign_in(admin)
+      post "/jtech-elections/admin/seats/#{seat.id}/vacate.json", params: { reason: "removed" }
+
+      expect(response.parsed_body["open"]).to eq(1)
+      expect(member.reload.trust_level).to eq(level)
+      expect(
+        UserHistory.where(custom_type: "mod_election_vacate", target_user_id: member.id),
+      ).to exist
     end
 
     it "takes someone off a later ballot when they're removed from their seat" do

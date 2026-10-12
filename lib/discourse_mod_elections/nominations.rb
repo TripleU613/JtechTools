@@ -67,9 +67,10 @@ module DiscourseModElections
           disqualified_by: actor,
         )
       end
-      StaffActionLogger.new(actor).log_custom(
+      StaffLog.log(
+        actor,
         "mod_election_disqualify",
-        target_user_id: candidate.user_id,
+        user_id: candidate.user_id,
         election_id: candidate.election_id,
         reason: reason,
       )
@@ -82,9 +83,10 @@ module DiscourseModElections
         raise Error.new(:not_found) unless candidate.reload.disqualified?
         candidate.update!(status: :running, disqualified_reason: nil, disqualified_by: nil)
       end
-      StaffActionLogger.new(actor).log_custom(
+      StaffLog.log(
+        actor,
         "mod_election_reinstate",
-        target_user_id: candidate.user_id,
+        user_id: candidate.user_id,
         election_id: candidate.election_id,
       )
     end

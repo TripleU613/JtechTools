@@ -24,9 +24,18 @@ module DiscourseModElections
       # old zone can fall on the last day of the previous month in the new.
       opens = dates[:nominations_open_at]
       month = (opens.beginning_of_month - 1.day)..(opens.end_of_month + 1.day)
-      return if Election.where(nominations_open_at: month).exists?
-      return if Election.unfinished.exists?
-      Election.create!(dates.merge(seats: SiteSetting.mod_elections_seats))
+      creating do
+        next if Election.where(nominations_open_at: month).exists?
+        next if Election.unfinished.exists?
+        Election.create!(dates.merge(seats: SiteSetting.mod_elections_seats))
+      end
+    end
+
+    # One election at a time: the schedule and an admin starting one by
+    # hand check for an unfinished election and create one under the same
+    # mutex, so they can't both get through.
+    def self.creating(&block)
+      DistributedMutex.synchronize("jtech-mod-elections-create", validity: 30.seconds, &block)
     end
 
     # Moves the election to wherever the clock says it should be. The
@@ -112,7 +121,8 @@ module DiscourseModElections
           raise Error.new(:finished)
         end
       end
-      StaffActionLogger.new(actor).log_custom(
+      StaffLog.log(
+        actor,
         "mod_election_end_phase",
         election_id: election.id,
         status: election.status,
@@ -122,7 +132,6 @@ module DiscourseModElections
 
     # An election an admin starts by hand, for dates off the calendar.
     def self.create!(actor, seats:, nominations_open_at:, voting_open_at:, voting_close_at:)
-      raise Error.new(:election_in_progress) if Election.unfinished.exists?
       unless nominations_open_at && voting_open_at && voting_close_at &&
                nominations_open_at < voting_open_at && voting_open_at < voting_close_at
         raise Error.new(:invalid_dates)
@@ -136,8 +145,11 @@ module DiscourseModElections
           created_by: actor,
         )
       raise Error.new(:invalid_dates) unless election.valid?
-      election.save!
-      StaffActionLogger.new(actor).log_custom("mod_election_create", election_id: election.id)
+      creating do
+        raise Error.new(:election_in_progress) if Election.unfinished.exists?
+        election.save!
+      end
+      StaffLog.log(actor, "mod_election_create", election_id: election.id)
       advance!(election)
     end
   end

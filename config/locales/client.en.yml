@@ -648,7 +648,7 @@ en:
       blocked:
         trust_level: "Candidates need trust level %{level}."
         account_age: "Candidates need an account at least %{days} days old."
-        record: "Accounts suspended or silenced in the last %{days} days can't run."
+        record: "Accounts an admin suspended or silenced in the last %{days} days can't run."
         admin: Admins don't run or vote.
         disqualified: You were taken off the ballot for this election.
         not_allowed: Your account can't take part right now.
@@ -763,6 +763,9 @@ en:
             mod_election_reinstate: "put candidate back on ballot"
             mod_election_void_ballot: "set ballot aside"
             mod_election_restore_ballot: "count ballot again"
+            mod_election_publish: "publish mod election results"
+            mod_election_vacate: "record moderator leaving seat"
+            mod_election_countback: "fill moderator seat by countback"
             mod_post_made_whisper: "turn post into whisper"
             mod_whisper_made_public: "make whisper public"
       mod_elections:
@@ -814,9 +817,16 @@ en:
           void_prompt: Why is this ballot set aside? The voter sees this reason.
           restore: Count it
           voided: "Set aside: %{reason}"
+          counted: Counted
           joined: "joined %{date}"
+        moderator_actions:
+          title: "Moderators are candidates too. These suspensions and silences of candidates or voters since nominations opened came from a moderator, not an admin; undo any that look like campaigning."
+          suspend: "%{by} suspended %{username}"
+          silence: "%{by} silenced %{username}"
         preview:
           button: Preview the count
+          fixes: "Set ballots aside first: the first preview fixes them, so two previews can't be compared to work out what was on one."
+          fixed: The count has been previewed, so the ballots are fixed.
           title: What publishing changes
           join: Become moderators
           stay: Stay moderators

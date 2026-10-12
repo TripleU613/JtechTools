@@ -312,13 +312,12 @@ RSpec.describe DiscourseModElections::Seats do
     leaving = Fabricate(:user)
     ballot(leaving, 3, c_runner_up)
     ballot(voter, 2, c_new)
-    publish
-    before = election.reload.result["elected"]
 
     UserDestroyer.new(admin).destroy(leaving, delete_posts: true)
-
-    expect(election.ballots.counted.count).to eq(2)
     expect(election.ballots.where(user_id: nil).count).to eq(1)
-    expect(DiscourseModElections::Tally.count(election).elected).to eq(before)
+
+    publish
+    expect(election.reload.result["elected"]).to eq([c_runner_up.id])
+    expect(election.ballots.counted.count).to eq(2)
   end
 end

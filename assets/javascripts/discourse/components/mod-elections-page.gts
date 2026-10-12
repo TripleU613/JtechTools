@@ -203,17 +203,18 @@ export default class ModElectionsPage extends Component<ModElectionsPageSignatur
     });
   }
 
-  // Whether your own ballot went into the count. Never what was on it.
+  // Whether your own ballot went into the count, once voting has closed.
+  // Never what was on it.
   get receipt(): { text: string; voided: boolean } | null {
-    const ballot = this.page?.me?.ballot;
-    if (!ballot || (this.status !== "closed" && this.status !== "published")) {
+    const receipt = this.page?.me?.receipt;
+    if (!receipt) {
       return null;
     }
-    if (ballot.voided) {
+    if (!receipt.counted) {
       return {
         voided: true,
         text: i18n("mod_elections.receipt.voided", {
-          reason: ballot.void_reason || "",
+          reason: receipt.reason || "",
         }),
       };
     }

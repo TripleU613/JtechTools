@@ -37,10 +37,10 @@ module DiscourseModElections
     end
 
     def self.results(election)
-      result = election.result || {}
+      result = Presenter.result_json(election.result) || {}
       by_id = Array(result["candidates"]).index_by { |c| c["id"] }
-      winners = Array(result["elected"]).map { |id| by_id[id] }.compact
-      lines = winners.map { |c| "- #{user_link_for(c["username"])}" }
+      names = Array(result["elected"]).filter_map { |id| by_id.dig(id, "username") }
+      lines = names.map { |name| "- #{user_link_for(name)}" }
       lines = [I18n.t("mod_elections.topic.nobody")] if lines.empty?
       reply(
         election,

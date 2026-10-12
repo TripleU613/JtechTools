@@ -42,6 +42,7 @@ module DiscourseModElections
           raise Error.new(:no_replacement) if found.nil?
 
           user = found.user
+          StaffLog.log(actor, "mod_election_countback", user_id: user.id, election_id: election.id)
           user.grant_moderation!
           StaffActionLogger.new(actor).log_grant_moderation(user)
           Seats.seat_trust_level!(user, actor)

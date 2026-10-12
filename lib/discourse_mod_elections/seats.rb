@@ -21,13 +21,19 @@ module DiscourseModElections
       winner_ids = winners.map(&:id)
       leaving = sitting.where.not(id: winner_ids).order(:username).to_a
       ran = election.candidates.where(user_id: leaving.map(&:id)).index_by(&:user_id)
+      # Everyone's strikes in one query.
+      had =
+        UserCustomField
+          .where(user_id: leaving.map(&:id), name: DiscourseModElections::STRIKES_FIELD)
+          .pluck(:user_id, :value)
+          .to_h
       {
         join: winners.reject(&:moderator?),
         stay: winners.select(&:moderator?),
         leave:
           leaving.map do |user|
             strike = ran[user.id]&.running? || false
-            strikes = strikes(user) + (strike ? 1 : 0)
+            strikes = had[user.id].to_i + (strike ? 1 : 0)
             {
               user: user,
               strike: strike,
@@ -63,14 +69,26 @@ module DiscourseModElections
     # 3 whatever the settings say.
     def self.vacate!(candidate, reason, actor)
       raise Error.new(:not_found) if Candidate::SEAT_LEFT_REASONS.exclude?(reason)
-      raise Error.new(:not_seated) unless candidate.elected? && candidate.seat_left_at.nil?
+      # Under the election's lock, like a countback filling the seat.
+      candidate.election.with_lock do
+        candidate.reload
+        raise Error.new(:not_seated) unless candidate.elected? && candidate.seat_left_at.nil?
+        candidate.update!(seat_left_at: Time.zone.now, seat_left_reason: reason)
+      end
       user = candidate.user
-      candidate.update!(seat_left_at: Time.zone.now, seat_left_reason: reason)
-      if user&.moderator? && !user.admin?
+      StaffLog.log(
+        actor,
+        "mod_election_vacate",
+        user_id: candidate.user_id,
+        election_id: candidate.election_id,
+        reason: reason,
+      )
+      # Someone made an admin since keeps their rights and trust level.
+      return if user.nil? || user.admin?
+      if user.moderator?
         user.revoke_moderation!
         StaffActionLogger.new(actor).log_revoke_moderation(user)
       end
-      return if user.nil?
       if reason == "removed"
         back_to_tl3!(user, actor)
       else

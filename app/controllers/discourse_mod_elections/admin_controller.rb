@@ -8,7 +8,7 @@ module DiscourseModElections
 
     # Reading works while the module is off, so the tab can say so and show
     # what happened; changing anything waits until it's back on.
-    READ_ONLY = %i[index show ip_report preview seats countback].freeze
+    READ_ONLY = %i[index show ip_report seats countback].freeze
     before_action :ensure_enabled, except: READ_ONLY
     before_action :find_election, except: %i[index create seats countback fill vacate]
 
@@ -62,7 +62,11 @@ module DiscourseModElections
       render_json_dump(Presenter.admin_election(@election.reload))
     end
 
+    # Only once voting has closed: during Vote Week it would say who has
+    # voted. Publishing clears the addresses.
     def ip_report
+      raise Error.new(:finished) unless @election.unfinished?
+      raise Error.new(:not_closed) unless @election.closed?
       render_json_dump(ip_report: Presenter.ip_report(@election))
     end
 
@@ -78,7 +82,10 @@ module DiscourseModElections
 
     def preview
       preview = Publisher.preview(@election)
-      render_json_dump(result: preview[:result], plan: Presenter.plan(preview[:plan]))
+      render_json_dump(
+        result: Presenter.result_json(preview[:result]),
+        plan: Presenter.plan(preview[:plan]),
+      )
     end
 
     def publish

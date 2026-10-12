@@ -178,8 +178,13 @@ export default class ModElectionsResults extends Component<ModElectionsResultsSi
     );
   }
 
+  // A candidate whose account has since been deleted.
+  get deleted(): string {
+    return i18n("mod_elections.candidates.deleted");
+  }
+
   name(id: number | null): string {
-    return (id !== null && this.people.get(id)?.username) || "?";
+    return (id !== null && this.people.get(id)?.username) || this.deleted;
   }
 
   names(ids: number[]): string {
@@ -212,16 +217,24 @@ export default class ModElectionsResults extends Component<ModElectionsResultsSi
         <ol class="mod-elections-results__winners">
           {{#each this.winners as |winner|}}
             <li class="mod-elections-results__winner">
-              <a
-                data-user-card={{winner.username}}
-                href={{profileUrl winner.username}}
-              >{{avatar winner imageSize="large"}}</a>
-              <div>
+              {{#if winner.username}}
                 <a
-                  class="mod-elections-results__winner-name"
                   data-user-card={{winner.username}}
                   href={{profileUrl winner.username}}
-                >{{winner.username}}</a>
+                >{{avatar winner imageSize="large"}}</a>
+              {{/if}}
+              <div>
+                {{#if winner.username}}
+                  <a
+                    class="mod-elections-results__winner-name"
+                    data-user-card={{winner.username}}
+                    href={{profileUrl winner.username}}
+                  >{{winner.username}}</a>
+                {{else}}
+                  <span
+                    class="mod-elections-results__winner-name"
+                  >{{this.deleted}}</span>
+                {{/if}}
                 {{#if winner.note}}
                   <span class="mod-elections-muted">{{winner.note}}</span>
                 {{else}}
@@ -271,8 +284,14 @@ export default class ModElectionsResults extends Component<ModElectionsResultsSi
                 class={{if row.elected "mod-elections-results__row--elected"}}
               >
                 <th scope="row">
-                  {{avatar row.candidate imageSize="tiny"}}
-                  {{row.candidate.username}}
+                  {{#if row.candidate.avatar_template}}
+                    {{avatar row.candidate imageSize="tiny"}}
+                  {{/if}}
+                  {{if
+                    row.candidate.username
+                    row.candidate.username
+                    this.deleted
+                  }}
                 </th>
                 {{#each row.cells as |cell|}}
                   <td

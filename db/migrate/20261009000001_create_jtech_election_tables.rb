@@ -17,8 +17,13 @@ class CreateJtechElectionTables < ActiveRecord::Migration[7.2]
       # Drawn when voting closes, so the admin's preview and the published
       # count draw any lots the same way.
       t.bigint :seed
-      # The published count, every stage of it, so later changes to users
-      # or candidates can't rewrite what was announced.
+      # When an admin first previewed the count. Ballots can't be set aside
+      # or restored after it: comparing two previews would show what was on
+      # the ballot in between.
+      t.datetime :previewed_at
+      # The published count, every stage of it, so later changes to ballots
+      # or candidates can't rewrite what was announced. Candidates by id;
+      # names are looked up when it's shown, so anonymizing an account works.
       t.jsonb :result
       t.datetime :published_at
       t.bigint :published_by_id
@@ -60,6 +65,11 @@ class CreateJtechElectionTables < ActiveRecord::Migration[7.2]
       t.bigint :election_id, null: false
       t.bigint :user_id
       t.integer :weight, null: false
+      # Set when results are published, when ballots lose their link to
+      # accounts: "counted" or "set_aside" (with the admin's reason), so a
+      # voter can still see what became of their ballot, and nothing else.
+      t.string :receipt, limit: 20
+      t.text :receipt_reason
     end
     add_index :jtech_election_voters, %i[election_id user_id], unique: true
     add_index :jtech_election_voters, :user_id
@@ -71,6 +81,8 @@ class CreateJtechElectionTables < ActiveRecord::Migration[7.2]
 
     create_table :jtech_election_ballots do |t|
       t.bigint :election_id, null: false
+      # Only while the election runs, so nobody votes twice. Cleared when
+      # results are published: after that no ballot says whose it was.
       t.bigint :user_id
       # Candidate ids, best first.
       t.bigint :ranking, array: true, null: false, default: []

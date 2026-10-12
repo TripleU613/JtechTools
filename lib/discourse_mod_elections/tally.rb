@@ -20,11 +20,11 @@ module DiscourseModElections
       )
     end
 
-    # The count as stored and shown: candidates by name (as they were when it
-    # was counted) and every stage, in plain numbers.
+    # The count as stored: every stage in plain numbers, candidates by id.
+    # Names are looked up when it's shown (Presenter.result_json), so a
+    # renamed or anonymized account never lingers under its old name.
     def self.serialize(election, result)
       candidates = election.candidates.where(id: result.stages.first&.tallies&.keys || [])
-      users = User.where(id: candidates.map(&:user_id)).index_by(&:id)
       {
         "seats" => result.seats,
         "quota" => number(result.quota),
@@ -36,13 +36,9 @@ module DiscourseModElections
         "exhausted" => number(result.exhausted),
         "candidates" =>
           candidates.map do |candidate|
-            user = users[candidate.user_id]
             {
               "id" => candidate.id,
               "user_id" => candidate.user_id,
-              "username" => user&.username,
-              "name" => user&.name,
-              "avatar_template" => user&.avatar_template,
               "incumbent" => candidate.incumbent,
             }
           end,

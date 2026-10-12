@@ -95,7 +95,7 @@ RSpec.describe DiscourseModElections::Disteleplus do
       voting_close_at: 1.day.ago,
       result: {
         "elected" => [7],
-        "candidates" => [{ "id" => 7, "username" => "chaim_w" }],
+        "candidates" => [{ "id" => 7, "user_id" => winner.id, "incumbent" => false }],
       },
     )
   end
@@ -121,8 +121,31 @@ RSpec.describe DiscourseModElections::Disteleplus do
     described_class.closed(election)
   end
 
+  it "says nothing about the count before it's published" do
+    election.update!(status: :closed, result: nil)
+    3.times { DiscourseModElections::Ballot.create!(election: election, weight: 1, ranking: [7]) }
+    described_class.stubs(:available?).returns(true)
+    described_class
+      .expects(:send_html)
+      .with do |html, dedupe_key:|
+        html.include?("/admin/plugins/jtech-tools/mod-elections") && !html.include?("3") &&
+          dedupe_key == "mod-election-#{election.id}-closed"
+      end
+      .once
+
+    described_class.closed(election)
+  end
+
+  it "names winners as their accounts are now" do
+    winner.update_column(:username, "renamed_w")
+    described_class.stubs(:available?).returns(true)
+    described_class.expects(:send_html).with { |html, **| html.include?("renamed_w") }.once
+
+    described_class.results(election)
+  end
+
   it "escapes what it puts in Telegram's HTML" do
-    election.result["candidates"].first["username"] = "<b>x</b>"
+    winner.update_column(:username, "<b>x</b>")
     described_class.stubs(:available?).returns(true)
     described_class
       .expects(:send_html)
