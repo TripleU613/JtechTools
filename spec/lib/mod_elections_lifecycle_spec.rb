@@ -124,6 +124,7 @@ RSpec.describe DiscourseModElections::Lifecycle do
     election_notes = ->(user) do
       Notification
         .where(user_id: user.id, notification_type: Notification.types[:custom])
+        .order(:id)
         .map { |n| JSON.parse(n.data) }
         .select { |d| d["mod_election"] }
         .map { |d| d["mod_election_kind"] }
