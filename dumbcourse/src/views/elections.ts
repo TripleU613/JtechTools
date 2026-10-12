@@ -148,7 +148,7 @@ function blockedText(reason: string, page: Page): string {
 }
 
 function nameOf(c: Candidate): string {
-  return c.user ? c.user.username : "?";
+  return c.user ? c.user.username : "A deleted account";
 }
 
 function candidateRow(c: Candidate, side: SafeHtml | string = ""): SafeHtml {

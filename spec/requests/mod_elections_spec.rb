@@ -69,6 +69,35 @@ RSpec.describe "Mod elections endpoints" do
     end
   end
 
+  describe "a candidate whose account is deleted" do
+    let!(:election) { start_election }
+
+    before { DiscourseModElections::Nominations.run!(member, election, "") }
+
+    it "comes off a ballot still open, so votes for them move on" do
+      open_voting(election)
+      UserDestroyer.new(admin).destroy(member)
+
+      get "/jtech-elections/current.json"
+      expect(
+        response.parsed_body.dig("election", "candidates").map { |c| c.dig("user", "username") },
+      ).to eq([moderator.username])
+      expect(
+        DiscourseModElections::Candidate.find_by(election: election, user_id: nil),
+      ).to be_withdrawn
+    end
+
+    it "stays in a closed count, for the admin to decide" do
+      open_voting(election)
+      DiscourseModElections::Lifecycle.end_phase!(election, admin)
+      UserDestroyer.new(admin).destroy(member)
+
+      expect(
+        DiscourseModElections::Candidate.find_by(election: election, user_id: nil),
+      ).to be_running
+    end
+  end
+
   describe "running" do
     let!(:election) { start_election }
 

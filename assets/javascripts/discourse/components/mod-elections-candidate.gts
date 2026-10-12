@@ -39,6 +39,10 @@ const ModElectionsCandidate: TemplateOnlyComponent<{
           {{#if @candidate.user.name}}
             <span class="mod-elections-muted">{{@candidate.user.name}}</span>
           {{/if}}
+        {{else}}
+          <span class="mod-elections-muted">{{i18n
+              "mod_elections.candidates.deleted"
+            }}</span>
         {{/if}}
         {{#if @candidate.incumbent}}
           <span class="mod-elections-chip">{{icon "shield-halved"}}

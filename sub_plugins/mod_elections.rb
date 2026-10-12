@@ -69,4 +69,10 @@ after_initialize do
       DiscourseModElections.enabled? && DiscourseModElections::State.active.present?
     end,
   ) { DiscourseModElections::Presenter.current_user_summary(object) }
+
+  # By now the account's candidacies have no user (the foreign key nulls
+  # it); take them off any ballot still open.
+  on(:user_destroyed) do |_user|
+    DiscourseModElections::Nominations.drop_deleted! if DiscourseModElections.enabled?
+  end
 end

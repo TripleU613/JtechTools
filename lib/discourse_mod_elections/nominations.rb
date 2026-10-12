@@ -93,6 +93,25 @@ module DiscourseModElections
     # election still going: stepping down drops them out, and a moderator
     # removed for abuse is taken off with that as the reason, so winning it
     # can't hand them the seat straight back.
+    # A deleted account can't take a seat, so it comes off every ballot still
+    # open, and ballots that ranked it move on to their next choice. Once
+    # voting has closed the count is left alone: the admin's preview lists
+    # the winner who can't serve, and the admin decides.
+    def self.drop_deleted!
+      open = Election.where(status: %i[scheduled nominating voting])
+      Candidate
+        .running
+        .where(user_id: nil, election_id: open.select(:id))
+        .includes(:election)
+        .find_each do |candidate|
+          election = candidate.election
+          election.with_lock do
+            next unless election.scheduled? || election.nominating? || election.voting?
+            candidate.update!(status: :withdrawn)
+          end
+        end
+    end
+
     def self.leave_ballots!(user, seat_left_reason, actor)
       Candidate
         .running

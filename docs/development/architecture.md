@@ -8,7 +8,8 @@ Jtech Tools is one Discourse plugin made of several modules. Each module was onc
 
 ```ruby
 %w[dislike another_smtp mini_mod mod_categories dumbcourse translator_tweaks
-   smart_search popup_notifications disteleplus reqpm listing_format].each do |sub|
+   smart_search popup_notifications disteleplus reqpm listing_format
+   jtech_theme mod_elections].each do |sub|
   instance_eval(File.read("sub_plugins/#{sub}.rb"), ...)
 end
 ```

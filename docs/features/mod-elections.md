@@ -10,9 +10,13 @@ Every few months the forum elects its moderators. Anyone in good standing can ru
 2. **Vote Week** follows. Voters rank as many candidates as they like, best first, and can change or take back their ballot until it ends. Each voter sees the candidates in their own shuffled order, so nobody is always at the top.
 3. **The count.** When Vote Week ends, admins get a notification. On the Mod elections tab they check for ballots cast from one address, set aside any that are alt accounts (with a reason the voter sees), preview the count and the moderator changes it makes, then publish.
 
-Publishing makes the winners moderators and takes moderator rights from the sitting moderators who weren't elected. All the seats are up every time.
+Publishing makes the winners moderators and takes moderator rights from the sitting moderators who weren't elected. All the seats are up every time. The preview marks any moderator who was never on this ballot (made a moderator after nominations opened), since publishing ends their seat too. If a winner can't take the seat any more (their account was deleted, suspended or silenced, or they became an admin), publishing waits: the preview says who and why, the admin takes them off the ballot with a reason, and the count gives the seat to the next in line.
 
-There's a page at `/elections` (linked from the sidebar's *More* list), a banner while nominations are open and for voters who haven't voted yet, and notifications when Vote Week opens and a day before it ends. Dumbcourse has the same page: on a flip phone, pick a candidate and press 1–9 to put them in that place, or 0 to take them off.
+Deadlines are exact to the minute: a ballot or a candidacy sent a minute after the phase ended is turned away, even before the page moves on.
+
+There's a page at `/elections` (linked from the sidebar's *More* list), a banner while nominations are open and for voters who haven't voted yet, and notifications when Vote Week opens and a day before it ends (never on Vote Week's first day). The page moves on by itself when a step changes, shows each step's date as a day on the forum's calendar, counts down to the end of the current one, and says when the next election opens. After voting closes it tells each voter whether their ballot went into the count. On a computer candidates can be dragged into place as well as moved with the buttons; every button names its candidate for screen readers, and each change is read out. Dumbcourse has the same page: on a flip phone, pick a candidate and press 1–9 to put them in that place, or 0 to take them off.
+
+If Disteleplus sends admin notices to Telegram, the staff topic there hears when voting closes (with how many ballots came in) and who won when the results are published.
 
 If a category is set, each election gets a topic there: the schedule when nominations open, the candidates when Vote Week opens, and the winners when the results are published. Candidates are linked, not @mentioned.
 
@@ -29,14 +33,18 @@ The count is the single transferable vote, as used for Ireland's elections:
 
 - With 3 seats, a candidate needs just over a quarter of the votes to win (the Droop quota).
 - Everyone's first choice is counted. Anyone over the quota is elected, and the votes they didn't need move on to their voters' next choices at a reduced value.
-- When nobody is over the quota, whoever has the fewest votes is out and their ballots move to each voter's next choice.
+- When nobody is over the quota, whoever has the fewest votes is out and their ballots move to each voter's next choice. Everyone with no votes at all goes out in one step, as long as enough people are left to fill the seats.
 - This repeats until every seat is filled.
 
-Ranking someone lower never hurts your higher choices: your next choice only counts once your earlier ones have won or are out. A tie goes to whoever did better at the earliest stage where they differed, and if they were level at every stage, it's drawn by lot. The lot's seed is drawn when voting closes and published with the results, so the preview and the published count always agree, and anyone can check a draw.
+Ranking someone lower never hurts your higher choices: your next choice only counts once your earlier ones have won or are out. A tie goes to whoever did better at the earliest stage where they differed, and if they were level at every stage, it's drawn by lot. The lot's seed is drawn when voting closes and published with the results, so the preview and the published count always agree, and anyone can check a draw. Every tie is listed under the count: which stage, who was level, what it decided (who went out, whose extra votes moved first, or who is listed first among people elected together) and whether an earlier stage or the lot settled it.
 
-The results show every stage, the turnout and the quota. Who ranked whom is never shown to anyone: ballots are tied to accounts so nobody votes twice, and admins see only who voted from which address, never a ballot's contents. The addresses are deleted when the results are published.
+The results show every stage, with a bar under each number for how close it was to the quota, the turnout and the quota. Who ranked whom is never shown to anyone: ballots are tied to accounts so nobody votes twice, and admins see only who voted from which address, never a ballot's contents. The addresses are deleted when the results are published.
 
 If fewer people run than there are seats, they're elected unopposed and the rest stay empty until admins appoint someone. If nobody voted in a contested election, it can't be published: cancel it and the moderators stay as they are.
+
+A deleted account's ballot stays in the count, so a result can't change after the fact. A candidate whose account is deleted comes off the ballot while nominations or Vote Week are still open, and their voters' ballots move on to the next choice; after voting closes they stay in the count and the preview lists them for the admin.
+
+Running and voting work only from the member's own browser: not with an API key, and not for an admin impersonating them. They're rate limited, so a script can't hammer them.
 
 ## Former moderators and strikes
 
@@ -46,11 +54,11 @@ A sitting moderator who runs again and loses gets a strike. At the second strike
 
 ## Seats between elections
 
-On the Mod elections tab an admin can mark a moderator as **stepped down** (they keep trust level 4) or **removed for abuse** (back to trust level 3). Either way the seat can be filled by **countback**: the same ballots are counted again without the people who left, and the first newly elected candidate takes the seat. No new vote.
+On the Mod elections tab an admin can mark a moderator as **stepped down** (they keep trust level 4) or **removed for abuse** (back to trust level 3). If they're on the ballot of an election under way, stepping down takes them off it, and removal for abuse takes them off with that as the reason. Either way the seat can be filled by **countback**: the same ballots are counted again without the people who left, and the first newly elected candidate who can still serve takes the seat. No new vote.
 
 ## Starting one by hand
 
-The tab can also start an election off the calendar, with its own dates and number of seats, end a phase early, or cancel an election. A cancelled election stays cancelled; the schedule won't start it again.
+The tab can also start an election off the calendar, with its own dates and number of seats, end a phase early, or cancel an election. A cancelled election stays cancelled; the schedule won't start it again, even if the time zone setting changes. While the module is off the tab still shows everything, but changes nothing.
 
 ## Settings
 

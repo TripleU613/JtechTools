@@ -627,6 +627,7 @@ en:
       candidates:
         title: Running
         none: Nobody is running yet.
+        deleted: A deleted account
         moderator: Moderator
         disqualified: "Taken off the ballot: %{reason}"
         elected: Elected

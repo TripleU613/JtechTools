@@ -24,5 +24,6 @@
 - [Setting up, testing and CI](development/testing.md)
 - [How Dumbcourse is built](development/dumbcourse.md)
 - [How smart search works](development/smart-search.md)
+- [How mod elections work](development/mod-elections.md)
 - [How the JTech theme is built](development/jtech-theme.md)
 - [Contributing](../CONTRIBUTING.md) and the [repository rules](../AGENTS.md)
