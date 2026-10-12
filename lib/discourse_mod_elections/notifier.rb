@@ -22,7 +22,8 @@ module DiscourseModElections
         .where(id: user_ids)
         .find_in_batches(batch_size: BATCH) do |users|
           # A job retried after failing halfway skips whoever already has it.
-          done = REPEATABLE.include?(kind) ? [] : already_notified(users.map(&:id), election, kind)
+          done =
+            REPEATABLE.include?(kind) ? Set.new : already_notified(users.map(&:id), election, kind)
           users.each do |user|
             next if done.include?(user.id)
             Notification.create!(
@@ -36,16 +37,20 @@ module DiscourseModElections
     end
 
     # Matched on the JSON text: notification data is a string column, and
-    # this payload's keys always come out in the same order.
+    # this payload's keys always come out in the same order. Nothing for this
+    # election predates it, which keeps the LIKE to a few rows per person on
+    # the (user_id, created_at) index.
     def self.already_notified(user_ids, election, kind)
       Notification
         .where(user_id: user_ids, notification_type: Notification.types[:custom])
+        .where("created_at >= ?", election.nominations_open_at)
         .where(
           "data LIKE ?",
           "%\"mod_election_kind\":#{kind.to_json},\"mod_election_id\":#{election.id},%",
         )
         .distinct
         .pluck(:user_id)
+        .to_set
     end
 
     # Everyone on the voter list, or for the reminder only those who haven't

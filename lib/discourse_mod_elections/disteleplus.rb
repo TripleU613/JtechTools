@@ -25,9 +25,7 @@ module DiscourseModElections
 
     def self.results(election)
       return unless available?
-      result = Presenter.result_json(election.result) || {}
-      by_id = Array(result["candidates"]).index_by { |c| c["id"] }
-      names = Array(result["elected"]).filter_map { |id| by_id.dig(id, "username") }
+      names = Presenter.elected_usernames(election)
       notice(
         election,
         "results",
@@ -53,7 +51,7 @@ module DiscourseModElections
     end
 
     def self.escape(text)
-      CGI.escapeHTML(text.to_s)
+      ::DiscourseDisteleplus::Reports.escape(text)
     end
   end
 end

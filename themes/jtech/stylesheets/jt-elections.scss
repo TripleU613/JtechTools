@@ -1,17 +1,17 @@
 // jtech-tools' mod elections (/elections and its admin tab). The plugin draws
-// with core's colours: grey boxes with the default small radius, a solid
-// primary bar over the current step, green and red for ballots counted and
-// set aside, and the count's numbers in the body font. Here the boxes are the
-// theme's raised surfaces with its larger radii, chips are pills, the current
-// step's line glows like the selected tab (jt-tabs), places and winners are
-// inverted like the leaderboard's first place, numbers are mono, and the
-// count's bars sit on a faint track like a poll's. Mode-dependent values come
-// from the tokens, so light, dark and Dim all follow.
+// with core's colours: grey boxes (their radius is core's large one, which
+// jt-shape already makes the theme's), a solid primary bar over the current
+// step, green and red for ballots counted and set aside, and the count's
+// numbers in the body font. Here the boxes are the theme's raised surfaces,
+// chips are pills, the current step's line glows like the selected tab
+// (jt-tabs), places and winners are inverted like the leaderboard's first
+// place, numbers are mono, and the count's bars sit on a faint track like a
+// poll's. Mode-dependent values come from the tokens, so light, dark and Dim
+// all follow.
 .mod-elections-panel,
 .mod-elections-admin__card,
 .mod-elections-results__winner {
   border-color: var(--jt-border);
-  border-radius: var(--jt-radius-lg);
   background: var(--jt-surface-raised);
 }
 
@@ -40,6 +40,9 @@
 .mod-elections-status {
   border-color: var(--jt-border-strong);
   border-radius: var(--jt-radius-pill);
+}
+
+.mod-elections-chip {
   color: var(--jt-text-muted);
 }
 
@@ -153,19 +156,18 @@
 }
 
 // Counted is the text colour, not green; set aside keeps core's red.
+.mod-elections-receipt {
+  border-radius: var(--jt-radius-md);
+}
+
 .mod-elections-receipt:not(.mod-elections-receipt--voided) {
   border-color: var(--jt-border);
-  border-radius: var(--jt-radius-md);
   background: var(--jt-surface-raised);
   color: var(--jt-text);
 
   .d-icon {
     color: var(--jt-text);
   }
-}
-
-.mod-elections-receipt--voided {
-  border-radius: var(--jt-radius-md);
 }
 
 // ── Results ───────────────────────────────────────────────────────────────

@@ -31,6 +31,7 @@ interface ResultCell {
 
 interface ResultRow {
   candidate: ModElectionResultCandidate;
+  label: string;
   elected: boolean;
   cells: ResultCell[];
 }
@@ -143,6 +144,7 @@ export default class ModElectionsResults extends Component<ModElectionsResultsSi
 
     return order.map((candidate) => ({
       candidate,
+      label: this.name(candidate.id),
       elected: elected.includes(candidate.id),
       cells: stages.map((stage) => {
         const out = (outAt.get(candidate.id) ?? Infinity) <= stage.number;
@@ -287,11 +289,7 @@ export default class ModElectionsResults extends Component<ModElectionsResultsSi
                   {{#if row.candidate.avatar_template}}
                     {{avatar row.candidate imageSize="tiny"}}
                   {{/if}}
-                  {{if
-                    row.candidate.username
-                    row.candidate.username
-                    this.deleted
-                  }}
+                  {{row.label}}
                 </th>
                 {{#each row.cells as |cell|}}
                   <td

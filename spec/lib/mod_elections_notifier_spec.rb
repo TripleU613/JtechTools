@@ -87,17 +87,18 @@ RSpec.describe DiscourseModElections::Disteleplus do
   fab!(:winner) { Fabricate(:user, username: "chaim_w") }
 
   let(:election) do
-    DiscourseModElections::Election.create!(
-      status: :published,
-      seats: 1,
-      nominations_open_at: 15.days.ago,
-      voting_open_at: 8.days.ago,
-      voting_close_at: 1.day.ago,
-      result: {
-        "elected" => [7],
-        "candidates" => [{ "id" => 7, "user_id" => winner.id, "incumbent" => false }],
-      },
-    )
+    DiscourseModElections::Election
+      .create!(
+        status: :published,
+        seats: 1,
+        nominations_open_at: 15.days.ago,
+        voting_open_at: 8.days.ago,
+        voting_close_at: 1.day.ago,
+      )
+      .tap do |election|
+        candidate = election.candidates.create!(user: winner, elected: true)
+        election.update!(result: { "elected" => [candidate.id] })
+      end
   end
 
   it "tells the staff Telegram topic who won, once" do

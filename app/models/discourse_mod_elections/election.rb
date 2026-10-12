@@ -16,6 +16,8 @@ module DiscourseModElections
 
     # Still going somewhere: not yet published or cancelled.
     UNFINISHED = %i[scheduled nominating voting closed].freeze
+    # Ballots and the candidate list can still change.
+    BEFORE_CLOSE = %i[scheduled nominating voting].freeze
 
     scope :unfinished, -> { where(status: UNFINISHED) }
 
@@ -34,6 +36,45 @@ module DiscourseModElections
 
     def taking_votes?(now = Time.zone.now)
       voting? && now >= voting_open_at && now < voting_close_at
+    end
+
+    def before_close?
+      BEFORE_CLOSE.include?(status.to_sym)
+    end
+
+    # Raises the reason a change can't happen in this phase, if it can't:
+    # :nominations and :votes go by the clock too; :closed is after Vote
+    # Week and before publishing; :unfinished is anything not yet over.
+    def check_phase!(phase, now = Time.zone.now)
+      case phase
+      when :nominations
+        raise Error.new(:not_nominating) unless taking_nominations?(now)
+      when :votes
+        raise Error.new(:not_voting) unless taking_votes?(now)
+      when :closed
+        raise Error.new(:finished) unless unfinished?
+        raise Error.new(:not_closed) unless closed?
+      when :unfinished
+        raise Error.new(:finished) unless unfinished?
+      else
+        raise ArgumentError, "unknown phase #{phase}"
+      end
+    end
+
+    # Every change to an election runs here: under its row lock (which
+    # publishing takes too), in the phase it belongs to.
+    def change_in!(phase)
+      with_lock do
+        check_phase!(phase)
+        yield
+      end
+    end
+
+    # "January 2027", from the calendar's zone: a reader in Los Angeles
+    # still sees January for an election that opened at midnight in New
+    # York on the 1st.
+    def month_label
+      I18n.l(nominations_open_at.in_time_zone(Schedule.zone).to_date, format: "%B %Y")
     end
 
     # When the current phase ends, for the page and the banner.

@@ -8,8 +8,6 @@ module DiscourseModElections
   class Voter < ActiveRecord::Base
     self.table_name = "jtech_election_voters"
 
-    RECEIPTS = %w[counted set_aside].freeze
-
     belongs_to :election, class_name: "DiscourseModElections::Election"
     belongs_to :user, optional: true
   end

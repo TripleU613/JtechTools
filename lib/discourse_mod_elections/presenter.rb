@@ -16,11 +16,21 @@ module DiscourseModElections
         me: election && user && me_json(election, user),
         limits: limits,
         history: history,
-        # The calendar's zone, so dates show as the forum's calendar days
-        # wherever the reader is.
-        timezone: Schedule.zone.tzinfo.name,
-        next_opening: DiscourseModElections.enabled? ? Schedule.next_opening : nil,
+        next_opening: next_opening,
       }
+    end
+
+    # When the next election opens, as a day on the forum's calendar.
+    def self.next_opening
+      opens = DiscourseModElections.enabled? && Schedule.next_opening
+      day_label(opens, "%B %-d, %Y") if opens
+    end
+
+    # A day on the forum's calendar, wherever the reader is: an election
+    # that opens at midnight in New York opens on the 1st, not on the 31st
+    # for someone in California.
+    def self.day_label(time, format)
+      I18n.l(time.in_time_zone(Schedule.zone).to_date, format: format)
     end
 
     def self.history
@@ -29,21 +39,8 @@ module DiscourseModElections
         .order(nominations_open_at: :desc)
         .limit(20)
         .map do |election|
-          {
-            id: election.id,
-            status: election.status,
-            label: month_label(election),
-            nominations_open_at: election.nominations_open_at,
-            published_at: election.published_at,
-          }
+          { id: election.id, status: election.status, label: election.month_label }
         end
-    end
-
-    # "January 2027", from the calendar's zone: a reader in Los Angeles
-    # still sees January for an election that opened at midnight in New
-    # York on the 1st.
-    def self.month_label(election)
-      I18n.l(election.nominations_open_at.in_time_zone(Schedule.zone).to_date, format: "%B %Y")
     end
 
     def self.limits
@@ -65,6 +62,12 @@ module DiscourseModElections
         nominations_open_at: election.nominations_open_at,
         voting_open_at: election.voting_open_at,
         voting_close_at: election.voting_close_at,
+        # The step strip's dates, as days on the forum's calendar.
+        days: {
+          nominations: day_label(election.nominations_open_at, "%B %-d"),
+          voting: day_label(election.voting_open_at, "%B %-d"),
+          results: day_label(election.voting_close_at, "%B %-d"),
+        },
         topic_url: topic_url(election, guardian),
         candidates: order(candidates, election, user).map { |c| candidate_json(c) },
         result: election.published? ? result_json(election.result) : nil,
@@ -82,19 +85,18 @@ module DiscourseModElections
       result.merge(
         "candidates" =>
           candidates.map do |candidate|
-            user = users[candidate["user_id"]]
-            candidate.slice("id", "user_id", "incumbent").merge(
-              "username" => user&.username,
-              "name" => name_of(user),
-              "avatar_template" => user&.avatar_template,
-            )
+            account = basic_user(users[candidate["user_id"]])&.stringify_keys&.except("id") || {}
+            candidate.slice("id", "user_id", "incumbent").merge(account)
           end,
       )
     end
 
-    # Real names only where the forum shows them.
-    def self.name_of(user)
-      user.name if user && SiteSetting.enable_names
+    # The winners' usernames, in the order they were elected.
+    def self.elected_usernames(election)
+      ids = Array(election.result&.dig("elected"))
+      names =
+        election.candidates.where(id: ids).includes(:user).to_h { |c| [c.id, c.user&.username] }
+      ids.filter_map { |id| names[id] }
     end
 
     def self.topic_url(election, guardian)
@@ -129,7 +131,6 @@ module DiscourseModElections
     def self.me_json(election, user)
       candidate = election.candidates.find_by(user_id: user.id)
       voter = Voter.find_by(election_id: election.id, user_id: user.id)
-      weight = voter&.weight
       ballot = Ballot.find_by(election_id: election.id, user_id: user.id)
       {
         candidate:
@@ -141,17 +142,10 @@ module DiscourseModElections
               incumbent: candidate.incumbent,
             },
         run_blocked: election.nominating? ? Eligibility.run_blocked_reason(user, election) : nil,
-        weight: weight,
+        weight: voter&.weight,
         vote_blocked:
-          election.voting? ? Eligibility.vote_blocked_reason(user, election, weight) : nil,
-        ballot:
-          ballot &&
-            {
-              ranking: ballot.ranking,
-              voided: ballot.voided?,
-              void_reason: ballot.void_reason,
-              updated_at: ballot.updated_at,
-            },
+          election.voting? ? Eligibility.vote_blocked_reason(user, election, voter) : nil,
+        ballot: ballot && { ranking: ballot.ranking, updated_at: ballot.updated_at },
         receipt: receipt_json(election, ballot, voter),
       }
     end
@@ -189,14 +183,9 @@ module DiscourseModElections
       summary
     end
 
+    # Core's user basics (real names only where the forum shows them).
     def self.basic_user(user)
-      return if user.nil?
-      {
-        id: user.id,
-        username: user.username,
-        name: name_of(user),
-        avatar_template: user.avatar_template,
-      }
+      BasicUserSerializer.new(user, root: false).as_json if user
     end
 
     # ── Admin ────────────────────────────────────────────────────────────
@@ -281,7 +270,7 @@ module DiscourseModElections
           voters_weight: election.voters.sum(:weight),
           ballots: ballots.counted.count,
           ballots_weight: ballots.counted.sum(:weight),
-          voided: ballots.where.not(voided_at: nil).count,
+          voided: ballots.voided.count,
         },
         result: result_json(election.result),
         previewed_at: election.previewed_at,

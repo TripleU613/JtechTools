@@ -36,7 +36,7 @@ How the [mod elections](../features/mod-elections.md) module works inside, for p
 
 What follows a step (topic posts, notifications, Telegram) runs after the lock is released, one step at a time, each rescued: a failed post can't roll a phase back or leave an election stuck. `State.changed!` clears the cached state and publishes `{ changed: true }` on `/jtech-elections/state` to the `trust_level_0` group (signed-in members), and open elections pages reload.
 
-**Deadlines follow the clock, not just the status.** `Election#taking_nominations?` and `#taking_votes?` compare the dates too, so between a deadline and the next tick nothing gets in. Every write (`run!`, `update_statement!`, `withdraw!`, `cast!`, `clear!`, `disqualify!`, `reinstate!`, `publish!`, `Countback.fill!`) re-checks under the election's lock.
+**Deadlines follow the clock, not just the status.** `Election#taking_nominations?` and `#taking_votes?` compare the dates too, so between a deadline and the next tick nothing gets in. Every change goes through `Election#change_in!(phase)`, which takes the election's row lock (the one publishing takes) and checks the phase under it, raising the reason a change has to give (`:not_nominating`, `:not_voting`, `:not_closed`, `:finished`). `run!` and `cast!` take the same lock and check through `Eligibility`, which goes by the clock too; seat changes (`Countback.fill!`, `Seats.vacate!`) take it to check seats rather than a phase.
 
 ## The count (`Stv`)
 
@@ -103,7 +103,7 @@ Notifications carry only the election id, the step and a link. The MessageBus me
 
 ## Requests
 
-- `GET /jtech-elections/current.json` (`?id=` for a past one): anyone who can see the forum. `scheduled` elections are never shown.
+- `GET /jtech-elections/current.json` (`?id=` for a past one): anyone who can see the forum. `scheduled` elections are never shown. Dates that mean days on the calendar (the step strip's `days`, `next_opening`, the history's month `label`s) are formatted here in the calendar's zone, so the page and Dumbcourse show the same days wherever the reader is; exact moments (the deadlines) go as times and show in the reader's own zone.
 - `POST|PUT|DELETE /jtech-elections/:id/candidacy.json`, `PUT|DELETE /jtech-elections/:id/ballot.json`: signed in, from the member's own browser session (no API keys, no impersonation), rate limited (30 a minute, 200 an hour).
 - `/jtech-elections/admin/…`: admins only (`AdminConstraint` and `Admin::AdminController`). The reads work with the module off, so an admin can always see what happened; the writes (the preview included, since it fixes the ballots) refuse with `module_off`. The address report and setting ballots aside or back work only while the election is closed, and setting aside only before the first preview.
 - Creating an election (the schedule, or an admin by hand) checks for an unfinished one and creates it under one `DistributedMutex`, so two can't both get through.

@@ -259,8 +259,7 @@ export default class ModElectionsAdmin extends Component {
       text: i18n(`admin.mod_elections.moderator_actions.${entry.action}`, {
         by: entry.by?.username || "?",
         username:
-          entry.user?.username ||
-          i18n("admin.mod_elections.preview.problems.someone"),
+          entry.user?.username || i18n("mod_elections.candidates.deleted"),
       }),
     }));
   }
@@ -270,8 +269,7 @@ export default class ModElectionsAdmin extends Component {
       candidateId: problem.candidate_id,
       text: i18n(`admin.mod_elections.preview.problems.${problem.reason}`, {
         username:
-          problem.user?.username ||
-          i18n("admin.mod_elections.preview.problems.someone"),
+          problem.user?.username || i18n("mod_elections.candidates.deleted"),
       }),
     }));
   }
@@ -435,18 +433,17 @@ export default class ModElectionsAdmin extends Component {
   }
 
   // The first preview fixes the ballots (the server refuses to set any
-  // aside after it), so the tab reloads the election to show that.
+  // aside after it); the answer carries the election to show that.
   @action
   loadPreview() {
     const election = this.current!;
     this.run(async () => {
-      this.preview = await ajax(
+      const data: Preview & { election: AdminElection } = await ajax(
         `${BASE}/elections/${election.id}/preview.json`,
         { type: "POST" }
       );
-      if (!election.previewed_at) {
-        this.current = await ajax(`${BASE}/elections/${election.id}.json`);
-      }
+      this.preview = { result: data.result, plan: data.plan };
+      this.current = data.election;
     });
   }
 

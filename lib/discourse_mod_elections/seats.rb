@@ -16,7 +16,7 @@ module DiscourseModElections
     # until an admin takes them off the ballot and the count moves on.
     def self.plan(election, elected_ids)
       elected = election.candidates.where(id: elected_ids).includes(:user).to_a
-      problems = elected.reject { |c| c.user && Eligibility.can_serve?(c.user) }
+      problems = elected.reject { |c| Eligibility.can_serve?(c.user) }
       winners = (elected - problems).map(&:user)
       winner_ids = winners.map(&:id)
       leaving = sitting.where.not(id: winner_ids).order(:username).to_a

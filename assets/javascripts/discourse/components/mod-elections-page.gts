@@ -10,7 +10,7 @@ import { eq } from "truth-helpers";
 import ConditionalLoadingSpinner from "discourse/components/conditional-loading-spinner";
 import icon from "discourse/helpers/d-icon";
 import { popupAjaxError } from "discourse/lib/ajax-error";
-import { longDate, shortDateNoYear } from "discourse/lib/formatter";
+import { duration, longDate } from "discourse/lib/formatter";
 import type MessageBusService from "discourse/services/message-bus";
 import { i18n } from "discourse-i18n";
 import ModElectionsService, {
@@ -48,44 +48,15 @@ type MessageBus = MessageBusService & {
 const STATE_CHANNEL = "/jtech-elections/state";
 
 const ORDER = ["nominating", "voting", "closed", "published"];
-const HOUR = 36e5;
 
-// A date as a day on the forum's calendar, wherever the reader is: an
-// election that opens at midnight in New York opens on the 1st, not on the
-// 31st for someone in California.
-const calendarDay = (
-  date: string,
-  zone: string | undefined,
-  options: Intl.DateTimeFormatOptions
-): string => {
-  try {
-    return new Date(date).toLocaleDateString(
-      document.documentElement.lang || undefined,
-      { ...options, timeZone: zone }
-    );
-  } catch {
-    // An unknown zone: the reader's own calendar is the next best thing.
-    return shortDateNoYear(date);
-  }
-};
-
-// "3 days left", "5 hours left", "Less than an hour left".
+// "8 days left", "about 3 hours left".
 const timeLeft = (until: string): string | null => {
-  const ms = new Date(until).getTime() - Date.now();
-  if (ms <= 0) {
-    return null;
-  }
-  if (ms < HOUR) {
-    return i18n("mod_elections.time_left.soon");
-  }
-  if (ms < 48 * HOUR) {
-    return i18n("mod_elections.time_left.hours", {
-      count: Math.floor(ms / HOUR),
-    });
-  }
-  return i18n("mod_elections.time_left.days", {
-    count: Math.floor(ms / (24 * HOUR)),
-  });
+  const seconds = (new Date(until).getTime() - Date.now()) / 1000;
+  return seconds > 0
+    ? i18n("mod_elections.time_left", {
+        duration: duration(seconds, { format: "medium" }),
+      })
+    : null;
 };
 
 // /elections — what step the election is at, who's running, your part in
@@ -96,11 +67,15 @@ export default class ModElectionsPage extends Component<ModElectionsPageSignatur
 
   @tracked page: ModElectionPage | null = null;
   @tracked loading = true;
+  // Which request the page is waiting for: an older one that answers late
+  // (a step change racing a click on a past election) is ignored.
+  requested = 0;
 
-  // A step changed: reload, unless someone is reading an older election.
+  // A step changed: reload in place, unless someone is reading an older
+  // election.
   onStateChange = (): void => {
     if (!this.args.electionId) {
-      this.refresh();
+      this.load({ quiet: true });
     }
   };
 
@@ -160,28 +135,23 @@ export default class ModElectionsPage extends Component<ModElectionsPageSignatur
     const at = ORDER.indexOf(election.status);
     const state = (index: number): StepState =>
       at > index ? "done" : at === index ? "current" : "upcoming";
-    const day = (date: string) =>
-      calendarDay(date, this.page?.timezone, {
-        month: "short",
-        day: "numeric",
-      });
     return [
       {
         id: "nominations",
         label: i18n("mod_elections.steps.nominations"),
-        date: day(election.nominations_open_at),
+        date: election.days.nominations,
         state: state(0),
       },
       {
         id: "voting",
         label: i18n("mod_elections.steps.voting"),
-        date: day(election.voting_open_at),
+        date: election.days.voting,
         state: state(1),
       },
       {
         id: "results",
         label: i18n("mod_elections.steps.results"),
-        date: day(election.voting_close_at),
+        date: election.days.results,
         // "Counting" and "Results" are the same step on the strip.
         state: at >= 3 ? "done" : at === 2 ? "current" : "upcoming",
       },
@@ -194,13 +164,7 @@ export default class ModElectionsPage extends Component<ModElectionsPageSignatur
     if (!next || (this.status && ORDER.indexOf(this.status) < 3)) {
       return null;
     }
-    return i18n("mod_elections.next_opening", {
-      date: calendarDay(next, this.page?.timezone, {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      }),
-    });
+    return i18n("mod_elections.next_opening", { date: next });
   }
 
   // Whether your own ballot went into the count, once voting has closed.
@@ -248,27 +212,30 @@ export default class ModElectionsPage extends Component<ModElectionsPageSignatur
     return (this.page?.history || []).filter((row) => row.id !== current);
   }
 
+  // Another election picked from the list.
   @action
-  async load() {
-    this.loading = true;
-    try {
-      this.page = await this.modElections.page(this.args.electionId);
-    } catch (e) {
-      popupAjaxError(e);
-    } finally {
-      this.loading = false;
-    }
+  reload() {
+    this.load();
   }
 
-  // In place, without the spinner flashing over the page.
-  async refresh() {
+  // Quiet: in place, without the spinner, and no error popup (the next step
+  // change, or a reload, tries again).
+  async load({ quiet = false }: { quiet?: boolean } = {}) {
+    const request = ++this.requested;
+    this.loading = !quiet;
     try {
       const page = await this.modElections.page(this.args.electionId);
-      if (!this.isDestroying) {
+      if (request === this.requested && !this.isDestroying) {
         this.page = page;
       }
-    } catch {
-      // The next step change, or a reload, tries again.
+    } catch (e) {
+      if (!quiet) {
+        popupAjaxError(e);
+      }
+    } finally {
+      if (request === this.requested && !this.isDestroying) {
+        this.loading = false;
+      }
     }
   }
 
@@ -278,7 +245,7 @@ export default class ModElectionsPage extends Component<ModElectionsPageSignatur
   }
 
   <template>
-    <div class="mod-elections" {{didUpdate this.load @electionId}}>
+    <div class="mod-elections" {{didUpdate this.reload @electionId}}>
       <header class="mod-elections__header">
         <h1>{{i18n "mod_elections.title"}}</h1>
         {{#if this.election}}

@@ -465,7 +465,7 @@
     align-items: center;
     padding: 0.65em 0.85em;
     border: 1px solid var(--primary-low);
-    border-radius: var(--d-border-radius);
+    border-radius: var(--d-border-radius-large, var(--d-border-radius));
 
     > div {
       display: flex;
@@ -668,7 +668,7 @@
     margin: 1em 0;
     padding: 1em 1.25em;
     border: 1px solid var(--primary-low);
-    border-radius: var(--d-border-radius);
+    border-radius: var(--d-border-radius-large, var(--d-border-radius));
 
     h3 {
       display: flex;

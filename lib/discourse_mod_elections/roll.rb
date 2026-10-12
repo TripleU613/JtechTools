@@ -26,10 +26,5 @@ module DiscourseModElections
     def self.min_age
       SiteSetting.mod_elections_voter_min_account_age_days.days
     end
-
-    def self.weight_for(election, user)
-      return if user.nil?
-      Voter.where(election_id: election.id, user_id: user.id).pick(:weight)
-    end
   end
 end

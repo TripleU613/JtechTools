@@ -95,7 +95,7 @@ RSpec.describe DiscourseModElections::Lifecycle do
 
     # Levelling up during the election changes nothing.
     tl1.change_trust_level!(TrustLevel[4])
-    expect(DiscourseModElections::Roll.weight_for(election, tl1)).to eq(1)
+    expect(DiscourseModElections::Voter.find_by(election: election, user: tl1).weight).to eq(1)
   end
 
   it "puts the sitting moderators on the ballot and tells them" do

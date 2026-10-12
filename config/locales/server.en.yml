@@ -1181,7 +1181,6 @@ en:
       empty_ballot: "Rank at least one candidate."
       invalid_ballot: "The ballot has changed. Reload the page and try again."
       self_vote: "You can't vote for yourself."
-      ballot_voided: "An admin set your ballot aside, so it can't be changed."
       reason_required: "Give a reason. It's shown to the candidate and on the elections page."
       finished: "This election is already over."
       not_closed: "Voting hasn't closed yet."

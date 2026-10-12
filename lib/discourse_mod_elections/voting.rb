@@ -17,18 +17,14 @@ module DiscourseModElections
         raise Error.new(:self_vote) if ids.any? { |id| running[id] == user.id }
 
         ballot = Ballot.find_or_initialize_by(election_id: election.id, user_id: user.id)
-        raise Error.new(:ballot_voided) if ballot.voided?
         ballot.update!(ranking: ids, weight: voter.weight, ip_address: ip_address)
         ballot
       end
     end
 
     def self.clear!(user, election)
-      election.with_lock do
-        raise Error.new(:not_voting) unless election.taking_votes?
-        ballot = Ballot.find_by(election_id: election.id, user_id: user.id)
-        raise Error.new(:ballot_voided) if ballot&.voided?
-        ballot&.destroy!
+      election.change_in!(:votes) do
+        Ballot.find_by(election_id: election.id, user_id: user.id)&.destroy!
       end
     end
 
@@ -78,9 +74,7 @@ module DiscourseModElections
     # of the count (after which a difference between two previews would
     # show what was on a ballot), under the lock publishing takes.
     def self.with_ballots_open(election)
-      election.with_lock do
-        raise Error.new(:finished) unless election.unfinished?
-        raise Error.new(:not_closed) unless election.closed?
+      election.change_in!(:closed) do
         raise Error.new(:count_previewed) if election.previewed_at.present?
         yield
       end

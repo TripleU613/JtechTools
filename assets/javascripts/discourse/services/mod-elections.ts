@@ -94,6 +94,8 @@ export interface ModElection {
   nominations_open_at: string;
   voting_open_at: string;
   voting_close_at: string;
+  // The step strip's dates, as days on the forum's calendar ("January 8").
+  days: { nominations: string; voting: string; results: string };
   topic_url: string | null;
   candidates: ModElectionCandidate[];
   result: ModElectionResult | null;
@@ -102,8 +104,6 @@ export interface ModElection {
 
 export interface ModElectionBallot {
   ranking: number[];
-  voided: boolean;
-  void_reason: string | null;
   updated_at: string;
 }
 
@@ -136,8 +136,6 @@ export interface ModElectionHistoryRow {
   status: ModElectionStatus;
   // "January 2027", in the calendar's time zone.
   label: string;
-  nominations_open_at: string;
-  published_at: string | null;
 }
 
 export interface ModElectionPage {
@@ -145,8 +143,7 @@ export interface ModElectionPage {
   me: ModElectionMe | null;
   limits: ModElectionLimits;
   history: ModElectionHistoryRow[];
-  // The calendar's IANA zone: dates show as the forum's calendar days.
-  timezone: string;
+  // When the next election opens, as a day on the forum's calendar.
   next_opening: string | null;
 }
 

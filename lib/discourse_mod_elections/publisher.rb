@@ -7,8 +7,7 @@ module DiscourseModElections
     # preview fixes the ballots: one set aside between two previews would
     # show, in the difference, what was on it.
     def self.preview(election)
-      election.with_lock do
-        raise Error.new(:not_closed) unless election.closed?
+      election.change_in!(:closed) do
         election.update!(previewed_at: Time.zone.now) if election.previewed_at.nil?
       end
       result = Tally.count(election)
@@ -16,8 +15,7 @@ module DiscourseModElections
     end
 
     def self.publish!(election, actor)
-      election.with_lock do
-        raise Error.new(:not_closed) unless election.closed?
+      election.change_in!(:closed) do
         result = Tally.count(election)
         # Nobody voted in a contested election: publishing would only remove
         # the sitting moderators. Cancel it instead.
@@ -55,20 +53,17 @@ module DiscourseModElections
     # no user, no address, no time anyone voted. A ballot set aside isn't
     # counted, so its ranking goes too.
     def self.unlink_ballots!(election)
-      ballots = election.ballots.where.not(user_id: nil)
-      counted = ballots.counted.pluck(:user_id)
-      election.voters.where(user_id: counted).update_all(receipt: "counted")
-      ballots
-        .where.not(voided_at: nil)
-        .pluck(:user_id, :void_reason)
-        .each do |user_id, reason|
-          election
-            .voters
-            .where(user_id: user_id)
-            .update_all(receipt: "set_aside", receipt_reason: reason)
-        end
+      DB.exec(<<~SQL, election_id: election.id)
+        UPDATE jtech_election_voters v
+        SET receipt = CASE WHEN b.voided_at IS NULL THEN 'counted' ELSE 'set_aside' END,
+            receipt_reason = b.void_reason
+        FROM jtech_election_ballots b
+        WHERE v.election_id = :election_id
+          AND b.election_id = :election_id
+          AND b.user_id = v.user_id
+      SQL
       now = Time.zone.now
-      election.ballots.where.not(voided_at: nil).update_all(ranking: [], void_reason: nil)
+      election.ballots.voided.update_all(ranking: [], void_reason: nil)
       election.ballots.update_all(
         user_id: nil,
         ip_address: nil,
@@ -79,8 +74,7 @@ module DiscourseModElections
     end
 
     def self.cancel!(election, actor)
-      election.with_lock do
-        raise Error.new(:finished) unless election.unfinished?
+      election.change_in!(:unfinished) do
         election.update!(status: :cancelled)
         # Nothing will ever be counted: the ballots go.
         election.ballots.delete_all

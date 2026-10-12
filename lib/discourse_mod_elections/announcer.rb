@@ -12,7 +12,7 @@ module DiscourseModElections
       post =
         PostCreator.create!(
           Discourse.system_user,
-          title: I18n.t("mod_elections.topic.title", month: month(election)),
+          title: I18n.t("mod_elections.topic.title", month: election.month_label),
           raw: I18n.t("mod_elections.topic.nominations_open", **dates(election), url: page_url),
           category: category.id,
           skip_validations: true,
@@ -37,17 +37,14 @@ module DiscourseModElections
     end
 
     def self.results(election)
-      result = Presenter.result_json(election.result) || {}
-      by_id = Array(result["candidates"]).index_by { |c| c["id"] }
-      names = Array(result["elected"]).filter_map { |id| by_id.dig(id, "username") }
-      lines = names.map { |name| "- #{user_link_for(name)}" }
+      lines = Presenter.elected_usernames(election).map { |name| "- #{user_link_for(name)}" }
       lines = [I18n.t("mod_elections.topic.nobody")] if lines.empty?
       reply(
         election,
         I18n.t(
           "mod_elections.topic.results",
           winners: lines.join("\n"),
-          ballots: result["ballots"].to_i,
+          ballots: election.result&.dig("ballots").to_i,
           url: "#{page_url}?id=#{election.id}",
         ),
       )
@@ -85,10 +82,6 @@ module DiscourseModElections
 
     def self.page_url
       "#{Discourse.base_url}/elections"
-    end
-
-    def self.month(election)
-      I18n.l(election.nominations_open_at.in_time_zone(Schedule.zone).to_date, format: "%B %Y")
     end
 
     def self.dates(election)

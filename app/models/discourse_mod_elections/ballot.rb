@@ -12,6 +12,7 @@ module DiscourseModElections
     belongs_to :voided_by, class_name: "User", optional: true
 
     scope :counted, -> { where(voided_at: nil) }
+    scope :voided, -> { where.not(voided_at: nil) }
 
     def voided?
       voided_at.present?

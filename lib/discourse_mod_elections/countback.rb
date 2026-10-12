@@ -27,7 +27,7 @@ module DiscourseModElections
     end
 
     def self.eligible?(user)
-      user.present? && Eligibility.can_serve?(user) && !user.moderator?
+      Eligibility.can_serve?(user) && !user.moderator?
     end
 
     # Under the election's lock, so two clicks (or two admins) fill one seat

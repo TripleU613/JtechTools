@@ -542,17 +542,18 @@ RSpec.describe "Mod elections endpoints" do
       expect(response.parsed_body.dig("election", "turnout", "ballots")).to eq(2)
     end
 
-    it "lists past elections by their month on the forum's calendar, and when the next opens" do
+    it "gives dates as days on the forum's calendar, wherever the reader is" do
       # Already February 1 in Auckland, still January 31 in UTC.
       SiteSetting.mod_elections_timezone = "Pacific/Auckland"
       election.update!(nominations_open_at: Time.zone.parse("2026-01-31 12:00 UTC"))
 
-      get "/jtech-elections/current.json"
+      get "/jtech-elections/current.json", params: { id: election.id }
       body = response.parsed_body
 
-      expect(body["timezone"]).to eq("Pacific/Auckland")
       expect(body["history"].map { |row| row["label"] }).to eq(["February 2026"])
-      expect(body["next_opening"]).to eq(DiscourseModElections::Schedule.next_opening.as_json)
+      expect(body.dig("election", "days", "nominations")).to eq("February 1")
+      opens = DiscourseModElections::Schedule.next_opening.in_time_zone("Pacific/Auckland")
+      expect(body["next_opening"]).to eq(I18n.l(opens.to_date, format: "%B %-d, %Y"))
     end
 
     it "shows the winners as their accounts are now, real names only where the forum shows them" do
@@ -566,7 +567,8 @@ RSpec.describe "Mod elections endpoints" do
           .parsed_body
           .dig("election", "result", "candidates")
           .find { |c| c["user_id"] == member.id }
-      expect(winner).to include("username" => "renamed_member", "name" => nil)
+      expect(winner["username"]).to eq("renamed_member")
+      expect(winner["name"]).to be_nil
       expect(election.reload.result.to_json).not_to include("renamed_member")
     end
 

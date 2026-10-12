@@ -111,7 +111,8 @@ RSpec.describe "Mod elections" do
       find(".mod-elections-ballot__pool [data-candidate-id='#{candidate_for(user).id}']")
     end
     pool_row.call(chaim).drag_to(find(".mod-elections-ballot__dropzone"))
-    expect(page).to have_css(".mod-elections-ballot__announce", text: "chaim_w ranked 1.")
+    # Core's live region reads each change out.
+    expect(page).to have_css("#a11y-announcements-polite", text: "chaim_w ranked 1.", visible: :all)
 
     pool_row.call(dovid).drag_to(
       find(".mod-elections-ballot__ranking li", text: chaim.username),
@@ -131,8 +132,9 @@ RSpec.describe "Mod elections" do
     )
     expect(names.call).to eq([chaim.username])
     expect(page).to have_css(
-      ".mod-elections-ballot__announce",
+      "#a11y-announcements-polite",
       text: "#{dovid.username} taken off your ranking.",
+      visible: :all,
     )
   end
 

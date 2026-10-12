@@ -65,8 +65,7 @@ module DiscourseModElections
     # Only once voting has closed: during Vote Week it would say who has
     # voted. Publishing clears the addresses.
     def ip_report
-      raise Error.new(:finished) unless @election.unfinished?
-      raise Error.new(:not_closed) unless @election.closed?
+      @election.check_phase!(:closed)
       render_json_dump(ip_report: Presenter.ip_report(@election))
     end
 
@@ -85,6 +84,8 @@ module DiscourseModElections
       render_json_dump(
         result: Presenter.result_json(preview[:result]),
         plan: Presenter.plan(preview[:plan]),
+        # The first preview fixes the ballots; the tab shows that.
+        election: Presenter.admin_election(@election.reload),
       )
     end
 

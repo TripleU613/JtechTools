@@ -4,7 +4,7 @@
 // server does every check.
 
 import { del, errorMessage, get, post, put } from "../api.ts";
-import { dateTime, longDate, plural, timeAgo, truncate } from "../format.ts";
+import { dateTime, plural, timeAgo, truncate } from "../format.ts";
 import { html, type SafeHtml } from "../html.ts";
 import { focusContent } from "../nav.ts";
 import { href, type RouteContext } from "../router.ts";
@@ -83,8 +83,6 @@ interface Me {
   vote_blocked: string | null;
   ballot: {
     ranking: number[];
-    voided: boolean;
-    void_reason: string | null;
     updated_at: string;
   } | null;
   receipt: { counted: boolean; reason: string | null } | null;
@@ -105,6 +103,9 @@ interface Page {
 }
 
 const API = "/jtech-elections";
+
+// A candidate whose account has since been deleted.
+const DELETED = "A deleted account";
 
 const STATUS: Record<string, string> = {
   nominating: "Nominations open",
@@ -149,7 +150,7 @@ function blockedText(reason: string, page: Page): string {
 }
 
 function nameOf(c: Candidate): string {
-  return c.user ? c.user.username : "A deleted account";
+  return c.user ? c.user.username : DELETED;
 }
 
 function candidateRow(c: Candidate, side: SafeHtml | string = ""): SafeHtml {
@@ -215,7 +216,7 @@ function show(s: Screen, page: Page): void {
     s.empty(
       "There hasn't been an election yet." +
         (page.next_opening
-          ? " Nominations open " + longDate(page.next_opening) + "."
+          ? " Nominations open " + page.next_opening + "."
           : ""),
       "info"
     );
@@ -414,48 +415,45 @@ function ballot(s: Screen, page: Page, e: Election, me: Me): void {
       </li>`;
 
     s.render(
-      html`${me.ballot && me.ballot.voided
-        ? html`<p class="hint pad">
-            An admin set your ballot aside: ${me.ballot.void_reason || ""}
-          </p>`
-        : html`<p class="hint pad">
-              Your vote counts ${String(me.weight || 0)}. On a candidate, press
-              1–9 to put them in that place, 0 to take them off.
-            </p>
-            <h2 class="section-title">Your ranking</h2>
-            ${ranked.length
-              ? html`<ul class="rows">
-                  ${ranked.map((c, i) => row(c, i + 1))}
-                </ul>`
-              : html`<p class="hint pad">Nobody ranked yet.</p>`}
-            <h2 class="section-title">Candidates</h2>
-            ${unranked.length
-              ? html`<ul class="rows">
-                  ${unranked.map((c) => row(c, 0))}
-                </ul>`
-              : html`<p class="hint pad">Everyone is ranked.</p>`}
-            <p class="hint pad">
-              ${dirty
-                ? "Not saved"
-                : me.ballot
-                  ? "Saved " + timeAgo(me.ballot.updated_at)
-                  : "Not saved yet"}
-            </p>
-            <div class="pad" data-row>
-              <button
-                type="button"
-                class="btn primary"
-                data-act="save"
-                ${dirty && ranking.length ? "" : "disabled"}
-              >
-                ${icon("check")} Save ballot
-              </button>
-              ${me.ballot
-                ? html`<button type="button" class="btn" data-act="clear">
-                    Take back
-                  </button>`
-                : ""}
-            </div>`}${history(page)}`
+      html`<p class="hint pad">
+          Your vote counts ${String(me.weight || 0)}. On a candidate, press 1–9
+          to put them in that place, 0 to take them off.
+        </p>
+        <h2 class="section-title">Your ranking</h2>
+        ${ranked.length
+          ? html`<ul class="rows">
+              ${ranked.map((c, i) => row(c, i + 1))}
+            </ul>`
+          : html`<p class="hint pad">Nobody ranked yet.</p>`}
+        <h2 class="section-title">Candidates</h2>
+        ${unranked.length
+          ? html`<ul class="rows">
+              ${unranked.map((c) => row(c, 0))}
+            </ul>`
+          : html`<p class="hint pad">Everyone is ranked.</p>`}
+        <p class="hint pad">
+          ${dirty
+            ? "Not saved"
+            : me.ballot
+              ? "Saved " + timeAgo(me.ballot.updated_at)
+              : "Not saved yet"}
+        </p>
+        <div class="pad" data-row>
+          <button
+            type="button"
+            class="btn primary"
+            data-act="save"
+            ${dirty && ranking.length ? "" : "disabled"}
+          >
+            ${icon("check")} Save ballot
+          </button>
+          ${me.ballot
+            ? html`<button type="button" class="btn" data-act="clear">
+                Take back
+              </button>`
+            : ""}
+        </div>
+        ${history(page)}`
     );
     s.softkeys({
       right: dirty && ranking.length ? { label: "Save", run: save } : null,
@@ -609,9 +607,7 @@ function tieText(
 
 function results(e: Election, r: Result, me: Me | null): SafeHtml {
   const names: Record<string, string> = {};
-  r.candidates.forEach(
-    (c) => (names[String(c.id)] = c.username || "A deleted account")
-  );
+  r.candidates.forEach((c) => (names[String(c.id)] = c.username || DELETED));
   const n = (id: number | null) =>
     id === null ? "?" : names[String(id)] || "?";
   const stageLabel = (st: Stage) =>
