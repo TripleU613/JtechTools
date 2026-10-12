@@ -55,7 +55,7 @@ export function categoryName(c: BootCategory): string {
   return parent ? parent.name + " › " + c.name : c.name;
 }
 
-function colour(hex: string | null | undefined): string {
+export function colour(hex: string | null | undefined): string {
   return /^[0-9a-f]{3,6}$/i.test(hex || "") ? "#" + hex : "#888";
 }
 

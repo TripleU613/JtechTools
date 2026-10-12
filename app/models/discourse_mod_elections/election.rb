@@ -88,10 +88,6 @@ module DiscourseModElections
       end
     end
 
-    def running_candidates
-      candidates.running
-    end
-
     private
 
     def dates_in_order

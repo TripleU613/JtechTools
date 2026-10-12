@@ -94,11 +94,9 @@ after_initialize do
 
   # What the client needs to show the button, the badge and the setup
   # prompt. Counts and flags only.
-  add_to_serializer(
-    :current_user,
-    :reqpm,
-    include_condition: -> { DiscourseReqpm::Policy.enabled? },
-  ) { DiscourseReqpm::Presenter.current_user_summary(object) }
+  add_to_serializer(:current_user, :reqpm, include_condition: -> { DiscourseReqpm.enabled? }) do
+    DiscourseReqpm::Presenter.current_user_summary(object)
+  end
 
   # Whether the REQ-PM button belongs on this person's card or profile at
   # all. Says nothing about whether they accept requests from the viewer.
@@ -109,7 +107,7 @@ after_initialize do
       serializer,
       :reqpm_available,
       include_condition: -> do
-        DiscourseReqpm::Policy.enabled? && scope.user.present? && scope.user.id != object.id
+        DiscourseReqpm.enabled? && scope.user.present? && scope.user.id != object.id
       end,
     ) { DiscourseReqpm::Policy.can_use?(object) }
   end

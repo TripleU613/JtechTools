@@ -217,15 +217,6 @@ export function scrollIntoView(el: Element, alignTop: boolean): void {
   el.scrollIntoView(alignTop);
 }
 
-export function supportsCssVars(): boolean {
-  const css = (
-    window as unknown as {
-      CSS?: { supports?: (a: string, b: string) => boolean };
-    }
-  ).CSS;
-  return !!(css && css.supports && css.supports("--a", "0"));
-}
-
 export function prefersLight(): boolean {
   try {
     return !!(

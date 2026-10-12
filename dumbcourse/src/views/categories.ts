@@ -10,6 +10,7 @@ import {
   category,
   categoryName,
   categoryPath,
+  colour,
 } from "../site.ts";
 import { count } from "../format.ts";
 import { icon } from "../ui/icons.ts";
@@ -20,10 +21,6 @@ interface CategoryJson extends BootCategory {
   topics_week?: number;
   topics_month?: number;
   subcategory_list?: CategoryJson[];
-}
-
-function colour(hex: string | null | undefined): string {
-  return /^[0-9a-f]{3,6}$/i.test(hex || "") ? "#" + hex : "#888";
 }
 
 function row(c: CategoryJson): SafeHtml {

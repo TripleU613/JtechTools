@@ -160,22 +160,6 @@ export function startBus(): void {
   });
 }
 
-export function stopBus(): void {
-  enabled = false;
-  if (timer) clearTimeout(timer);
-  timer = null;
-  if (current) {
-    const x = current;
-    current = null;
-    polling = false;
-    try {
-      x.abort();
-    } catch {
-      // ignore
-    }
-  }
-}
-
 export function busClientId(): string {
   return clientId;
 }

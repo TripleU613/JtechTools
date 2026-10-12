@@ -57,7 +57,7 @@
 // the sidebar stays put and the logo sits at the left wall, on the same
 // line as the sidebar's search row. Narrower windows keep the ☰, which is
 // the only way to open the slide-out sidebar there.
-@media (width >= 48rem) {
+@include viewport.from(md) {
   html.desktop-view {
     .d-header .header-sidebar-toggle {
       display: none;
@@ -288,7 +288,7 @@ html.jt-has-color-toggle .d-header-icons .header-color-scheme-toggle {
   }
 }
 
-@media (width < 64rem) {
+@include viewport.until(lg) {
   .d-header:has(.extra-info-wrapper) .jt-header-search__button {
     @include jt-search-icon-only;
   }
@@ -334,7 +334,7 @@ html.jt-has-color-toggle .d-header-icons .header-color-scheme-toggle {
 
 // Narrower windows keep the essentials (search, notifications, avatar);
 // phones also drop "+" (the list has its own) and the ☰ takes the menu
-@media (width < 64rem) {
+@include viewport.until(lg) {
   .jt-header-home,
   .jt-header-messages,
   .jt-header-theme {

@@ -11,8 +11,8 @@ import ConditionalLoadingSpinner from "discourse/components/conditional-loading-
 import icon from "discourse/helpers/d-icon";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 import { duration, longDate } from "discourse/lib/formatter";
-import type MessageBusService from "discourse/services/message-bus";
 import { i18n } from "discourse-i18n";
+import type { MessageBus } from "../lib/message-bus";
 import ModElectionsService, {
   ModElection,
   ModElectionCandidate,
@@ -38,11 +38,6 @@ interface ModElectionsPageSignature {
     electionId?: string | null;
   };
 }
-
-type MessageBus = MessageBusService & {
-  subscribe(channel: string, callback: (data: unknown) => void): void;
-  unsubscribe(channel: string, callback: (data: unknown) => void): void;
-};
 
 // Sent when an election moves to its next step (Lifecycle, Publisher).
 const STATE_CHANNEL = "/jtech-elections/state";

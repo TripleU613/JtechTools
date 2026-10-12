@@ -9,6 +9,7 @@ import type Site from "discourse/models/site";
 import type User from "discourse/models/user";
 import type AppEventsService from "discourse/services/app-events";
 import type SiteSettingsService from "discourse/services/site-settings";
+import type { MessageBus } from "../lib/message-bus";
 
 // Fields the plugin reads off the current user that core's User model does
 // not declare.
@@ -32,12 +33,6 @@ export type DisteleplusSiteSettings = SiteSettingsService & {
   enable_mentions: boolean;
   enable_emoji: boolean;
 };
-
-// Core's MessageBusService declaration does not describe the client API.
-interface MessageBusClient {
-  subscribe<T>(channel: string, callback: (data: T) => void): void;
-  unsubscribe<T>(channel: string, callback?: (data: T) => void): void;
-}
 
 // ── server payloads (lib/discourse_disteleplus/message_serializer.rb) ─────
 
@@ -293,7 +288,7 @@ const MIN_HEIGHT = 300;
 
 export default class DisteleplusService extends Service {
   @service declare currentUser: DisteleplusCurrentUser | null;
-  @service declare messageBus: MessageBusClient;
+  @service declare messageBus: MessageBus;
   @service declare site: Site;
   @service declare router: RouterService;
   @service declare appEvents: AppEventsService;

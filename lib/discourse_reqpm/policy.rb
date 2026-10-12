@@ -5,13 +5,9 @@ module DiscourseReqpm
   # here on purpose: an admin can neither read anyone's card nor bypass
   # someone's ignore/mute or "no requests" choice.
   module Policy
-    def self.enabled?
-      SiteSetting.jtech_enabled && SiteSetting.reqpm_enabled
-    end
-
     # A real, active, human account in one of the allowed groups.
     def self.can_use?(user)
-      return false unless enabled?
+      return false unless DiscourseReqpm.enabled?
       return false if user.nil? || user.id.to_i <= 0
       return false if user.staged? || !user.active? || user.suspended? || user.silenced?
       # Anonymous-mode shadow accounts: exchanging contact details would

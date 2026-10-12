@@ -38,10 +38,6 @@ let onUnauthorized: (() => void) | null = null;
 let inflight = 0;
 let onActivity: ((busy: boolean) => void) | null = null;
 
-export function setCsrf(token: string): void {
-  if (token) csrf = token;
-}
-
 export function getCsrf(): string {
   return csrf;
 }
@@ -295,8 +291,4 @@ export function errorMessage(error: unknown): string {
     return (error as { message: string }).message || "Something went wrong.";
   }
   return String(error || "Something went wrong.");
-}
-
-export function isOffline(error: unknown): boolean {
-  return error instanceof ApiError && error.status === 0;
 }

@@ -3,11 +3,11 @@ import type Owner from "@ember/owner";
 import Service, { service } from "@ember/service";
 import { ajax } from "discourse/lib/ajax";
 import type User from "discourse/models/user";
-import type MessageBusService from "discourse/services/message-bus";
 import type ModalService from "discourse/services/modal";
 import type SiteSettingsService from "discourse/services/site-settings";
 import ReqpmSetupModal from "../components/reqpm-setup-modal";
 import ReqpmUserModal from "../components/reqpm-user-modal";
+import type { MessageBus } from "../lib/message-bus";
 import type { ReqpmKindId } from "../lib/reqpm-kinds";
 
 const BASE = "/jtech-reqpm";
@@ -148,13 +148,6 @@ export type ReqpmCurrentUser = User & {
 export type ReqpmSiteSettings = SiteSettingsService & {
   reqpm_enabled: boolean;
   reqpm_default_country_code: string;
-};
-
-type MessageBusCallback = (data: unknown) => void;
-
-type MessageBus = MessageBusService & {
-  subscribe(channel: string, callback: MessageBusCallback): void;
-  unsubscribe(channel: string, callback: MessageBusCallback): void;
 };
 
 interface ReqpmStateMessage {

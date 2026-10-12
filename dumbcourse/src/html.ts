@@ -64,8 +64,6 @@ export function join(parts: HtmlValue[], separator = ""): SafeHtml {
   return new SafeHtml(parts.map(render).join(render(separator)));
 }
 
-export const EMPTY = new SafeHtml("");
-
 // For attribute values that must be a URL: only http(s), mailto, tel, sms
 // and relative paths survive; anything else (javascript:, data:, …) becomes
 // "#". Escaping still happens in html``.

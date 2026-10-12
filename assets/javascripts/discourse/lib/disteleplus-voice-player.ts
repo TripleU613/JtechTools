@@ -621,7 +621,7 @@ export function enhanceWithin(
   const nodes =
     root instanceof HTMLAudioElement ? [root] : root.querySelectorAll("audio");
   nodes.forEach((audio) => {
-    if (!audio.closest(".disteleplus-message, .disteleplus-voice-modal")) {
+    if (!audio.closest(".disteleplus-message")) {
       return;
     }
     if (enhanceAudio(audio, options)) {
@@ -629,14 +629,4 @@ export function enhanceWithin(
     }
   });
   return count;
-}
-
-// Tears down players whose <audio> Glimmer has removed from the document.
-export function pruneDetached(): void {
-  for (const [audio, player] of players) {
-    if (!audio.isConnected) {
-      player.destroy();
-      players.delete(audio);
-    }
-  }
 }

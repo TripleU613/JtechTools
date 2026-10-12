@@ -188,7 +188,7 @@
 // left-to-right block keeps its button on the right: the code was pushed 26px
 // in from the left and still ran under the button. Logical sides, from the
 // way the block runs.
-@media (width < 40rem) {
+@include viewport.until(sm) {
   .cooked pre.codeblock-buttons > code {
     padding-inline: 12px 2.75em;
   }

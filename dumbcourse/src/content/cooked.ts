@@ -5,6 +5,7 @@
 // much easier with a D-pad than tabbing through a paragraph.
 
 import { closest } from "../compat.ts";
+import { $$ } from "../dom.ts";
 import { APP_ROOT, settings } from "../config.ts";
 import { raw, type SafeHtml } from "../html.ts";
 import { prefs } from "../prefs.ts";
@@ -79,13 +80,6 @@ function scratch(): HTMLElement {
     }
   }
   return inert.createElement("div");
-}
-
-function all(root: Element, selector: string): Element[] {
-  const list = root.querySelectorAll(selector);
-  const out: Element[] = [];
-  for (let i = 0; i < list.length; i++) out.push(list[i]);
-  return out;
 }
 
 function origin(): string {
@@ -174,14 +168,14 @@ export function processCooked(cooked: string | null | undefined): Processed {
   let images = 0;
 
   // Embeds that cannot play on a flip phone become plain links.
-  for (const frame of all(box, "iframe")) {
+  for (const frame of $$("iframe", box)) {
     const src = frame.getAttribute("src") || "";
     const a = box.ownerDocument.createElement("a");
     a.setAttribute("href", src);
     a.textContent = "▶ Open embedded content";
     if (frame.parentNode) frame.parentNode.replaceChild(a, frame);
   }
-  for (const lazy of all(box, ".lazy-video-container, .lazyYT")) {
+  for (const lazy of $$(".lazy-video-container, .lazyYT", box)) {
     const url =
       lazy.getAttribute("data-video-url") ||
       lazy.querySelector("a")?.getAttribute("href") ||
@@ -196,15 +190,15 @@ export function processCooked(cooked: string | null | undefined): Processed {
   }
 
   // Lightbox chrome is for big screens.
-  for (const meta of all(
-    box,
-    ".lightbox-wrapper .meta, .onebox-metadata, .quote-controls, .cooked-selection-barrier"
+  for (const meta of $$(
+    ".lightbox-wrapper .meta, .onebox-metadata, .quote-controls, .cooked-selection-barrier",
+    box
   )) {
     if (meta.parentNode) meta.parentNode.removeChild(meta);
   }
 
   // Images.
-  for (const img of all(box, "img")) {
+  for (const img of $$("img", box)) {
     img.removeAttribute("srcset");
     img.removeAttribute("sizes");
     const src = img.getAttribute("src") || "";
@@ -272,7 +266,7 @@ export function processCooked(cooked: string | null | undefined): Processed {
   }
 
   // Links.
-  for (const a of all(box, "a[href]")) {
+  for (const a of $$("a[href]", box)) {
     const hrefValue = a.getAttribute("href") || "";
     if (!hrefValue || hrefValue.charAt(0) === "#") continue;
     if (/^javascript:/i.test(hrefValue)) {
@@ -308,7 +302,7 @@ export function processCooked(cooked: string | null | undefined): Processed {
   }
 
   // Quotes: make the header jump to the quoted post.
-  for (const quote of all(box, "aside.quote")) {
+  for (const quote of $$("aside.quote", box)) {
     const topic = quote.getAttribute("data-topic");
     const post = quote.getAttribute("data-post");
     const title = quote.querySelector(".title");
@@ -322,10 +316,10 @@ export function processCooked(cooked: string | null | undefined): Processed {
     }
   }
 
-  for (const el of all(box, ".discourse-local-date, span[data-date]"))
+  for (const el of $$(".discourse-local-date, span[data-date]", box))
     formatLocalDate(el);
 
-  for (const table of all(box, "table")) {
+  for (const table of $$("table", box)) {
     const wrap = box.ownerDocument.createElement("div");
     wrap.setAttribute("class", "table-wrap");
     if (table.parentNode) {
@@ -335,15 +329,15 @@ export function processCooked(cooked: string | null | undefined): Processed {
   }
 
   // Spoilers and details need to be operable without a mouse.
-  for (const el of all(box, ".spoiler, .spoiled, .spoiler-blurred")) {
+  for (const el of $$(".spoiler, .spoiled, .spoiler-blurred", box)) {
     el.setAttribute("data-act", "spoiler");
     el.setAttribute("role", "button");
   }
-  for (const s of all(box, "details > summary"))
+  for (const s of $$("details > summary", box))
     s.setAttribute("tabindex", "-1");
 
   // Polls are drawn from post.polls instead (see polls.ts).
-  for (const poll of all(box, "div.poll")) {
+  for (const poll of $$("div.poll", box)) {
     const name = poll.getAttribute("data-poll-name") || "poll";
     const holder = box.ownerDocument.createElement("div");
     holder.setAttribute("class", "poll-slot");

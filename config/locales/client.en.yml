@@ -16,9 +16,6 @@ en:
       placeholder: Write a message…
       send: Send
       empty_title: Start the conversation
-      new_messages:
-        one: "%{count} new message"
-        other: "%{count} new messages"
       unread_divider: New messages
       go_to_bottom: Go to bottom
       search: Search messages
@@ -224,7 +221,6 @@ en:
         emoji: Emoji
         label: Name
         label_placeholder: e.g. Office line
-        value: Details
         note: Note
         optional: (optional)
         note_placeholder: e.g. Evenings only, no calls on Shabbos
@@ -562,8 +558,6 @@ en:
           label: Convert to public post
           title: Remove the whisper status from this post so everyone can see it
           confirm: Make this whisper public? Everyone who can read the topic will see it.
-          done_toast: Converted to a public post
-          failed_toast: Could not convert this post
         add_participant:
           menu_label: Add user to whisper
           modal_title: Add users to this whisper

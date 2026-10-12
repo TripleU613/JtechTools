@@ -8,7 +8,7 @@ module DiscourseModElections
   # candidates), and nothing about anyone's ballot.
   module Disteleplus
     def self.available?
-      defined?(::DiscourseDisteleplus::Reports) && ::DiscourseDisteleplus::Reports.admin_notices?
+      ::DiscourseDisteleplus::Reports.admin_notices?
     end
 
     def self.closed(election)

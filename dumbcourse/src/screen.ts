@@ -42,7 +42,6 @@ export interface Screen {
 
 let counter = 0;
 let active: ScreenImpl | null = null;
-const globalActions: Record<string, ActionHandler> = {};
 let titleHook: ((text: string, back: boolean, sub: string) => void) | null =
   null;
 let composeHook: ((target: string | null, label: string) => void) | null = null;
@@ -209,12 +208,8 @@ export function screenSoftActions(): SoftAction[] {
   return out;
 }
 
-export function registerGlobalAction(name: string, fn: ActionHandler): void {
-  globalActions[name] = fn;
-}
-
 export function runAction(name: string, el: HTMLElement, e: Event): boolean {
-  const fn = (active && active.actionMap[name]) || globalActions[name];
+  const fn = active && active.actionMap[name];
   if (!fn) return false;
   fn(el, e);
   return true;

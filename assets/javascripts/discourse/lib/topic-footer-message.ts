@@ -31,14 +31,3 @@ export function topicFooterFeatureActive(
   }
   return true;
 }
-
-// Overall visibility = structural gate AND a non-empty message.
-export function shouldRenderTopicFooterMessage(
-  siteSettings: FooterMessageSiteSettings | null | undefined,
-  topic: FooterMessageTopic | null | undefined
-): boolean {
-  return (
-    topicFooterFeatureActive(siteSettings, topic) &&
-    topicFooterMessage(topic).length > 0
-  );
-}

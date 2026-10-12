@@ -125,14 +125,6 @@ export function userSet(key: string, value: unknown): void {
   setJson("user:" + key, value);
 }
 
-export function userRemove(key: string): void {
-  remove("user:" + key);
-}
-
 export function hasOwner(): boolean {
   return !!owner;
-}
-
-export function isAvailable(): boolean {
-  return !!backend();
 }

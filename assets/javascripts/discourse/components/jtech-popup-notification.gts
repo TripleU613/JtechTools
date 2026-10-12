@@ -14,9 +14,9 @@ import discourseLater from "discourse/lib/later";
 import DiscourseURL from "discourse/lib/url";
 import type Site from "discourse/models/site";
 import type User from "discourse/models/user";
-import type MessageBusService from "discourse/services/message-bus";
 import type SiteSettingsService from "discourse/services/site-settings";
 import { i18n } from "discourse-i18n";
+import type { MessageBus } from "../lib/message-bus";
 
 // Desktop-only, Jelly-style pop-up "toast". Purely ADDITIVE — it renders a
 // card when a new notification is published on the current user's
@@ -132,13 +132,6 @@ interface DisteleplusDrawerState {
   isDrawerActive?: boolean;
   isDrawerExpanded?: boolean;
 }
-
-type MessageBusCallback = (data: unknown) => void;
-
-type MessageBus = MessageBusService & {
-  subscribe(channel: string, callback: MessageBusCallback): void;
-  unsubscribe(channel: string, callback: MessageBusCallback): void;
-};
 
 type PopupSiteSettings = SiteSettingsService & {
   popup_notifications_enabled: boolean;

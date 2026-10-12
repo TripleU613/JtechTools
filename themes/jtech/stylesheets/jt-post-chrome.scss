@@ -1,3 +1,5 @@
+@use "lib/viewport";
+
 // Post chrome: author block, post menu, reactions, solved answer, topic events.
 :root {
   --d-post-control-text-color: var(--jt-text-muted);
@@ -263,7 +265,7 @@ nav.post-controls {
 // Where the post buttons don't fit beside them they drop to a second line
 // (still on the right) rather than run past the post's edge. Phones keep the
 // plugin's own row.
-@media (width >= 64rem) {
+@include viewport.from(lg) {
   .post__contents > .solved-shared-issue-row {
     float: left;
 

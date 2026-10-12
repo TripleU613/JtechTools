@@ -1245,9 +1245,7 @@ after_initialize do
         # Other posts may carry a baked link preview of this post.
         DiscourseModCategories::Whisper.rebake_linking_posts(post)
         # The Telegram bridge may already have mirrored it while public.
-        if defined?(::DiscourseDisteleplus)
-          ::Jobs.enqueue(:disteleplus_retract_whisper, post_id: post.id)
-        end
+        ::Jobs.enqueue(:disteleplus_retract_whisper, post_id: post.id)
       else
         ::SearchIndexer.index(post, force: true)
         ::TopicLink.extract_from(post)

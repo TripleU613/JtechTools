@@ -1,7 +1,6 @@
 // Small DOM helpers. Queries return real arrays (NodeList#forEach is
 // missing on old engines), and setHtml only accepts SafeHtml.
 
-import { closest, fire } from "./compat.ts";
 import type { SafeHtml } from "./html.ts";
 
 export function byId<T extends HTMLElement = HTMLElement>(
@@ -61,19 +60,6 @@ export function isVisible(el: HTMLElement): boolean {
   return rects.length > 0;
 }
 
-export function inputChanged(el: HTMLElement): void {
-  fire(el, "input");
-}
-
-export function dataOf(
-  target: EventTarget | null,
-  attr: string
-): { el: HTMLElement; value: string } | null {
-  const el = closest(target, `[${attr}]`);
-  if (!el) return null;
-  return { el, value: el.getAttribute(attr) || "" };
-}
-
 export function topbarHeight(): number {
   const bar = byId("topbar");
   return bar ? bar.offsetHeight : 0;
@@ -110,10 +96,6 @@ export function revealElement(
   } else if (rect.bottom > bottomLimit) {
     window.scrollBy(0, rect.bottom - bottomLimit);
   }
-}
-
-export function scrollToTop(): void {
-  window.scrollTo(0, 0);
 }
 
 export function scrollY(): number {

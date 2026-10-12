@@ -32,7 +32,7 @@ module DiscourseReqpm
     private
 
     def ensure_enabled
-      raise Discourse::NotFound unless Policy.enabled?
+      raise Discourse::NotFound unless DiscourseReqpm.enabled?
     end
 
     def ensure_own_session

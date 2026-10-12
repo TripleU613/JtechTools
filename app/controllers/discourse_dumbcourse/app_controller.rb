@@ -227,8 +227,7 @@ module DiscourseDumbcourse
         reactions: reactions,
         noReactionCategoryIds: no_reaction_category_ids,
         reqpmCountryCode: setting(:reqpm_default_country_code).to_s,
-        modElectionsEnabled:
-          !!(defined?(::DiscourseModElections) && ::DiscourseModElections.enabled?),
+        modElectionsEnabled: ::DiscourseModElections.enabled?,
         tagsEnabled: !!SiteSetting.tagging_enabled,
         maxPostLength: SiteSetting.max_post_length,
         minPostLength: SiteSetting.min_post_length,
@@ -276,7 +275,7 @@ module DiscourseDumbcourse
 
     # 1 while Vote Week is open and this member can vote but hasn't.
     def mod_election_vote_due(user)
-      return 0 unless defined?(::DiscourseModElections) && ::DiscourseModElections.enabled?
+      return 0 unless ::DiscourseModElections.enabled?
       summary = ::DiscourseModElections::Presenter.current_user_summary(user)
       summary && summary[:voter] && !summary[:voted] ? 1 : 0
     rescue StandardError
@@ -284,7 +283,6 @@ module DiscourseDumbcourse
     end
 
     def reqpm_summary(user)
-      return { available: false } unless defined?(::DiscourseReqpm::Presenter)
       ::DiscourseReqpm::Presenter.current_user_summary(user)
     rescue StandardError
       { available: false }
@@ -327,7 +325,7 @@ module DiscourseDumbcourse
     end
 
     def no_reaction_category_ids
-      defined?(::DiscourseNoLikes) ? ::DiscourseNoLikes.restricted_category_ids : []
+      ::DiscourseNoLikes.restricted_category_ids
     rescue StandardError
       []
     end

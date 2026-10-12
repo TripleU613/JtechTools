@@ -1,3 +1,5 @@
+@use "lib/viewport";
+
 // Menus, cards, modals: flat surface, hairline border, no heavy shadows
 // (.drop-down and .is-expanded: core's own selectors, which outranked these
 // and left menus and dropdowns at its small radius)
@@ -76,7 +78,7 @@ html.mobile-view .d-modal:not(.jt-cmdk) .d-modal__container {
 // wide, so at 320px (a Qin F21) the last arrow ran 24px into the sheet's
 // padding, against the screen's edge. The numbers take their own width; a
 // long count wraps onto two lines instead of pushing the arrows out.
-@media (width < 48rem) {
+@include viewport.until(md) {
   .d-modal.history-modal #revision-numbers {
     min-width: 0;
   }
@@ -128,7 +130,7 @@ body.has-sidebar-page #reply-control:not(.fullscreen).hide-preview {
 // title is a 20-character input), so for anyone who can tag messages the
 // picker ran 36px off a 375px screen. The row wraps: the picker gets the line
 // under the title, as a topic's category and tags do.
-@media (width < 40rem) {
+@include viewport.until(sm) {
   #reply-control .title-and-category {
     flex-wrap: wrap;
 
