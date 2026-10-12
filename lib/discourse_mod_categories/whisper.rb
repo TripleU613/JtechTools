@@ -80,9 +80,9 @@ module DiscourseModCategories
       return true if user.staff?
       return true if post.user_id.present? && post.user_id == user.id
       return true if d[:user_ids].include?(user.id)
-      if d[:group_ids].any? && ::GroupUser.exists?(group_id: d[:group_ids], user_id: user.id)
-        return true
-      end
+      # Core memoizes the user's group ids, so the many Guardian checks a
+      # post's serializer makes don't each query them.
+      return true if d[:group_ids].intersect?(user.belonging_to_group_ids)
       if d[:badge_ids].any? && ::UserBadge.exists?(badge_id: d[:badge_ids], user_id: user.id)
         return true
       end
@@ -536,8 +536,9 @@ module DiscourseModCategories
       end
 
       # A preloaded proxy only knows the keys somebody chose to preload, so
-      # "key absent" there means nothing — read the rows directly.
-      return db_fields(post) if preloaded?(post)
+      # "key absent" there means nothing — read the rows directly, once per
+      # post (as prime! would have).
+      return post.instance_variable_set(:@mod_whisper_fields, db_fields(post)) if preloaded?(post)
 
       fields = post.custom_fields
       fields.is_a?(Hash) ? fields : db_fields(post)

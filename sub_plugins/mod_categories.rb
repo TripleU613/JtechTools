@@ -9,6 +9,7 @@ require_relative "../lib/discourse_mod_categories/core_whisper_patches"
 require_relative "../lib/discourse_mod_categories/whisper_query_filter"
 require_relative "../lib/discourse_mod_categories/whisper_unread"
 require_relative "../lib/discourse_mod_categories/staff_notifier"
+require_relative "../lib/discourse_mod_categories/note_thread"
 require_relative "../lib/discourse_mod_categories/user_action_whisper_filter"
 require_relative "../lib/discourse_mod_categories/search_indexer_extension"
 require_relative "../lib/discourse_mod_categories/search_extension"
@@ -515,11 +516,7 @@ after_initialize do
       scope.is_staff? && DiscourseModCategories.enabled? &&
         SiteSetting.mod_topic_private_notes_enabled
     end,
-  ) do
-    user_id = object.topic.custom_fields[DiscourseModCategories::TOPIC_PRIVATE_NOTE_USER_FIELD]
-    user = user_id && User.find_by(id: user_id)
-    { username: user.username, name: user.name, avatar_template: user.avatar_template } if user
-  end
+  ) { DiscourseModCategories::NoteThread.author(object.topic) }
   add_to_serializer(
     :topic_view,
     :mod_topic_private_note_created_at,
@@ -536,25 +533,7 @@ after_initialize do
       scope.is_staff? && DiscourseModCategories.enabled? &&
         SiteSetting.mod_topic_private_notes_enabled
     end,
-  ) do
-    raw = object.topic.custom_fields[DiscourseModCategories::TOPIC_PRIVATE_NOTE_REPLIES_FIELD]
-    entries = raw.is_a?(Array) ? raw : []
-    entries.map do |entry|
-      author = entry["user_id"] && User.find_by(id: entry["user_id"])
-      {
-        id: DiscourseModCategories.note_reply_id(entry),
-        raw: entry["raw"].to_s,
-        created_at: entry["created_at"],
-        author:
-          author &&
-            {
-              username: author.username,
-              name: author.name,
-              avatar_template: author.avatar_template,
-            },
-      }
-    end
-  end
+  ) { DiscourseModCategories::NoteThread.replies(object.topic) }
 
   # Staff who have rendered the mod-note panel on this topic — used by the
   # "👁 Viewed by N" pill at the bottom of the panel. Newest viewer last,
@@ -567,16 +546,9 @@ after_initialize do
         SiteSetting.mod_note_view_tracking_enabled
     end,
   ) do
-    raw = object.topic.custom_fields[DiscourseModCategories::TOPIC_NOTE_VIEWERS_FIELD]
-    Array(raw).map do |entry|
-      {
-        user_id: entry["user_id"],
-        username: entry["username"],
-        name: entry["name"],
-        avatar_template: entry["avatar_template"],
-        viewed_at: entry["viewed_at"],
-      }
-    end
+    DiscourseModCategories::NoteThread.viewers(
+      object.topic.custom_fields[DiscourseModCategories::TOPIC_NOTE_VIEWERS_FIELD],
+    )
   end
 
   # Unread moderator-note count, for the staff member's user-menu tab. Derived
@@ -590,10 +562,7 @@ after_initialize do
   ) do
     next 0 unless object.staff?
 
-    ::Notification
-      .where(user_id: object.id, notification_type: ::Notification.types[:custom], read: false)
-      .where("data LIKE ?", "%\"mod_note\":true%")
-      .count
+    DiscourseModCategories::StaffNotifier.mod_notes_for(object.id).where(read: false).count
   end
 
   # First-post checklist: the single checklist the current user most needs
@@ -1341,59 +1310,27 @@ after_initialize do
         # type filter needs to be applied here. Same response envelope
         # the user-notifications template binds against.
         def render_type_filtered_index(type_sym)
-          user = mod_notifications_user
-          limit = 60
-          offset = params[:offset].to_i
-          type_id = ::Notification.types[type_sym]
-
-          scope =
-            ::Notification
-              .where(user_id: user.id, notification_type: type_id)
-              .visible
-              .includes(:topic)
-              .order(created_at: :desc)
-
-          scope = scope.where(read: true) if params[:filter] == "read"
-          scope = scope.where(read: false) if params[:filter] == "unread"
-
-          total = scope.dup.count
-          notifications = scope.offset(offset).limit(limit)
-          notifications =
-            ::Notification.filter_inaccessible_topic_notifications(
-              current_user.guardian,
-              notifications,
+          render_filtered_index(type_sym.to_s) do |user|
+            ::Notification.where(
+              user_id: user.id,
+              notification_type: ::Notification.types[type_sym],
             )
-          notifications = ::Notification.filter_disabled_badge_notifications(notifications)
-          notifications = ::Notification.populate_acting_user(notifications)
-
-          render_json_dump(
-            notifications: serialize_data(notifications, ::NotificationSerializer),
-            total_rows_notifications: total,
-            seen_notification_id: user.seen_notification_id,
-            load_more_notifications:
-              notifications_path(
-                username: user.username,
-                offset: offset + limit,
-                limit: limit,
-                filter: params[:filter],
-                type: type_sym.to_s,
-              ),
-          )
+          end
         end
 
         def render_mod_notes_index
+          render_filtered_index("mod_notes") do |user|
+            DiscourseModCategories::StaffNotifier.mod_notes_for(user.id)
+          end
+        end
+
+        # The bell's list, narrowed to the notifications the block picks for
+        # the user (the one whose notifications are shown).
+        def render_filtered_index(type)
           user = mod_notifications_user
           limit = 60
           offset = params[:offset].to_i
-
-          scope =
-            ::Notification
-              .where(user_id: user.id)
-              .visible
-              .where(notification_type: ::Notification.types[:custom])
-              .where("data LIKE ?", "%\"mod_note\":true%")
-              .includes(:topic)
-              .order(created_at: :desc)
+          scope = yield(user).visible.includes(:topic).order(created_at: :desc)
 
           scope = scope.where(read: true) if params[:filter] == "read"
           scope = scope.where(read: false) if params[:filter] == "unread"
@@ -1418,7 +1355,7 @@ after_initialize do
                 offset: offset + limit,
                 limit: limit,
                 filter: params[:filter],
-                type: "mod_notes",
+                type: type,
               ),
           )
         end

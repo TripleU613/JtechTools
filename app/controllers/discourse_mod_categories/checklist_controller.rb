@@ -12,8 +12,7 @@ module ::DiscourseModCategories
   #
   # Any user records that they have acknowledged a checklist; staff read and
   # edit the lists and the acceptance audit log.
-  class ChecklistController < ::ApplicationController
-    requires_plugin "jtech-tools"
+  class ChecklistController < BaseController
     requires_login
 
     before_action :ensure_module_enabled
@@ -284,22 +283,8 @@ module ::DiscourseModCategories
 
     private
 
-    def ensure_module_enabled
-      raise Discourse::NotFound unless DiscourseModCategories.enabled?
-    end
-
-    def find_topic!
-      topic = Topic.find_by(id: params[:topic_id])
-      raise Discourse::NotFound if topic.nil? || !guardian.can_see_topic?(topic)
-      topic
-    end
-
     # 404s when a per-feature toggle is off, so each checklist flavour can be
     # revoked individually from the plugin settings.
-    def ensure_feature!(setting)
-      raise Discourse::NotFound unless SiteSetting.public_send(setting)
-    end
-
     # Resolves the user named by a `username` or `user_id` param.
     def find_target_user
       if params[:user_id].present?
