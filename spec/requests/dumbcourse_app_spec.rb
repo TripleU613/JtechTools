@@ -123,4 +123,50 @@ RSpec.describe "Dumbcourse app page" do
     get "/dumb/"
     expect(response.status).to eq(404)
   end
+
+  describe "mod elections" do
+    fab!(:admin)
+
+    before do
+      SiteSetting.jtech_enabled = true
+      SiteSetting.mod_elections_enabled = true
+      user.update!(trust_level: TrustLevel[2], created_at: 1.year.ago)
+    end
+
+    it "says whether they're on, and marks a vote due until it's cast" do
+      sign_in(user)
+      get "/dumb/"
+      expect(boot_data["modElectionsEnabled"]).to eq(true)
+      expect(boot_data.dig("currentUser", "mod_election_vote_due")).to eq(0)
+
+      election =
+        DiscourseModElections::Lifecycle.create!(
+          admin,
+          seats: 1,
+          nominations_open_at: 1.minute.ago,
+          voting_open_at: 3.days.from_now,
+          voting_close_at: 6.days.from_now,
+        )
+      DiscourseModElections::Nominations.run!(
+        Fabricate(:user, trust_level: TrustLevel[2], created_at: 1.year.ago),
+        election,
+        "",
+      )
+      DiscourseModElections::Lifecycle.end_phase!(election, admin)
+
+      get "/dumb/"
+      expect(boot_data.dig("currentUser", "mod_election_vote_due")).to eq(1)
+
+      DiscourseModElections::Voting.cast!(user, election, [election.candidates.first.id])
+      get "/dumb/"
+      expect(boot_data.dig("currentUser", "mod_election_vote_due")).to eq(0)
+    end
+
+    it "says they're off when the module is" do
+      SiteSetting.mod_elections_enabled = false
+      sign_in(user)
+      get "/dumb/"
+      expect(boot_data["modElectionsEnabled"]).to eq(false)
+    end
+  end
 end

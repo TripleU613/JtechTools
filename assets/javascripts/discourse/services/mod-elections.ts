@@ -33,20 +33,29 @@ export interface ModElectionCandidate {
   seat_left_reason: "stepped_down" | "removed" | null;
 }
 
+// A tie the count had to break: who went out, whose surplus moved first, or
+// who is listed first among people elected on equal votes. decided_at is
+// the stage whose votes settled it; null when it was drawn by lot.
 export interface ModElectionTie {
+  purpose: "exclusion" | "surplus" | "order";
   method: "earlier_stage" | "lot";
   among: number[];
   chosen: number;
+  decided_at: number | null;
 }
 
 export interface ModElectionStage {
   number: number;
   action: "first" | "unopposed" | "surplus" | "exclusion";
+  // Whose surplus moved, for a surplus stage.
   candidate: number | null;
+  // Who went out, for an exclusion stage: several at once when none of
+  // them had a single vote.
+  excluded: number[];
   tallies: Record<string, number>;
   exhausted: number;
   elected: number[];
-  tie: ModElectionTie | null;
+  ties: ModElectionTie[];
 }
 
 export interface ModElectionResultCandidate {
@@ -122,6 +131,8 @@ export interface ModElectionLimits {
 export interface ModElectionHistoryRow {
   id: number;
   status: ModElectionStatus;
+  // "January 2027", in the calendar's time zone.
+  label: string;
   nominations_open_at: string;
   published_at: string | null;
 }
@@ -131,6 +142,9 @@ export interface ModElectionPage {
   me: ModElectionMe | null;
   limits: ModElectionLimits;
   history: ModElectionHistoryRow[];
+  // The calendar's IANA zone: dates show as the forum's calendar days.
+  timezone: string;
+  next_opening: string | null;
 }
 
 // current_user.mod_election

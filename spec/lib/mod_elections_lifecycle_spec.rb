@@ -143,6 +143,16 @@ RSpec.describe DiscourseModElections::Lifecycle do
     expect(election_notes.call(admin)).to eq(%w[closed])
   end
 
+  it "tells open elections pages when a step changes, and only signed-in members" do
+    channel = DiscourseModElections::State::CHANNEL
+    messages = MessageBus.track_publish(channel) { tick_at(2027, 1, 1, 0, 5) }
+    expect(messages.size).to eq(1)
+    expect(messages.first.group_ids).to eq([Group::AUTO_GROUPS[:trust_level_0]])
+    expect(messages.first.data).to eq(changed: true)
+
+    expect(MessageBus.track_publish(channel) { tick_at(2027, 1, 2) }).to be_empty
+  end
+
   it "doesn't bring back an election an admin cancelled" do
     tick_at(2027, 1, 1, 0, 5)
     DiscourseModElections::Publisher.cancel!(election, admin)
@@ -165,6 +175,87 @@ RSpec.describe DiscourseModElections::Lifecycle do
     expect(topic.reload.posts_count).to eq(2)
     expect(topic.posts.last.raw).to include("/u/#{moderator.username}")
     expect(topic.posts.last.raw).not_to include("@#{moderator.username}")
+  end
+
+  describe "deadlines" do
+    let(:voter) { Fabricate(:user, trust_level: TrustLevel[2], created_at: 1.year.ago) }
+
+    before do
+      voter
+      tick_at(2027, 1, 1, 0, 5)
+      DiscourseModElections::Nominations.run!(
+        Fabricate(:user, trust_level: TrustLevel[2], created_at: 1.year.ago),
+        election,
+        "",
+      )
+    end
+
+    it "turns ballots away after Vote Week ends, even before the tick moves it on" do
+      tick_at(2027, 1, 8, 0, 5)
+      freeze_time(zone.local(2027, 1, 15, 0, 1))
+      expect(election).to be_voting
+
+      expect {
+        DiscourseModElections::Voting.cast!(voter, election, [election.candidates.first.id])
+      }.to raise_error(DiscourseModElections::Error) { |e| expect(e.reason).to eq(:not_voting) }
+    end
+
+    it "turns candidates away after nominations close, even before the tick moves it on" do
+      freeze_time(zone.local(2027, 1, 8, 0, 1))
+      expect(election).to be_nominating
+
+      expect {
+        DiscourseModElections::Nominations.run!(
+          Fabricate(:user, trust_level: TrustLevel[2], created_at: 1.year.ago),
+          election,
+          "",
+        )
+      }.to raise_error(DiscourseModElections::Error) { |e| expect(e.reason).to eq(:not_nominating) }
+    end
+  end
+
+  it "moves on even when the election's topic post fails" do
+    SiteSetting.mod_elections_category = Fabricate(:category).id.to_s
+    DiscourseModElections::Announcer.stubs(:voting_open).raises(ActiveRecord::StatementInvalid)
+
+    tick_at(2027, 1, 1, 0, 5)
+    tick_at(2027, 1, 8, 0, 5)
+
+    expect(election).to be_voting
+  end
+
+  describe "the reminder" do
+    it "never comes in Vote Week's first day" do
+      SiteSetting.mod_elections_voting_days = 1
+      tick_at(2027, 1, 1, 0, 5)
+      tick_at(2027, 1, 8, 0, 5)
+      tick_at(2027, 1, 8, 12)
+
+      expect(election).to be_voting
+      expect(election.reminder_sent_at).to be_nil
+    end
+
+    it "comes a day before the end of a longer Vote Week" do
+      SiteSetting.mod_elections_voting_days = 2
+      tick_at(2027, 1, 1, 0, 5)
+      tick_at(2027, 1, 8, 0, 5)
+      expect(election.reminder_sent_at).to be_nil
+
+      tick_at(2027, 1, 9, 0, 5)
+      expect(election.reminder_sent_at).to be_present
+    end
+  end
+
+  it "doesn't start a second election in a month that had one, even after the time zone changes" do
+    tick_at(2027, 1, 1, 0, 5)
+    DiscourseModElections::Publisher.cancel!(election, admin)
+
+    # Still January 2 in Honolulu, whose midnight on the 1st is five hours
+    # after New York's: a new slot, the same month.
+    SiteSetting.mod_elections_timezone = "Pacific/Honolulu"
+    tick_at(2027, 1, 2, 12)
+
+    expect(DiscourseModElections::Election.count).to eq(1)
   end
 
   describe ".end_phase!" do

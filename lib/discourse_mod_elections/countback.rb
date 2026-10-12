@@ -27,29 +27,35 @@ module DiscourseModElections
     end
 
     def self.eligible?(user)
-      Eligibility.member?(user) && !user.admin? && !user.moderator?
+      user.present? && Eligibility.can_serve?(user) && !user.moderator?
     end
 
+    # Under the election's lock, so two clicks (or two admins) fill one seat
+    # once.
     def self.fill!(election, actor)
       raise Error.new(:not_found) unless election == current_election
-      seats_open = election.seats - election.candidates.seated.count
-      raise Error.new(:no_open_seat) if seats_open <= 0
-      candidate = replacement(election)
-      raise Error.new(:no_replacement) if candidate.nil?
+      candidate =
+        election.with_lock do
+          seats_open = election.seats - election.candidates.seated.count
+          raise Error.new(:no_open_seat) if seats_open <= 0
+          found = replacement(election)
+          raise Error.new(:no_replacement) if found.nil?
 
-      user = candidate.user
-      user.grant_moderation!
-      StaffActionLogger.new(actor).log_grant_moderation(user)
-      Seats.seat_trust_level!(user, actor)
-      candidate.update!(elected: true)
+          user = found.user
+          user.grant_moderation!
+          StaffActionLogger.new(actor).log_grant_moderation(user)
+          Seats.seat_trust_level!(user, actor)
+          found.update!(elected: true)
 
-      result = election.result || {}
-      result["countbacks"] = Array(result["countbacks"]) +
-        [{ "candidate" => candidate.id, "at" => Time.zone.now.iso8601 }]
-      election.update!(result: result)
+          result = election.result || {}
+          result["countbacks"] = Array(result["countbacks"]) +
+            [{ "candidate" => found.id, "at" => Time.zone.now.iso8601 }]
+          election.update!(result: result)
+          found
+        end
 
       Announcer.countback(election, candidate)
-      Notifier.notify([user.id], election, "seat_filled")
+      Notifier.notify([candidate.user_id], election, "seat_filled")
       candidate
     end
   end

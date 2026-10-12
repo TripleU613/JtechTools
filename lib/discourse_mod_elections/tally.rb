@@ -52,16 +52,20 @@ module DiscourseModElections
               "number" => stage.number,
               "action" => stage.action.to_s,
               "candidate" => stage.candidate,
+              "excluded" => stage.excluded,
               "tallies" => stage.tallies.transform_keys(&:to_s).transform_values { |v| number(v) },
               "exhausted" => number(stage.exhausted),
               "elected" => stage.elected,
-              "tie" =>
-                stage.tie &&
+              "ties" =>
+                stage.ties.map do |tie|
                   {
-                    "method" => stage.tie[:method].to_s,
-                    "among" => stage.tie[:among],
-                    "chosen" => stage.tie[:chosen],
-                  },
+                    "purpose" => tie.purpose.to_s,
+                    "method" => tie.method.to_s,
+                    "among" => tie.among,
+                    "chosen" => tie.chosen,
+                    "decided_at" => tie.decided_at,
+                  }
+                end,
             }
           end,
       }

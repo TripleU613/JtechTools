@@ -6,6 +6,10 @@ module DiscourseModElections
   class AdminController < ::Admin::AdminController
     requires_plugin "jtech-tools"
 
+    # Reading works while the module is off, so the tab can say so and show
+    # what happened; changing anything waits until it's back on.
+    READ_ONLY = %i[index show ip_report preview seats countback].freeze
+    before_action :ensure_enabled, except: READ_ONLY
     before_action :find_election, except: %i[index create seats countback fill vacate]
 
     rescue_from DiscourseModElections::Error do |e|
@@ -114,6 +118,10 @@ module DiscourseModElections
     end
 
     private
+
+    def ensure_enabled
+      raise DiscourseModElections::Error.new(:module_off) unless DiscourseModElections.enabled?
+    end
 
     def find_election
       @election = Election.find_by(id: params[:id])

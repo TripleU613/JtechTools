@@ -39,7 +39,7 @@ RSpec.describe DiscourseModElections::Stv do
     expect(result.stages[0].elected).to eq(%w[chocolate])
     # Chocolate's 6 surplus votes move on at half value.
     expect(result.stages[1].tallies).to include("chocolate" => 6, "strawberry" => 5, "burger" => 3)
-    expect(result.stages[2].candidate).to eq("pear")
+    expect(result.stages[2].excluded).to eq(%w[pear])
     expect(result.stages[2].elected).to eq(%w[orange])
     expect(result.stages[3].elected).to eq(%w[strawberry])
     expect(result.exhausted).to eq(3)
@@ -115,23 +115,85 @@ RSpec.describe DiscourseModElections::Stv do
         )
 
       exclusion = result.stages.find { |s| s.action == :exclusion }
-      expect(exclusion.candidate).to eq("c")
-      expect(exclusion.tie).to include(method: :earlier_stage, chosen: "c")
+      expect(exclusion.excluded).to eq(%w[c])
+      expect(exclusion.ties.sole).to have_attributes(
+        purpose: :exclusion,
+        method: :earlier_stage,
+        among: %w[b c],
+        chosen: "c",
+        decided_at: 1,
+      )
     end
 
     it "draws lots when the candidates were level at every stage" do
       ballots = %w[a b c d].map { |id| ballot(1, id) }
 
       results = (1..20).map { |seed| count(%w[a b c d], ballots, seed: seed) }
-      excluded = results.map { |r| r.stages.find { |s| s.action == :exclusion }.candidate }
+      exclusions = results.map { |r| r.stages.find { |s| s.action == :exclusion } }
+      excluded = exclusions.map { |stage| stage.excluded.sole }
 
-      expect(results.first.stages.last.tie).to include(method: :lot)
+      expect(exclusions.first.ties.find { |t| t.purpose == :exclusion }.method).to eq(:lot)
       # Same seed, same draw.
       expect(count(%w[a b c d], ballots, seed: 7).elected).to eq(
         count(%w[a b c d], ballots, seed: 7).elected,
       )
       # And the draw isn't always the same person.
       expect(excluded.uniq.size).to be > 1
+    end
+  end
+
+  describe "candidates with no votes" do
+    it "go out together, without drawing lots between them" do
+      result = count(%w[a b c d e], [ballot(3, "a"), ballot(2, "b"), ballot(1, "c")], seats: 2)
+
+      zeros = result.stages.find { |s| s.excluded.size > 1 }
+      expect(zeros.excluded).to contain_exactly("d", "e")
+      expect(zeros.ties).to be_empty
+      expect(result.elected).to eq(%w[a b])
+      expect(result.stages.flat_map(&:ties).map(&:method)).not_to include(:lot)
+    end
+
+    it "still go one at a time by lot when too few would be left for the seats" do
+      result = count(%w[a b c], [ballot(5, "a")], seats: 2)
+
+      exclusion = result.stages.find { |s| s.action == :exclusion }
+      expect(exclusion.excluded.size).to eq(1)
+      expect(exclusion.ties.sole).to have_attributes(purpose: :exclusion, method: :lot)
+      expect(result.elected.size).to eq(2)
+    end
+  end
+
+  it "puts people elected together on equal votes in order, and records how" do
+    result = count(%w[a b c], [ballot(3, "a"), ballot(3, "b"), ballot(1, "c")], seats: 2)
+
+    first = result.stages.first
+    expect(first.elected).to contain_exactly("a", "b")
+    expect(first.ties.sole).to have_attributes(purpose: :order, method: :lot, among: %w[a b])
+    expect(result.elected.first).to eq(first.ties.sole.chosen)
+  end
+
+  # Whatever the ballots, a count must add up: every vote is with a
+  # candidate or exhausted at every stage, and the right number are elected.
+  it "keeps its books balanced on random elections" do
+    rng = Random.new(42)
+    300.times do
+      ids = (1..rng.rand(1..7)).map { |i| "c#{i}" }
+      seats = rng.rand(1..4)
+      ballots =
+        Array.new(rng.rand(0..25)) do
+          ballot(rng.rand(0..4), *ids.shuffle(random: rng).first(rng.rand(0..ids.size)))
+        end
+      result = count(ids, ballots, seats: seats, seed: rng.rand(1000))
+
+      result.stages.each do |stage|
+        expect(stage.tallies.values.sum + stage.exhausted).to eq(result.total)
+      end
+      expect(result.elected).to eq(result.elected.uniq)
+      expect(result.elected - ids).to be_empty
+      excluded = result.stages.flat_map(&:excluded)
+      expect(result.elected & excluded).to be_empty
+      expected = result.outcome == :no_votes ? 0 : [seats, ids.size].min
+      expect(result.elected.size).to eq(expected)
     end
   end
 

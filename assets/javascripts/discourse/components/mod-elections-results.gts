@@ -1,4 +1,5 @@
 import Component from "@glimmer/component";
+import { htmlSafe } from "@ember/template";
 import avatar from "discourse/helpers/avatar";
 import icon from "discourse/helpers/d-icon";
 import getURL from "discourse/lib/get-url";
@@ -24,6 +25,8 @@ interface ResultCell {
   value: string;
   elected: boolean;
   out: boolean;
+  // How far toward the votes needed, as a bar under the number.
+  bar: ReturnType<typeof htmlSafe> | null;
 }
 
 interface ResultRow {
@@ -51,6 +54,8 @@ export default class ModElectionsResults extends Component<ModElectionsResultsSi
     return new Map(this.args.result.candidates.map((c) => [c.id, c]));
   }
 
+  // In the order they were elected, which is the order a countback skips
+  // them in.
   get winners(): (ModElectionResultCandidate & { note: string | null })[] {
     const now = new Map((this.args.candidates || []).map((c) => [c.id, c]));
     return this.args.result.elected
@@ -106,12 +111,11 @@ export default class ModElectionsResults extends Component<ModElectionsResultsSi
   get rows(): ResultRow[] {
     const stages = this.args.result.stages;
     const elected = this.args.result.elected;
+    const quota = this.args.result.quota;
     const outAt = new Map<number, number>();
     const electedAt = new Map<number, number>();
     stages.forEach((stage) => {
-      if (stage.action === "exclusion" && stage.candidate !== null) {
-        outAt.set(stage.candidate, stage.number);
-      }
+      stage.excluded.forEach((id) => outAt.set(id, stage.number));
       stage.elected.forEach((id) => electedAt.set(id, stage.number));
     });
 
@@ -142,12 +146,13 @@ export default class ModElectionsResults extends Component<ModElectionsResultsSi
       elected: elected.includes(candidate.id),
       cells: stages.map((stage) => {
         const out = (outAt.get(candidate.id) ?? Infinity) <= stage.number;
+        const votes = stage.tallies[String(candidate.id)] || 0;
+        const share = quota > 0 ? Math.min(votes / quota, 1) : 0;
         return {
-          value: out
-            ? "—"
-            : formatVotes(stage.tallies[String(candidate.id)] || 0),
+          value: out ? "—" : formatVotes(votes),
           elected: electedAt.get(candidate.id) === stage.number,
           out,
+          bar: out ? null : htmlSafe(`width:${Math.round(share * 100)}%`),
         };
       }),
     }));
@@ -157,23 +162,28 @@ export default class ModElectionsResults extends Component<ModElectionsResultsSi
     return this.args.result.stages.map((stage) => formatVotes(stage.exhausted));
   }
 
+  // Every tie the count broke, where, and how.
   get ties(): string[] {
-    return this.args.result.stages
-      .filter((stage) => stage.tie)
-      .map((stage) => {
-        const tie = stage.tie!;
-        const names = tie.among.map((id) => this.name(id)).join(", ");
-        return tie.method === "lot"
-          ? i18n("mod_elections.results.tie_lot", {
-              names,
-              seed: this.args.result.seed,
-            })
-          : i18n("mod_elections.results.tie_earlier_stage", { names });
-      });
+    const seed = this.args.result.seed;
+    return this.args.result.stages.flatMap((stage) =>
+      stage.ties.map((tie) =>
+        i18n(`mod_elections.results.ties.${tie.purpose}_${tie.method}`, {
+          stage: stage.number,
+          names: this.names(tie.among),
+          chosen: this.name(tie.chosen),
+          decided_at: tie.decided_at ?? "",
+          seed,
+        })
+      )
+    );
   }
 
   name(id: number | null): string {
     return (id !== null && this.people.get(id)?.username) || "?";
+  }
+
+  names(ids: number[]): string {
+    return ids.map((id) => this.name(id)).join(", ");
   }
 
   stageLabel(stage: ModElectionStage): string {
@@ -184,7 +194,8 @@ export default class ModElectionsResults extends Component<ModElectionsResultsSi
         });
       case "exclusion":
         return i18n("mod_elections.results.stage_exclusion", {
-          username: this.name(stage.candidate),
+          count: stage.excluded.length,
+          names: this.names(stage.excluded),
         });
       case "unopposed":
         return i18n("mod_elections.results.stage_unopposed");
@@ -270,6 +281,14 @@ export default class ModElectionsResults extends Component<ModElectionsResultsSi
                   >
                     {{cell.value}}
                     {{#if cell.elected}}{{icon "check"}}{{/if}}
+                    {{#if cell.bar}}
+                      <span
+                        aria-hidden="true"
+                        class="mod-elections-results__bar"
+                      >
+                        <span style={{cell.bar}}></span>
+                      </span>
+                    {{/if}}
                   </td>
                 {{/each}}
               </tr>
@@ -284,13 +303,18 @@ export default class ModElectionsResults extends Component<ModElectionsResultsSi
         </table>
       </div>
 
-      {{#each this.ties as |line|}}
-        <p class="mod-elections-muted">{{line}}</p>
-      {{/each}}
+      {{#if this.ties.length}}
+        <ul class="mod-elections-results__ties">
+          {{#each this.ties as |line|}}
+            <li>{{line}}</li>
+          {{/each}}
+        </ul>
+      {{/if}}
 
       <details class="mod-elections-results__how">
         <summary>{{i18n "mod_elections.results.how"}}</summary>
         <p>{{i18n "mod_elections.results.how_body"}}</p>
+        <p>{{i18n "mod_elections.results.how_ties"}}</p>
       </details>
     </section>
   </template>

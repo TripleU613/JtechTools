@@ -29,7 +29,9 @@ class CreateJtechElectionTables < ActiveRecord::Migration[7.2]
 
     create_table :jtech_election_candidates do |t|
       t.bigint :election_id, null: false
-      t.bigint :user_id, null: false
+      # Kept, without the user, when an account is deleted: a published count
+      # and any later countback must stay the same.
+      t.bigint :user_id
       t.integer :status, null: false, default: 0
       t.text :statement, null: false, default: ""
       # A sitting moderator when nominations opened, put on the ballot
@@ -49,14 +51,14 @@ class CreateJtechElectionTables < ActiveRecord::Migration[7.2]
                     :jtech_elections,
                     column: :election_id,
                     on_delete: :cascade
-    add_foreign_key :jtech_election_candidates, :users, on_delete: :cascade
+    add_foreign_key :jtech_election_candidates, :users, on_delete: :nullify
 
     # Who may vote and how much their vote counts, fixed when nominations
     # open so new accounts and trust level changes during the election
     # change nothing.
     create_table :jtech_election_voters do |t|
       t.bigint :election_id, null: false
-      t.bigint :user_id, null: false
+      t.bigint :user_id
       t.integer :weight, null: false
     end
     add_index :jtech_election_voters, %i[election_id user_id], unique: true
@@ -65,11 +67,11 @@ class CreateJtechElectionTables < ActiveRecord::Migration[7.2]
                     :jtech_elections,
                     column: :election_id,
                     on_delete: :cascade
-    add_foreign_key :jtech_election_voters, :users, on_delete: :cascade
+    add_foreign_key :jtech_election_voters, :users, on_delete: :nullify
 
     create_table :jtech_election_ballots do |t|
       t.bigint :election_id, null: false
-      t.bigint :user_id, null: false
+      t.bigint :user_id
       # Candidate ids, best first.
       t.bigint :ranking, array: true, null: false, default: []
       t.integer :weight, null: false
@@ -87,6 +89,6 @@ class CreateJtechElectionTables < ActiveRecord::Migration[7.2]
                     :jtech_elections,
                     column: :election_id,
                     on_delete: :cascade
-    add_foreign_key :jtech_election_ballots, :users, on_delete: :cascade
+    add_foreign_key :jtech_election_ballots, :users, on_delete: :nullify
   end
 end

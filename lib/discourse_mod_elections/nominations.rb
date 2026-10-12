@@ -4,10 +4,11 @@ module DiscourseModElections
   # Getting on (and off) the ballot.
   module Nominations
     # Sitting moderators go on the ballot when nominations open. They can
-    # drop out until nominations close.
+    # drop out until nominations close. Returns their user ids, to tell them
+    # once the change is saved.
     def self.add_incumbents!(election)
       ids = Seats.sitting.pluck(:id)
-      return if ids.empty?
+      return [] if ids.empty?
       now = Time.zone.now
       rows =
         ids.map do |user_id|
@@ -21,57 +22,89 @@ module DiscourseModElections
           }
         end
       Candidate.insert_all(rows, unique_by: %i[election_id user_id])
-      Notifier.notify(ids, election, "on_ballot")
+      ids
     end
 
+    # Under the election's lock, which opening the vote takes too, so the
+    # ballot never changes once Vote Week has begun.
     def self.run!(user, election, statement)
-      reason = Eligibility.run_blocked_reason(user, election)
-      raise Error.new(reason) if reason
-      candidate = election.candidates.find_or_initialize_by(user_id: user.id)
-      candidate.status = :running
-      candidate.statement = clean(statement)
-      save!(candidate)
+      election.with_lock do
+        reason = Eligibility.run_blocked_reason(user, election)
+        raise Error.new(reason) if reason
+        candidate = election.candidates.find_or_initialize_by(user_id: user.id)
+        candidate.status = :running
+        candidate.statement = clean(statement)
+        save!(candidate)
+      end
     end
 
     def self.update_statement!(user, election, statement)
-      raise Error.new(:not_nominating) unless election.nominating?
-      candidate = own_candidacy!(user, election)
-      candidate.statement = clean(statement)
-      save!(candidate)
+      election.with_lock do
+        raise Error.new(:not_nominating) unless election.taking_nominations?
+        candidate = own_candidacy!(user, election)
+        candidate.statement = clean(statement)
+        save!(candidate)
+      end
     end
 
     def self.withdraw!(user, election)
-      raise Error.new(:not_nominating) unless election.nominating?
-      own_candidacy!(user, election).update!(status: :withdrawn)
+      election.with_lock do
+        raise Error.new(:not_nominating) unless election.taking_nominations?
+        own_candidacy!(user, election).update!(status: :withdrawn)
+      end
     end
 
+    # Under the election's lock, like publishing, so a count never sees a
+    # candidate halfway on or off the ballot.
     def self.disqualify!(candidate, reason, actor)
-      raise Error.new(:finished) unless candidate.election.unfinished?
       reason = reason.to_s.strip
       raise Error.new(:reason_required) if reason.blank?
-      candidate.update!(
-        status: :disqualified,
-        disqualified_reason: reason.truncate(500),
-        disqualified_by: actor,
-      )
+      candidate.election.with_lock do
+        raise Error.new(:finished) unless candidate.election.unfinished?
+        candidate.update!(
+          status: :disqualified,
+          disqualified_reason: reason.truncate(500),
+          disqualified_by: actor,
+        )
+      end
       StaffActionLogger.new(actor).log_custom(
         "mod_election_disqualify",
         target_user_id: candidate.user_id,
         election_id: candidate.election_id,
         reason: reason,
       )
-      Notifier.notify([candidate.user_id], candidate.election, "disqualified")
+      Notifier.notify([candidate.user_id].compact, candidate.election, "disqualified")
     end
 
     def self.reinstate!(candidate, actor)
-      raise Error.new(:finished) unless candidate.election.unfinished?
-      raise Error.new(:not_found) unless candidate.disqualified?
-      candidate.update!(status: :running, disqualified_reason: nil, disqualified_by: nil)
+      candidate.election.with_lock do
+        raise Error.new(:finished) unless candidate.election.unfinished?
+        raise Error.new(:not_found) unless candidate.reload.disqualified?
+        candidate.update!(status: :running, disqualified_reason: nil, disqualified_by: nil)
+      end
       StaffActionLogger.new(actor).log_custom(
         "mod_election_reinstate",
         target_user_id: candidate.user_id,
         election_id: candidate.election_id,
       )
+    end
+
+    # Someone leaving their seat mid-term also leaves the ballot of any
+    # election still going: stepping down drops them out, and a moderator
+    # removed for abuse is taken off with that as the reason, so winning it
+    # can't hand them the seat straight back.
+    def self.leave_ballots!(user, seat_left_reason, actor)
+      Candidate
+        .running
+        .where(user_id: user.id, election_id: Election.unfinished.select(:id))
+        .includes(:election)
+        .find_each do |candidate|
+          if seat_left_reason == "removed"
+            disqualify!(candidate, I18n.t("mod_elections.reasons.removed"), actor)
+          else
+            candidate.update!(status: :withdrawn)
+          end
+        end
     end
 
     def self.own_candidacy!(user, election)

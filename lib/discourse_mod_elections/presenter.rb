@@ -16,6 +16,10 @@ module DiscourseModElections
         me: election && user && me_json(election, user),
         limits: limits,
         history: history,
+        # The calendar's zone, so dates show as the forum's calendar days
+        # wherever the reader is.
+        timezone: Schedule.zone.tzinfo.name,
+        next_opening: DiscourseModElections.enabled? ? Schedule.next_opening : nil,
       }
     end
 
@@ -28,10 +32,18 @@ module DiscourseModElections
           {
             id: election.id,
             status: election.status,
+            label: month_label(election),
             nominations_open_at: election.nominations_open_at,
             published_at: election.published_at,
           }
         end
+    end
+
+    # "January 2027", from the calendar's zone: a reader in Los Angeles
+    # still sees January for an election that opened at midnight in New
+    # York on the 1st.
+    def self.month_label(election)
+      I18n.l(election.nominations_open_at.in_time_zone(Schedule.zone).to_date, format: "%B %Y")
     end
 
     def self.limits
@@ -270,9 +282,27 @@ module DiscourseModElections
               strike: row[:strike],
               strikes: row[:strikes],
               trust_level: row[:trust_level],
+              on_ballot: row[:on_ballot],
             )
           end,
+        problems:
+          plan[:problems].map do |candidate|
+            {
+              candidate_id: candidate.id,
+              user: basic_user(candidate.user),
+              reason: problem_reason(candidate.user),
+            }
+          end,
       }
+    end
+
+    # Why a winner can't take their seat, for the admin's preview.
+    def self.problem_reason(user)
+      return "deleted" if user.nil?
+      return "admin" if user.admin?
+      return "suspended" if user.suspended?
+      return "silenced" if user.silenced?
+      "inactive"
     end
   end
 end

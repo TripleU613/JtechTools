@@ -7,7 +7,7 @@ module DiscourseModElections
     self.table_name = "jtech_election_candidates"
 
     belongs_to :election, class_name: "DiscourseModElections::Election"
-    belongs_to :user
+    belongs_to :user, optional: true
     belongs_to :disqualified_by, class_name: "User", optional: true
 
     enum :status, { running: 0, withdrawn: 1, disqualified: 2 }
@@ -42,7 +42,7 @@ end
 #  updated_at          :datetime         not null
 #  disqualified_by_id  :bigint
 #  election_id         :bigint           not null
-#  user_id             :bigint           not null
+#  user_id             :bigint
 #
 # Indexes
 #
@@ -52,5 +52,5 @@ end
 # Foreign Keys
 #
 #  fk_rails_...  (election_id => jtech_elections.id) ON DELETE => cascade
-#  fk_rails_...  (user_id => users.id) ON DELETE => cascade
+#  fk_rails_...  (user_id => users.id) ON DELETE => nullify
 #

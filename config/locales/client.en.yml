@@ -605,6 +605,19 @@ en:
         voting: Vote Week
         results: Results
       until: "until %{date}"
+      time_left:
+        soon: Less than an hour left
+        hours:
+          one: "%{count} hour left"
+          other: "%{count} hours left"
+        days:
+          one: "%{count} day left"
+          other: "%{count} days left"
+      next_opening: "Next election: nominations open %{date}."
+      receipt:
+        in: Your ballot is in. It goes into the count when the results are published.
+        counted: Your ballot was counted.
+        voided: "An admin set your ballot aside: %{reason}"
       seats:
         one: "%{count} seat"
         other: "%{count} seats"
@@ -647,6 +660,16 @@ en:
           one: "Your vote counts %{count}"
           other: "Your vote counts %{count}"
         hint: Rank as many as you like. Ranking someone lower never hurts your higher picks.
+        drag_hint: You can drag them into place, too.
+        aria:
+          add: "Rank %{username}"
+          move_up: "Move %{username} up"
+          move_down: "Move %{username} down"
+          remove: "Take %{username} off your ranking"
+        announce:
+          ranked: "%{username} ranked %{place}."
+          moved: "%{username} moved to %{place}."
+          removed: "%{username} taken off your ranking."
         your_ranking: Your ranking
         empty_ranking: Pick candidates below, best first.
         candidates: Candidates
@@ -680,16 +703,24 @@ en:
         stage_first: First choices
         stage_unopposed: Unopposed
         stage_surplus: "%{username}'s extra votes move on"
-        stage_exclusion: "%{username} is out"
+        stage_exclusion:
+          one: "%{names} is out"
+          other: "%{names} are out"
         exhausted: No more choices
-        tie_earlier_stage: "%{names} were level; earlier stages of the count decided it."
-        tie_lot: "%{names} were level at every stage, so it was drawn by lot (seed %{seed})."
+        ties:
+          exclusion_earlier_stage: "Stage %{stage}: %{names} were level on the fewest votes. %{chosen} had fewer at stage %{decided_at}, so went out."
+          exclusion_lot: "Stage %{stage}: %{names} were level on the fewest votes at every stage, so a lot put %{chosen} out (seed %{seed})."
+          surplus_earlier_stage: "Stage %{stage}: %{names} had equal extra votes. %{chosen} had more at stage %{decided_at}, so theirs moved first."
+          surplus_lot: "Stage %{stage}: %{names} had equal extra votes and were level at every stage, so a lot moved %{chosen}'s first (seed %{seed})."
+          order_earlier_stage: "Stage %{stage}: %{names} were elected on equal votes. %{chosen} had more at stage %{decided_at}, so is listed ahead."
+          order_lot: "Stage %{stage}: %{names} were elected on equal votes and were level at every stage, so a lot listed %{chosen} ahead (seed %{seed})."
         countback: "%{username} took a seat someone left mid-term."
         left:
           stepped_down: Stepped down
           removed: Removed
         how: How the count works
-        how_body: "Every ballot starts with its voter's weight on their first choice. Anyone who reaches the votes needed is elected, and the votes they didn't need move on to their voters' next choices at a reduced value. When nobody reaches it, whoever has the fewest votes is out and their ballots move to each voter's next choice. This repeats until every seat is filled."
+        how_body: "Every ballot starts with its voter's weight on their first choice. Anyone who reaches the votes needed is elected, and the votes they didn't need move on to their voters' next choices at a reduced value. When nobody reaches it, whoever has the fewest votes is out and their ballots move to each voter's next choice. This repeats until every seat is filled. Anyone with no votes at all goes out in one step, as long as enough people are left to fill the seats."
+        how_ties: "When people are level, whoever was ahead at the earliest stage where they differed wins the tie. If they were level at every stage, a lot decides it, drawn from a seed fixed when voting closed and shown here so anyone can check it."
       history:
         title: Past elections
         cancelled: Cancelled
@@ -791,7 +822,16 @@ en:
           leave: Lose moderator rights
           strike: "strike %{count}"
           trust_level: "trust level %{level}"
+          not_on_ballot: Not on this ballot
           nobody: Nobody
+          problems:
+            title: "These winners can't take a seat now. Take them off the ballot and preview again; the count gives the seat to the next in line."
+            someone: A deleted account
+            deleted: "%{username} was deleted."
+            admin: "%{username} is an admin now."
+            suspended: "%{username} is suspended."
+            silenced: "%{username} is silenced."
+            inactive: "%{username}'s account isn't active."
           publish: Publish results
           publish_confirm: Publish the results? Moderator rights change straight away, and the results go on the elections page.
         seats:
@@ -822,6 +862,7 @@ en:
           submit: Start election
         history:
           title: Elections
+          published: "published %{date}"
       jtech_tools:
         actions:
           title: Maintenance actions

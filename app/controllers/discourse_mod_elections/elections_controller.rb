@@ -11,6 +11,7 @@ module DiscourseModElections
     before_action :ensure_enabled
     before_action :ensure_logged_in, except: %i[page show]
     before_action :ensure_own_session, except: %i[page show]
+    before_action :limit_writes, except: %i[page show]
     before_action :find_election, except: %i[page show]
 
     rescue_from DiscourseModElections::Error do |e|
@@ -77,6 +78,13 @@ module DiscourseModElections
       if is_api? || is_user_api? || current_user&.is_impersonating
         raise Discourse::InvalidAccess.new(I18n.t("mod_elections.errors.own_session_only"))
       end
+    end
+
+    # Generous for a person reordering a ballot a few times, tight for a
+    # script. Over the limit, core answers 429 with when to try again.
+    def limit_writes
+      RateLimiter.new(current_user, "mod-elections-write", 30, 1.minute).performed!
+      RateLimiter.new(current_user, "mod-elections-write-hourly", 200, 1.hour).performed!
     end
 
     def find_election

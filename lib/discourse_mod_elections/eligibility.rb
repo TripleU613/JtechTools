@@ -10,8 +10,14 @@ module DiscourseModElections
       !user.anonymous?
     end
 
+    # Someone who may hold a seat: a member in good standing who isn't an
+    # admin. Checked again when results are published and at a countback.
+    def self.can_serve?(user)
+      member?(user) && !user.admin?
+    end
+
     def self.run_blocked_reason(user, election, now: Time.zone.now)
-      return :not_nominating unless election.nominating?
+      return :not_nominating unless election.taking_nominations?(now)
       return :not_allowed unless member?(user)
       return :admin if user.admin?
 
@@ -31,8 +37,8 @@ module DiscourseModElections
       nil
     end
 
-    def self.vote_blocked_reason(user, election, voter)
-      return :not_voting unless election.voting?
+    def self.vote_blocked_reason(user, election, voter, now: Time.zone.now)
+      return :not_voting unless election.taking_votes?(now)
       return :not_allowed unless member?(user)
       return :admin if user.admin?
       return :not_on_roll if voter.nil?

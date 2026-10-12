@@ -18,8 +18,18 @@ module DiscourseModElections
       { id: election.id, status: election.status, ends_at: election.phase_ends_at&.iso8601 }
     end
 
+    CHANNEL = "/jtech-elections/state"
+
+    # An election moved to its next step: drop the cache and tell open
+    # elections pages to reload. Only that something changed goes out, to
+    # signed-in members; the page asks the server for the rest.
     def self.changed!
       Discourse.cache.delete(CACHE_KEY)
+      MessageBus.publish(
+        CHANNEL,
+        { changed: true },
+        group_ids: [Group::AUTO_GROUPS[:trust_level_0]],
+      )
     end
   end
 end

@@ -7,7 +7,7 @@ module DiscourseModElections
     self.table_name = "jtech_election_ballots"
 
     belongs_to :election, class_name: "DiscourseModElections::Election"
-    belongs_to :user
+    belongs_to :user, optional: true
     belongs_to :voided_by, class_name: "User", optional: true
 
     scope :counted, -> { where(voided_at: nil) }
@@ -31,7 +31,7 @@ end
 #  created_at   :datetime         not null
 #  updated_at   :datetime         not null
 #  election_id  :bigint           not null
-#  user_id      :bigint           not null
+#  user_id      :bigint
 #  voided_by_id :bigint
 #
 # Indexes
@@ -42,5 +42,5 @@ end
 # Foreign Keys
 #
 #  fk_rails_...  (election_id => jtech_elections.id) ON DELETE => cascade
-#  fk_rails_...  (user_id => users.id) ON DELETE => cascade
+#  fk_rails_...  (user_id => users.id) ON DELETE => nullify
 #

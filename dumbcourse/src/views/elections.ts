@@ -4,7 +4,7 @@
 // server does every check.
 
 import { del, errorMessage, get, post, put } from "../api.ts";
-import { longDate, plural, timeAgo, truncate } from "../format.ts";
+import { dateTime, longDate, plural, timeAgo, truncate } from "../format.ts";
 import { html, type SafeHtml } from "../html.ts";
 import { focusContent } from "../nav.ts";
 import { href, type RouteContext } from "../router.ts";
@@ -39,17 +39,28 @@ interface Candidate {
   elected: boolean;
 }
 
+interface Tie {
+  purpose: string;
+  method: string;
+  among: number[];
+  chosen: number;
+  decided_at: number | null;
+}
+
 interface Stage {
   number: number;
   action: string;
   candidate: number | null;
+  excluded: number[];
   tallies: Record<string, number>;
   elected: number[];
+  ties: Tie[];
 }
 
 interface Result {
   quota: number;
   ballots: number;
+  seed: number;
   elected: number[];
   candidates: Array<{ id: number; username: string | null }>;
   stages: Stage[];
@@ -88,7 +99,8 @@ interface Page {
     voter_min_account_age_days: number;
     statement_max_length: number;
   };
-  history: Array<{ id: number; status: string; nominations_open_at: string }>;
+  history: Array<{ id: number; status: string; label: string }>;
+  next_opening: string | null;
 }
 
 const API = "/jtech-elections";
@@ -199,7 +211,13 @@ export function electionsRoute(ctx: RouteContext): Promise<void> {
 function show(s: Screen, page: Page): void {
   const e = page.election;
   if (!e) {
-    s.empty("There hasn't been an election yet.", "info");
+    s.empty(
+      "There hasn't been an election yet." +
+        (page.next_opening
+          ? " Nominations open " + longDate(page.next_opening) + "."
+          : ""),
+      "info"
+    );
     return;
   }
   const ends =
@@ -210,7 +228,7 @@ function show(s: Screen, page: Page): void {
         : null;
   s.title("Mod elections", {
     back: true,
-    sub: (STATUS[e.status] || "") + (ends ? " · until " + longDate(ends) : ""),
+    sub: (STATUS[e.status] || "") + (ends ? " · until " + dateTime(ends) : ""),
   });
 
   if (e.status === "voting" && page.me && !page.me.vote_blocked) {
@@ -230,7 +248,8 @@ function show(s: Screen, page: Page): void {
         count.
       </p>
       ${candidateList(e)}`;
-  else if (e.status === "published" && e.result) body = results(e, e.result);
+  else if (e.status === "published" && e.result)
+    body = results(e, e.result, page.me);
   else
     body = html`<p class="hint pad">
       This election was cancelled. The moderators stayed as they were.
@@ -255,7 +274,7 @@ function history(page: Page): SafeHtml | string {
               data-key="past${h.id}"
             >
               <div class="row-main">
-                <div class="row-title">${longDate(h.nominations_open_at)}</div>
+                <div class="row-title">${h.label}</div>
                 ${h.status === "cancelled"
                   ? html`<div class="row-meta">Cancelled</div>`
                   : ""}
@@ -556,7 +575,38 @@ function ballot(s: Screen, page: Page, e: Election, me: Me): void {
 
 // ── Results ─────────────────────────────────────────────────────────────
 
-function results(e: Election, r: Result): SafeHtml {
+// Whether the reader's own ballot went into the count, never what was on it.
+function receipt(me: Me | null): SafeHtml | string {
+  if (!me || !me.ballot) return "";
+  return html`<p class="hint pad">
+    ${me.ballot.voided
+      ? "An admin set your ballot aside: " + (me.ballot.void_reason || "")
+      : "Your ballot was counted."}
+  </p>`;
+}
+
+function tieText(
+  t: Tie,
+  st: Stage,
+  n: (id: number | null) => string,
+  seed: number
+): string {
+  const what =
+    t.purpose === "exclusion"
+      ? "put " + n(t.chosen) + " out"
+      : t.purpose === "surplus"
+        ? "moved " + n(t.chosen) + "'s extra votes first"
+        : "listed " + n(t.chosen) + " ahead";
+  const how =
+    t.method === "lot"
+      ? " were level at every stage. A lot (seed " + seed + ") "
+      : " were level. Stage " + t.decided_at + " ";
+  return (
+    "Stage " + st.number + ": " + t.among.map(n).join(", ") + how + what + "."
+  );
+}
+
+function results(e: Election, r: Result, me: Me | null): SafeHtml {
   const names: Record<string, string> = {};
   r.candidates.forEach((c) => (names[String(c.id)] = c.username || "?"));
   const n = (id: number | null) =>
@@ -565,13 +615,31 @@ function results(e: Election, r: Result): SafeHtml {
     st.action === "surplus"
       ? n(st.candidate) + "'s extra votes move on"
       : st.action === "exclusion"
-        ? n(st.candidate) + " is out"
+        ? st.excluded.map(n).join(", ") +
+          (st.excluded.length > 1 ? " are out" : " is out")
         : st.action === "unopposed"
           ? "Unopposed"
           : "First choices";
+  const byId: Record<string, Candidate> = {};
+  e.candidates.forEach((c) => (byId[String(c.id)] = c));
+  // In the order they were elected.
+  const winners = r.elected.map((id) => byId[String(id)]).filter((c) => !!c);
+  const ties: string[] = [];
+  r.stages.forEach((st) =>
+    st.ties.forEach((t) => ties.push(tieText(t, st, n, r.seed)))
+  );
+  // Who is out by each stage, so a stage lists only who's still in it.
+  const outBy: Record<string, number> = {};
+  r.stages.forEach((st) =>
+    st.excluded.forEach((id) => (outBy[String(id)] = st.number))
+  );
   const tallies = (st: Stage) =>
     r.candidates
-      .filter((c) => st.tallies[String(c.id)] !== undefined)
+      .filter(
+        (c) =>
+          st.tallies[String(c.id)] !== undefined &&
+          !(outBy[String(c.id)] <= st.number)
+      )
       .sort((a, b) => st.tallies[String(b.id)] - st.tallies[String(a.id)])
       .slice(0, 4)
       .map(
@@ -582,12 +650,11 @@ function results(e: Election, r: Result): SafeHtml {
       )
       .join(" · ");
 
-  return html`<h2 class="section-title">Elected</h2>
-    ${r.elected.length
+  return html`${receipt(me)}
+    <h2 class="section-title">Elected</h2>
+    ${winners.length
       ? html`<ul class="rows">
-          ${e.candidates
-            .filter((c) => r.elected.indexOf(c.id) >= 0)
-            .map((c) => candidateRow(c))}
+          ${winners.map((c) => candidateRow(c))}
         </ul>`
       : html`<p class="hint pad">Nobody was elected.</p>`}
     <p class="hint pad">
@@ -614,5 +681,9 @@ function results(e: Election, r: Result): SafeHtml {
             </div>
           </li>`
       )}
-    </ul>`;
+    </ul>
+    ${ties.length
+      ? html`<h2 class="section-title">Ties</h2>
+          ${ties.map((t) => html`<p class="hint pad">${t}</p>`)}`
+      : ""}`;
 }

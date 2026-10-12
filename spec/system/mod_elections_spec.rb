@@ -102,6 +102,52 @@ RSpec.describe "Mod elections" do
     shot("04_ballot_saved")
   end
 
+  it "drags candidates into place on desktop and reads out each change" do
+    open_voting
+    sign_in(voter)
+    visit "/elections"
+
+    pool_row = ->(user) do
+      find(".mod-elections-ballot__pool [data-candidate-id='#{candidate_for(user).id}']")
+    end
+    pool_row.call(chaim).drag_to(find(".mod-elections-ballot__dropzone"))
+    expect(page).to have_css(".mod-elections-ballot__announce", text: "chaim_w ranked 1.")
+
+    pool_row.call(dovid).drag_to(
+      find(".mod-elections-ballot__ranking li", text: chaim.username),
+      delay: 0.05,
+    )
+    names = -> { all(".mod-elections-ballot__ranking .mod-elections-ballot__name").map(&:text) }
+    expect(names.call).to contain_exactly(dovid.username, chaim.username)
+
+    # Each button says whose it is.
+    expect(page).to have_css(".mod-elections-ballot__up[aria-label='Move #{chaim.username} up']")
+    expect(page).to have_css(
+      ".mod-elections-ballot__remove[aria-label='Take #{dovid.username} off your ranking']",
+    )
+
+    find(".mod-elections-ballot__ranking li", text: dovid.username).drag_to(
+      find(".mod-elections-ballot__pool"),
+    )
+    expect(names.call).to eq([chaim.username])
+    expect(page).to have_css(
+      ".mod-elections-ballot__announce",
+      text: "#{dovid.username} taken off your ranking.",
+    )
+  end
+
+  it "moves the page on by itself when a step changes" do
+    open_voting
+    sign_in(voter)
+    visit "/elections"
+    expect(page).to have_css(".mod-elections-ballot")
+
+    DiscourseModElections::Lifecycle.end_phase!(election, admin)
+
+    expect(page).to have_css(".mod-elections-status", text: "Counting")
+    expect(page).to have_no_css(".mod-elections-ballot")
+  end
+
   it "works the same in mobile mode", mobile: true do
     open_voting
     sign_in(voter)
@@ -175,8 +221,62 @@ RSpec.describe "Mod elections" do
     sign_in(voter)
     visit "/elections"
     expect(page).to have_css(".mod-elections-status", text: "Results")
+    expect(page).to have_css(".mod-elections-receipt", text: "Your ballot was counted.")
     expect(page).to have_css(".mod-elections-results__row--elected", text: chaim.username)
     expect(page).to have_css(".mod-elections-results__table th", text: "First choices")
     shot("06_results")
+  end
+
+  it "holds publishing while a winner can't take the seat, until an admin takes them off" do
+    open_voting
+    election.update!(seats: 1)
+    DiscourseModElections::Voting.cast!(voter, election, [candidate_for(chaim).id])
+    DiscourseModElections::Voting.cast!(dovid, election, [candidate_for(chaim).id])
+    DiscourseModElections::Voting.cast!(
+      moderator,
+      election,
+      [candidate_for(dovid).id, candidate_for(chaim).id],
+    )
+    DiscourseModElections::Lifecycle.end_phase!(election, admin)
+    chaim.update!(suspended_till: 1.month.from_now, suspended_at: Time.zone.now)
+
+    sign_in(admin)
+    visit "/admin/plugins/jtech-tools/mod-elections"
+    find(".mod-elections-admin__preview").click
+
+    expect(page).to have_css(
+      ".mod-elections-admin__problems",
+      text: "#{chaim.username} is suspended.",
+    )
+    expect(page).to have_css(".mod-elections-admin__publish[disabled]")
+
+    row = find(".mod-elections-admin__table tr[data-candidate-id='#{candidate_for(chaim).id}']")
+    row.find(".mod-elections-admin__disqualify").click
+    row.find(".mod-elections-admin__reason").fill_in(with: "Suspended after the vote")
+    row.find(".btn-danger").click
+
+    # The old preview is gone: it showed a count that no longer stands.
+    expect(page).to have_no_css(".mod-elections-results")
+    find(".mod-elections-admin__preview").click
+    expect(page).to have_css(".mod-elections-results__winner", text: dovid.username)
+    expect(page).to have_no_css(".mod-elections-admin__problems")
+    expect(page).to have_no_css(".mod-elections-admin__publish[disabled]")
+  end
+
+  it "shows every tie the count broke, and how" do
+    open_voting
+    # One seat, two level candidates, nothing between them at any stage.
+    election.update!(seats: 1)
+    DiscourseModElections::Voting.cast!(voter, election, [candidate_for(chaim).id])
+    DiscourseModElections::Voting.cast!(moderator, election, [candidate_for(dovid).id])
+    DiscourseModElections::Lifecycle.end_phase!(election, admin)
+    DiscourseModElections::Publisher.publish!(election, admin)
+
+    sign_in(voter)
+    visit "/elections"
+    expect(page).to have_css(
+      ".mod-elections-results__ties li",
+      text: /level on the fewest votes at every stage, so a lot put \S+ out \(seed \d+\)/,
+    )
   end
 end

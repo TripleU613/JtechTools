@@ -26,6 +26,16 @@ module DiscourseModElections
       UNFINISHED.include?(status.to_sym)
     end
 
+    # By the clock as well as the status: the tick job moves the status a
+    # minute or so late, and nothing may slip in after a deadline.
+    def taking_nominations?(now = Time.zone.now)
+      nominating? && now >= nominations_open_at && now < voting_open_at
+    end
+
+    def taking_votes?(now = Time.zone.now)
+      voting? && now >= voting_open_at && now < voting_close_at
+    end
+
     # When the current phase ends, for the page and the banner.
     def phase_ends_at
       if scheduled?

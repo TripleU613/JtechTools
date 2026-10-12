@@ -109,6 +109,17 @@ interface PlanLeave extends ModElectionUser {
   strike: boolean;
   strikes: number;
   trust_level: number | null;
+  // False for someone made a moderator after nominations opened: never on
+  // this ballot, but publishing still ends their seat.
+  on_ballot: boolean;
+}
+
+// A winner who can't take the seat any more; publishing waits until an
+// admin takes them off the ballot.
+interface PlanProblem {
+  candidate_id: number;
+  user: ModElectionUser | null;
+  reason: "deleted" | "admin" | "suspended" | "silenced" | "inactive";
 }
 
 interface Preview {
@@ -117,6 +128,7 @@ interface Preview {
     join: ModElectionUser[];
     stay: ModElectionUser[];
     leave: PlanLeave[];
+    problems: PlanProblem[];
   };
 }
 
@@ -223,6 +235,21 @@ export default class ModElectionsAdmin extends Component {
 
   get isClosed(): boolean {
     return this.current?.status === "closed";
+  }
+
+  get problems(): { candidateId: number; text: string }[] {
+    return (this.preview?.plan.problems || []).map((problem) => ({
+      candidateId: problem.candidate_id,
+      text: i18n(`admin.mod_elections.preview.problems.${problem.reason}`, {
+        username:
+          problem.user?.username ||
+          i18n("admin.mod_elections.preview.problems.someone"),
+      }),
+    }));
+  }
+
+  get cannotPublish(): boolean {
+    return this.busy || this.problems.length > 0;
   }
 
   get past(): AdminElectionRow[] {
@@ -336,8 +363,10 @@ export default class ModElectionsAdmin extends Component {
           { type: "POST", data: { reason: this.reason } }
         );
         this.ipReport = data.ip_report;
-        this.preview = null;
       }
+      // The count changed: a preview from before would publish a different
+      // result than it shows.
+      this.preview = null;
       this.reasonFor = null;
     });
   }
@@ -350,6 +379,7 @@ export default class ModElectionsAdmin extends Component {
         `${BASE}/elections/${election.id}/candidates/${candidate.id}/reinstate.json`,
         { type: "POST" }
       );
+      this.preview = null;
     });
   }
 
@@ -723,6 +753,20 @@ export default class ModElectionsAdmin extends Component {
 
                 {{#if this.preview}}
                   <ModElectionsResults @result={{this.preview.result}} />
+                  {{#if this.problems.length}}
+                    <div class="mod-elections-admin__problems" role="alert">
+                      <p>{{i18n
+                          "admin.mod_elections.preview.problems.title"
+                        }}</p>
+                      <ul>
+                        {{#each this.problems as |problem|}}
+                          <li
+                            data-candidate-id={{problem.candidateId}}
+                          >{{problem.text}}</li>
+                        {{/each}}
+                      </ul>
+                    </div>
+                  {{/if}}
                   <h4>{{i18n "admin.mod_elections.preview.title"}}</h4>
                   <dl class="mod-elections-admin__plan">
                     <dt>{{i18n "admin.mod_elections.preview.join"}}</dt>
@@ -746,6 +790,13 @@ export default class ModElectionsAdmin extends Component {
                                 level=row.trust_level
                               }}</span>
                           {{/if}}
+                          {{#unless row.on_ballot}}
+                            <span
+                              class="mod-elections-chip mod-elections-admin__not-on-ballot"
+                            >{{i18n
+                                "admin.mod_elections.preview.not_on_ballot"
+                              }}</span>
+                          {{/unless}}
                         </div>
                       {{else}}
                         {{i18n "admin.mod_elections.preview.nobody"}}
@@ -756,7 +807,7 @@ export default class ModElectionsAdmin extends Component {
                     <DButton
                       class="btn-primary mod-elections-admin__publish"
                       @action={{this.publish}}
-                      @disabled={{this.busy}}
+                      @disabled={{this.cannotPublish}}
                       @icon="check"
                       @label="admin.mod_elections.preview.publish"
                     />
@@ -883,6 +934,12 @@ export default class ModElectionsAdmin extends Component {
                     <a href={{this.pastUrl row.id}}>{{this.date
                         row.nominations_open_at
                       }}</a>
+                    {{#if row.published_at}}
+                      <span class="mod-elections-muted">{{i18n
+                          "admin.mod_elections.history.published"
+                          date=(this.date row.published_at)
+                        }}</span>
+                    {{/if}}
                     <span class="mod-elections-muted">{{i18n
                         (concat "mod_elections.status." row.status)
                       }}</span>

@@ -7,7 +7,7 @@ module DiscourseModElections
     self.table_name = "jtech_election_voters"
 
     belongs_to :election, class_name: "DiscourseModElections::Election"
-    belongs_to :user
+    belongs_to :user, optional: true
   end
 end
 
@@ -18,7 +18,7 @@ end
 #  id          :bigint           not null, primary key
 #  weight      :integer          not null
 #  election_id :bigint           not null
-#  user_id     :bigint           not null
+#  user_id     :bigint
 #
 # Indexes
 #
@@ -28,5 +28,5 @@ end
 # Foreign Keys
 #
 #  fk_rails_...  (election_id => jtech_elections.id) ON DELETE => cascade
-#  fk_rails_...  (user_id => users.id) ON DELETE => cascade
+#  fk_rails_...  (user_id => users.id) ON DELETE => nullify
 #

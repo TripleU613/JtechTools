@@ -11,8 +11,13 @@ module DiscourseModElections
     end
 
     # What publishing these winners would change, before anything does.
+    # `problems` are winners who can't take a seat any more (suspended,
+    # deactivated, made an admin or deleted since they ran); publishing waits
+    # until an admin takes them off the ballot and the count moves on.
     def self.plan(election, elected_ids)
-      winners = election.candidates.where(id: elected_ids).includes(:user).map(&:user).compact
+      elected = election.candidates.where(id: elected_ids).includes(:user).to_a
+      problems = elected.reject { |c| c.user && Eligibility.can_serve?(c.user) }
+      winners = (elected - problems).map(&:user)
       winner_ids = winners.map(&:id)
       leaving = sitting.where.not(id: winner_ids).order(:username).to_a
       ran = election.candidates.where(user_id: leaving.map(&:id)).index_by(&:user_id)
@@ -28,8 +33,12 @@ module DiscourseModElections
               strike: strike,
               strikes: strikes,
               trust_level: former_trust_level(strikes),
+              # Made a moderator after nominations opened, so never on this
+              # ballot: easy to miss that publishing still ends their seat.
+              on_ballot: ran.key?(user.id),
             }
           end,
+        problems: problems,
       }
     end
 
@@ -67,6 +76,7 @@ module DiscourseModElections
       else
         leave_trust_level!(user, strikes(user), actor)
       end
+      Nominations.leave_ballots!(user, reason, actor)
     end
 
     def self.strikes(user)

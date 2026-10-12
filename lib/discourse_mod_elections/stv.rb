@@ -11,17 +11,27 @@ module DiscourseModElections
   class Stv
     Ballot = Struct.new(:weight, :ranking)
 
+    # action is :first, :unopposed, :surplus (candidate's surplus moved on)
+    # or :exclusion (everyone in excluded is out). ties lists every tie the
+    # stage had to settle, and how.
     Stage =
       Struct.new(
         :number,
         :action,
         :candidate,
+        :excluded,
         :tallies,
         :exhausted,
         :elected,
-        :tie,
+        :ties,
         keyword_init: true,
       )
+
+    # purpose: :exclusion (who goes out), :surplus (whose surplus moves
+    # first) or :order (who is listed, and so counted back, first among
+    # people elected on equal votes). decided_at: the stage whose votes
+    # settled it, when it wasn't settled by lot.
+    Tie = Struct.new(:purpose, :method, :among, :chosen, :decided_at, keyword_init: true)
 
     Result =
       Struct.new(
@@ -62,6 +72,7 @@ module DiscourseModElections
       @settled = {}
       @elected = []
       @stages = []
+      @pending_ties = []
       @exhausted = Rational(0)
     end
 
@@ -72,7 +83,9 @@ module DiscourseModElections
 
       if @candidates.size <= @seats
         record(:unopposed)
-        elect(*by_votes(continuing))
+        # Everyone is elected and nobody is left to count back to, so the
+        # order is only for reading: most votes first, no lots drawn.
+        elect(*continuing.sort_by { |id| [-votes(id), id] })
         return result(:unopposed)
       end
 
@@ -85,20 +98,19 @@ module DiscourseModElections
         break if @elected.size == @seats
 
         if @elected.size + continuing.size <= @seats
-          elect(*by_votes(continuing))
+          elect(*ordered(continuing))
           break
         end
 
         pending.reject! { |id| surplus(id).zero? }
         if pending.any?
-          id = pick(pending, highest: true) { |c| surplus(c) }
+          id =
+            pick(pending, highest: true, purpose: :surplus, into: @pending_ties) { |c| surplus(c) }
           pending.delete(id)
           transfer_surplus(id)
-          record(:surplus, id)
+          record(:surplus, candidate: id)
         else
-          id = pick(continuing, highest: false) { |c| votes(c) }
-          exclude(id)
-          record(:exclusion, id)
+          exclude_lowest
         end
       end
 
@@ -131,10 +143,9 @@ module DiscourseModElections
     end
 
     def elect_reaching_quota
-      reached = continuing.select { |id| votes(id) >= @quota }
-      ordered = by_votes(reached)
-      elect(*ordered)
-      ordered
+      reached = ordered(continuing.select { |id| votes(id) >= @quota })
+      elect(*reached)
+      reached
     end
 
     def elect(*ids)
@@ -142,6 +153,24 @@ module DiscourseModElections
         @state[id] = :elected
         @elected << id
         @stages.last.elected << id
+      end
+    end
+
+    # Candidates with no votes at all hold no papers, so taking them out
+    # together changes nothing for anyone else and needs no lot between
+    # them, as long as enough candidates stay in for the seats left.
+    def exclude_lowest
+      zeros = continuing.select { |id| votes(id).zero? }
+      if zeros.size > 1 && continuing.size - zeros.size >= @seats - @elected.size
+        zeros.each { |id| exclude(id) }
+        record(:exclusion, excluded: zeros)
+      else
+        id =
+          pick(continuing, highest: false, purpose: :exclusion, into: @pending_ties) do |c|
+            votes(c)
+          end
+        exclude(id)
+        record(:exclusion, excluded: [id])
       end
     end
 
@@ -167,51 +196,69 @@ module DiscourseModElections
       papers.each { |paper| place(paper) }
     end
 
-    # Highest first, for the order winners are listed in. Equal votes keep
-    # whoever did better earlier ahead, without drawing lots: the order of
-    # people elected together changes nothing.
-    def by_votes(ids)
-      ids.sort_by { |id| [-votes(id), @stages.map { |s| -s.tallies[id] }, id] }
+    # Most votes first. People elected at the same stage on equal votes are
+    # put in order the same way any other tie is settled, and the tie is
+    # recorded on that stage: a countback gives a seat to the first newly
+    # elected candidate, so the order can matter.
+    def ordered(ids)
+      rest = ids.dup
+      order = []
+      until rest.empty?
+        id = pick(rest, highest: true, purpose: :order, into: @stages.last.ties) { |c| votes(c) }
+        order << id
+        rest.delete(id)
+      end
+      order
     end
 
     # The candidate with the highest (or lowest) value. A tie goes to the
     # earliest stage where the tied candidates had different votes, then to
-    # lot.
-    def pick(ids, highest:, &value)
+    # lot; either way it's added to `into`.
+    def pick(ids, highest:, purpose:, into:, &value)
       best = highest ? ids.map(&value).max : ids.map(&value).min
       tied = ids.select { |id| value.call(id) == best }
       return tied.first if tied.size == 1
 
       remaining = tied
+      decided_at = nil
       @stages.each do |stage|
         values = remaining.map { |id| stage.tallies[id] }
         next if values.uniq.size == 1
         target = highest ? values.max : values.min
         remaining = remaining.select { |id| stage.tallies[id] == target }
+        decided_at = stage.number
         break if remaining.size == 1
       end
 
-      if remaining.size == 1
-        @pending_tie = { method: :earlier_stage, among: tied, chosen: remaining.first }
-        return remaining.first
-      end
-
-      chosen = remaining.sort[@rng.rand(remaining.size)]
-      @pending_tie = { method: :lot, among: tied, chosen: chosen }
+      chosen =
+        if remaining.size == 1
+          remaining.first
+        else
+          decided_at = nil
+          remaining.sort[@rng.rand(remaining.size)]
+        end
+      into << Tie.new(
+        purpose: purpose,
+        method: decided_at ? :earlier_stage : :lot,
+        among: tied.sort,
+        chosen: chosen,
+        decided_at: decided_at,
+      )
       chosen
     end
 
-    def record(action, candidate = nil)
+    def record(action, candidate: nil, excluded: [])
       @stages << Stage.new(
         number: @stages.size + 1,
         action: action,
         candidate: candidate,
+        excluded: excluded,
         tallies: @candidates.to_h { |id| [id, votes(id)] },
         exhausted: @exhausted,
         elected: [],
-        tie: @pending_tie,
+        ties: @pending_ties,
       )
-      @pending_tie = nil
+      @pending_ties = []
     end
 
     def result(outcome)

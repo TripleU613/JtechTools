@@ -38,6 +38,10 @@
     }
   }
 
+  &__next {
+    color: var(--primary-high);
+  }
+
   h2 {
     margin: 0 0 0.75em;
     font-size: var(--font-up-1);
@@ -110,6 +114,33 @@
 
   > :last-child {
     margin-bottom: 0;
+  }
+}
+
+// Whether your own ballot went in; never what was on it.
+.mod-elections-receipt {
+  display: flex;
+  gap: 0.5em;
+  align-items: center;
+  margin: 0 0 1em;
+  padding: 0.6em 0.85em;
+  border: 1px solid var(--success-low, var(--primary-low));
+  border-radius: var(--d-border-radius);
+  background: var(--success-low, var(--primary-very-low));
+  color: var(--primary);
+
+  .d-icon {
+    flex: 0 0 auto;
+    color: var(--success);
+  }
+
+  &--voided {
+    border-color: var(--danger-low);
+    background: var(--danger-low);
+
+    .d-icon {
+      color: var(--danger);
+    }
   }
 }
 
@@ -361,6 +392,34 @@
     text-align: center;
   }
 
+  // Dragging on desktop: a line where the candidate will land.
+  &__row[draggable="true"] {
+    cursor: grab;
+  }
+
+  &__row.is-dragged {
+    opacity: 0.45;
+  }
+
+  &__row.is-drop-before {
+    box-shadow: 0 -3px 0 0 var(--tertiary);
+  }
+
+  &__dropzone {
+    min-height: 3em;
+    border-radius: var(--d-border-radius);
+
+    &.is-dragging .mod-elections-ballot__empty {
+      border-color: var(--tertiary);
+      color: var(--tertiary);
+    }
+
+    &.is-drop-end .mod-elections-ballot__list {
+      padding-bottom: 0.4em;
+      box-shadow: 0 3px 0 0 var(--tertiary);
+    }
+  }
+
   &__foot {
     display: flex;
     flex-wrap: wrap;
@@ -487,6 +546,37 @@
 
     td.is-out {
       color: var(--primary-low-mid);
+    }
+  }
+
+  // How close each candidate was to the votes needed, under the number.
+  &__bar {
+    display: block;
+    height: 3px;
+    margin-top: 0.25em;
+    overflow: hidden;
+    border-radius: 2px;
+    background: var(--primary-very-low);
+
+    > span {
+      display: block;
+      height: 100%;
+      background: var(--primary-medium);
+    }
+  }
+
+  td.is-elected &__bar > span {
+    background: var(--success);
+  }
+
+  &__ties {
+    margin: 1em 0 0;
+    padding-left: 1.25em;
+    color: var(--primary-high);
+    font-size: var(--font-down-1);
+
+    li {
+      margin-bottom: 0.35em;
     }
   }
 
@@ -643,6 +733,27 @@
     code {
       margin-right: 0.5em;
     }
+  }
+
+  &__problems {
+    margin: 1em 0;
+    padding: 0.75em 1em;
+    border: 1px solid var(--danger);
+    border-radius: var(--d-border-radius);
+    background: var(--danger-low);
+
+    p {
+      font-weight: 600;
+    }
+
+    ul {
+      padding-left: 1.25em;
+      list-style: disc;
+    }
+  }
+
+  &__not-on-ballot {
+    border-color: var(--highlight-high, var(--primary-low));
   }
 
   &__plan {

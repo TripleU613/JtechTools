@@ -1,0 +1,276 @@
+// jtech-tools' mod elections (/elections and its admin tab). The plugin draws
+// with core's colours: grey boxes with the default small radius, a solid
+// primary bar over the current step, green and red for ballots counted and
+// set aside, and the count's numbers in the body font. Here the boxes are the
+// theme's raised surfaces with its larger radii, chips are pills, the current
+// step's line glows like the selected tab (jt-tabs), places and winners are
+// inverted like the leaderboard's first place, numbers are mono, and the
+// count's bars sit on a faint track like a poll's. Mode-dependent values come
+// from the tokens, so light, dark and Dim all follow.
+.mod-elections-panel,
+.mod-elections-admin__card,
+.mod-elections-results__winner {
+  border-color: var(--jt-border);
+  border-radius: var(--jt-radius-lg);
+  background: var(--jt-surface-raised);
+}
+
+.mod-elections {
+  h1 {
+    letter-spacing: var(--jt-tracking-display);
+  }
+
+  h2,
+  h3 {
+    letter-spacing: var(--jt-tracking-heading);
+  }
+}
+
+.mod-elections-muted,
+.mod-elections-count,
+.mod-elections__meta {
+  color: var(--jt-text-muted);
+}
+
+.mod-elections__meta a:hover {
+  color: var(--jt-text);
+}
+
+.mod-elections-chip,
+.mod-elections-status {
+  border-color: var(--jt-border-strong);
+  border-radius: var(--jt-radius-pill);
+  color: var(--jt-text-muted);
+}
+
+.mod-elections-status {
+  color: var(--jt-text);
+}
+
+.mod-elections-chip--strong {
+  border-color: var(--jt-text);
+  background: var(--jt-text);
+  color: var(--jt-surface);
+}
+
+// ── Steps ─────────────────────────────────────────────────────────────────
+.mod-elections-steps {
+  &__step {
+    position: relative;
+    border-top: 1px solid var(--jt-border);
+    transition: border-color var(--jt-motion);
+  }
+
+  &__step--done {
+    border-top-color: var(--jt-text-subtle);
+  }
+
+  // The step you're in: a 1px line in the text colour that glows, with a
+  // faint light falling from it, like the selected tab.
+  &__step--current {
+    border-top-color: var(--jt-text);
+    background-image: radial-gradient(
+      60% 70% at 50% 0%,
+      color-mix(in srgb, var(--jt-text) 6%, transparent),
+      transparent
+    );
+    box-shadow: 0 -1px 8px -2px
+      color-mix(in srgb, var(--jt-text) 45%, transparent);
+  }
+
+  &__date {
+    font-family: var(--jt-font-mono);
+    font-size: var(--jt-text-xs);
+    color: var(--jt-text-subtle);
+  }
+
+  &__step--upcoming &__label {
+    color: var(--jt-text-subtle);
+  }
+}
+
+// ── Candidates and the ballot ─────────────────────────────────────────────
+.mod-elections-candidate {
+  border-bottom-color: var(--jt-border);
+
+  &__statement {
+    color: var(--jt-text-body);
+  }
+}
+
+.mod-elections-ballot {
+  &__row {
+    border-color: var(--jt-border);
+    border-radius: var(--jt-radius-md);
+    background: var(--jt-fill);
+    transition:
+      background-color var(--jt-motion),
+      border-color var(--jt-motion);
+  }
+
+  &__row:hover {
+    border-color: var(--jt-border-strong);
+    background: var(--jt-hover);
+  }
+
+  &__place {
+    background: var(--jt-text);
+    color: var(--jt-surface);
+    font-family: var(--jt-font-mono);
+  }
+
+  &__empty {
+    border-color: var(--jt-border-strong);
+    border-radius: var(--jt-radius-md);
+    color: var(--jt-text-subtle);
+  }
+
+  // Where a dragged candidate lands: the text colour, glowing.
+  &__row.is-drop-before {
+    box-shadow:
+      0 -2px 0 0 var(--jt-text),
+      0 -2px 8px 0 color-mix(in srgb, var(--jt-text) 35%, transparent);
+  }
+
+  &__dropzone.is-drop-end .mod-elections-ballot__list {
+    box-shadow:
+      0 2px 0 0 var(--jt-text),
+      0 2px 8px 0 color-mix(in srgb, var(--jt-text) 35%, transparent);
+  }
+
+  &__dropzone.is-dragging .mod-elections-ballot__empty {
+    border-color: var(--jt-text);
+    color: var(--jt-text);
+  }
+
+  &__foot {
+    border-top-color: var(--jt-border);
+  }
+}
+
+.mod-elections-run__statement {
+  border-radius: var(--jt-radius-field, var(--jt-radius-md));
+}
+
+// Counted is the text colour, not green; set aside keeps core's red.
+.mod-elections-receipt:not(.mod-elections-receipt--voided) {
+  border-color: var(--jt-border);
+  border-radius: var(--jt-radius-md);
+  background: var(--jt-surface-raised);
+  color: var(--jt-text);
+
+  .d-icon {
+    color: var(--jt-text);
+  }
+}
+
+.mod-elections-receipt--voided {
+  border-radius: var(--jt-radius-md);
+}
+
+// ── Results ───────────────────────────────────────────────────────────────
+.mod-elections-results {
+  &__winner-name {
+    color: var(--jt-text);
+  }
+
+  &__stats {
+    color: var(--jt-text-muted);
+  }
+
+  &__table {
+    th,
+    td {
+      border-bottom-color: var(--jt-border);
+    }
+
+    td {
+      font-family: var(--jt-font-mono);
+      font-size: var(--jt-text-sm);
+      color: var(--jt-text-muted);
+    }
+
+    td.is-elected {
+      color: var(--jt-text);
+    }
+
+    td.is-out {
+      color: var(--jt-text-subtle);
+    }
+
+    th[scope="row"],
+    thead th:first-child {
+      background: var(--jt-surface-raised);
+    }
+  }
+
+  &__stage-number {
+    font-family: var(--jt-font-mono);
+  }
+
+  &__stage-label {
+    color: var(--jt-text-subtle);
+  }
+
+  &__bar {
+    height: 4px;
+    border-radius: var(--jt-radius-pill);
+    background: var(--jt-hover);
+
+    > span {
+      border-radius: var(--jt-radius-pill);
+      background: var(--jt-text-subtle);
+    }
+  }
+
+  td.is-elected &__bar > span {
+    background: var(--jt-text);
+  }
+
+  &__ties,
+  &__how p {
+    color: var(--jt-text-body);
+  }
+}
+
+// ── Past elections, nothing yet ───────────────────────────────────────────
+.mod-elections-history li {
+  border-bottom-color: var(--jt-border);
+}
+
+.mod-elections-empty {
+  color: var(--jt-text-muted);
+
+  .d-icon {
+    color: var(--jt-text-subtle);
+  }
+}
+
+// ── Admin tab ─────────────────────────────────────────────────────────────
+.mod-elections-admin {
+  &__off {
+    border-color: var(--jt-border);
+    border-radius: var(--jt-radius-md);
+    background: var(--jt-surface-sunken);
+  }
+
+  &__table td,
+  &__seats-list li {
+    border-bottom-color: var(--jt-border);
+  }
+
+  &__problems {
+    border-radius: var(--jt-radius-md);
+  }
+
+  &__ip code {
+    font-family: var(--jt-font-mono);
+  }
+}
+
+@media (forced-colors: active) {
+  .mod-elections-steps__step--current {
+    background-image: none;
+    box-shadow: none;
+  }
+}

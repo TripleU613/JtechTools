@@ -215,5 +215,110 @@ RSpec.describe DiscourseModElections::Seats do
 
       expect(DiscourseModElections::Countback.replacement(election)).to be_nil
     end
+
+    context "while the next election is running" do
+      let(:next_election) do
+        DiscourseModElections::Election.create!(
+          status: :voting,
+          seats: 2,
+          nominations_open_at: 2.days.ago,
+          voting_open_at: 1.day.ago,
+          voting_close_at: 5.days.from_now,
+        )
+      end
+      let!(:on_next_ballot) do
+        DiscourseModElections::Candidate.create!(
+          election: next_election,
+          user: newcomer,
+          incumbent: true,
+        )
+      end
+
+      it "takes a moderator removed for abuse off it, with the reason" do
+        DiscourseModElections::Seats.vacate!(c_new.reload, "removed", admin)
+
+        expect(on_next_ballot.reload).to be_disqualified
+        expect(on_next_ballot.disqualified_reason).to eq(I18n.t("mod_elections.reasons.removed"))
+      end
+
+      it "drops a moderator who steps down out of it" do
+        DiscourseModElections::Seats.vacate!(c_new.reload, "stepped_down", admin)
+
+        expect(on_next_ballot.reload).to be_withdrawn
+      end
+    end
+  end
+
+  describe "winners who can't serve" do
+    let!(:c_new) { candidate(newcomer) }
+    let!(:c_runner_up) { candidate(runner_up) }
+
+    before do
+      election.update!(seats: 1)
+      ballot(voter, 3, c_new)
+      ballot(Fabricate(:user), 1, c_runner_up)
+    end
+
+    it "holds publishing until an admin takes them off, then the count moves on" do
+      newcomer.update!(suspended_till: 1.week.from_now, suspended_at: Time.zone.now)
+
+      preview = DiscourseModElections::Publisher.preview(election)
+      expect(preview[:plan][:problems]).to eq([c_new])
+      expect { DiscourseModElections::Publisher.publish!(election, admin) }.to raise_error(
+        DiscourseModElections::Error,
+      ) { |e| expect(e.reason).to eq(:winners_cannot_serve) }
+      expect(newcomer.reload).not_to be_moderator
+
+      DiscourseModElections::Nominations.disqualify!(c_new, "Suspended during Vote Week", admin)
+      publish
+
+      expect(runner_up).to be_moderator
+      expect(newcomer).not_to be_moderator
+    end
+
+    it "never makes an admin a moderator" do
+      newcomer.update!(admin: true)
+      expect(DiscourseModElections::Publisher.preview(election)[:plan][:problems]).to eq([c_new])
+    end
+
+    it "lets an admin take a deleted winner off the ballot" do
+      UserDestroyer.new(admin).destroy(newcomer)
+      expect(DiscourseModElections::Publisher.preview(election)[:plan][:problems]).to eq(
+        [c_new.reload],
+      )
+
+      DiscourseModElections::Nominations.disqualify!(c_new, "Account deleted", admin)
+      DiscourseModElections::Publisher.publish!(election, admin)
+
+      expect(runner_up.reload).to be_moderator
+    end
+  end
+
+  it "says which leaving moderators were never on this ballot" do
+    candidate(newcomer)
+    ballot(voter, 3, election.candidates.first)
+
+    leave = DiscourseModElections::Publisher.preview(election)[:plan][:leave]
+    expect(leave.map { |row| [row[:user], row[:on_ballot]] }).to contain_exactly(
+      [sitting, false],
+      [stepping_down, false],
+    )
+  end
+
+  it "keeps a deleted account's ballot, so the count can't change after the fact" do
+    c_new = candidate(newcomer)
+    c_runner_up = candidate(runner_up)
+    election.update!(seats: 1)
+    leaving = Fabricate(:user)
+    ballot(leaving, 3, c_runner_up)
+    ballot(voter, 2, c_new)
+    publish
+    before = election.reload.result["elected"]
+
+    UserDestroyer.new(admin).destroy(leaving, delete_posts: true)
+
+    expect(election.ballots.counted.count).to eq(2)
+    expect(election.ballots.where(user_id: nil).count).to eq(1)
+    expect(DiscourseModElections::Tally.count(election).elected).to eq(before)
   end
 end

@@ -311,6 +311,190 @@ RSpec.describe "Mod elections endpoints" do
           .dig("election", "candidates")
           .find { |c| c["id"] == member_candidate.id }
       expect(shown).to include("status" => "disqualified", "disqualified_reason" => "Vote buying")
+
+      post "/jtech-elections/admin/elections/#{election.id}/candidates/#{member_candidate.id}/reinstate.json"
+      expect(response.status).to eq(200)
+      expect(member_candidate.reload).to be_running
+    end
+
+    it "refuses every change to moderators and anonymous visitors" do
+      member_candidate = DiscourseModElections::Nominations.run!(member, election, "")
+      writes = [
+        "/jtech-elections/admin/elections.json",
+        "/jtech-elections/admin/elections/#{election.id}/end-phase.json",
+        "/jtech-elections/admin/elections/#{election.id}/cancel.json",
+        "/jtech-elections/admin/elections/#{election.id}/candidates/#{member_candidate.id}/disqualify.json",
+        "/jtech-elections/admin/elections/#{election.id}/candidates/#{member_candidate.id}/reinstate.json",
+        "/jtech-elections/admin/elections/#{election.id}/publish.json",
+        "/jtech-elections/admin/seats/fill.json",
+      ]
+
+      [nil, moderator].each do |who|
+        sign_in(who) if who
+        writes.each do |path|
+          post path, params: { reason: "x" }
+          expect(response.status).to be_in([403, 404]), "#{who&.username || "anon"} → #{path}"
+        end
+      end
+      expect(election.reload).to be_nominating
+      expect(member_candidate.reload).to be_running
+    end
+
+    it "ends a phase early and cancels" do
+      sign_in(admin)
+      post "/jtech-elections/admin/elections/#{election.id}/end-phase.json"
+      expect(response.parsed_body["status"]).to eq("voting")
+
+      post "/jtech-elections/admin/elections/#{election.id}/cancel.json"
+      expect(response.parsed_body["status"]).to eq("cancelled")
+      expect(moderator.reload).to be_moderator
+    end
+
+    it "shows what happened but changes nothing while the module is off" do
+      sign_in(admin)
+      SiteSetting.mod_elections_enabled = false
+
+      get "/jtech-elections/admin.json"
+      expect(response.status).to eq(200)
+      expect(response.parsed_body["enabled"]).to eq(false)
+      get "/jtech-elections/admin/elections/#{election.id}.json"
+      expect(response.status).to eq(200)
+
+      post "/jtech-elections/admin/elections/#{election.id}/cancel.json"
+      expect(response.status).to eq(422)
+      expect(response.parsed_body.dig("extras", "reason")).to eq("module_off")
+      expect(election.reload).to be_nominating
+    end
+  end
+
+  describe "seats between elections" do
+    fab!(:runner_up) { Fabricate(:user, trust_level: TrustLevel[2], created_at: 1.year.ago) }
+
+    let!(:election) { start_election(seats: 1) }
+
+    before do
+      DiscourseModElections::Nominations.run!(member, election, "")
+      DiscourseModElections::Nominations.run!(runner_up, election, "")
+      open_voting(election)
+      candidates = election.candidates.index_by(&:user_id)
+      DiscourseModElections::Voting.cast!(
+        other,
+        election,
+        [candidates[member.id].id, candidates[runner_up.id].id],
+      )
+      DiscourseModElections::Voting.cast!(newbie, election, [candidates[runner_up.id].id])
+      DiscourseModElections::Lifecycle.end_phase!(election, admin)
+      DiscourseModElections::Publisher.publish!(election, admin)
+    end
+
+    it "lets an admin record who left, then fills the seat by countback" do
+      seat = election.candidates.find_by(user: member)
+      sign_in(admin)
+
+      get "/jtech-elections/admin/seats.json"
+      expect(response.parsed_body["holders"].map { |h| h["id"] }).to eq([seat.id])
+
+      post "/jtech-elections/admin/seats/#{seat.id}/vacate.json", params: { reason: "removed" }
+      expect(response.parsed_body["open"]).to eq(1)
+      expect(member.reload).not_to be_moderator
+      # Seated at a locked TL4; removed for abuse, straight back to TL3.
+      expect(member.trust_level).to eq(TrustLevel[3])
+      expect(member.manual_locked_trust_level).to be_nil
+
+      get "/jtech-elections/admin/seats/countback.json"
+      expect(response.parsed_body.dig("replacement", "username")).to eq(runner_up.username)
+
+      post "/jtech-elections/admin/seats/fill.json"
+      expect(response.parsed_body["open"]).to eq(0)
+      expect(runner_up.reload).to be_moderator
+
+      post "/jtech-elections/admin/seats/fill.json"
+      expect(response.parsed_body.dig("extras", "reason")).to eq("no_open_seat")
+    end
+
+    it "shows a voter, after the results, that their ballot was counted" do
+      sign_in(other)
+      get "/jtech-elections/current.json", params: { id: election.id }
+
+      expect(response.parsed_body.dig("me", "ballot")).to include("voided" => false)
+      expect(response.parsed_body.dig("election", "turnout", "ballots")).to eq(2)
+    end
+
+    it "lists past elections by their month on the forum's calendar, and when the next opens" do
+      # Already February 1 in Auckland, still January 31 in UTC.
+      SiteSetting.mod_elections_timezone = "Pacific/Auckland"
+      election.update!(nominations_open_at: Time.zone.parse("2026-01-31 12:00 UTC"))
+
+      get "/jtech-elections/current.json"
+      body = response.parsed_body
+
+      expect(body["timezone"]).to eq("Pacific/Auckland")
+      expect(body["history"].map { |row| row["label"] }).to eq(["February 2026"])
+      expect(body["next_opening"]).to eq(DiscourseModElections::Schedule.next_opening.as_json)
+    end
+
+    it "takes someone off a later ballot when they're removed from their seat" do
+      later = start_election
+      # A sitting moderator, so on the new ballot from the start.
+      expect(later.candidates.find_by(user: member)).to be_running
+
+      sign_in(admin)
+      seat = election.candidates.find_by(user: member)
+      post "/jtech-elections/admin/seats/#{seat.id}/vacate.json", params: { reason: "removed" }
+
+      expect(later.candidates.find_by(user: member)).to be_disqualified
+    end
+  end
+
+  describe "the signed-in user's summary" do
+    let!(:election) { start_election }
+
+    it "carries the step and, in Vote Week, whether they still have a vote to cast" do
+      sign_in(other)
+      get "/session/current.json"
+      expect(response.parsed_body.dig("current_user", "mod_election")).to include(
+        "id" => election.id,
+        "status" => "nominating",
+      )
+
+      open_voting(election)
+      get "/session/current.json"
+      expect(response.parsed_body.dig("current_user", "mod_election")).to include(
+        "status" => "voting",
+        "voter" => true,
+        "voted" => false,
+      )
+
+      DiscourseModElections::Voting.cast!(other, election, [election.candidates.first.id])
+      get "/session/current.json"
+      expect(response.parsed_body.dig("current_user", "mod_election", "voted")).to eq(true)
+    end
+
+    it "isn't there with no election running, or with the module off" do
+      sign_in(other)
+      SiteSetting.mod_elections_enabled = false
+      get "/session/current.json"
+      expect(response.parsed_body["current_user"]).not_to have_key("mod_election")
+
+      SiteSetting.mod_elections_enabled = true
+      DiscourseModElections::Publisher.cancel!(election, admin)
+      get "/session/current.json"
+      expect(response.parsed_body["current_user"]).not_to have_key("mod_election")
+    end
+  end
+
+  describe "rate limits" do
+    let!(:election) { start_election }
+
+    it "stops a script hammering the ballot or candidacy" do
+      RateLimiter.enable
+      sign_in(member)
+      statuses =
+        Array.new(32) do
+          put "/jtech-elections/#{election.id}/candidacy.json", params: { statement: "x" }
+          response.status
+        end
+      expect(statuses.last).to eq(429)
     end
   end
 end
