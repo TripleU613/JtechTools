@@ -72,6 +72,17 @@ RSpec.describe "Mod elections endpoints" do
       expect(response.parsed_body.dig("me", "ballot")).to be_nil
       expect(response.body).not_to include("ranking")
     end
+
+    it "says where the step-change channel was, so the page misses nothing after it" do
+      election = start_election
+      DiscourseModElections::Lifecycle.end_phase!(election, admin)
+
+      get "/jtech-elections/current.json"
+      expect(response.parsed_body["message_bus_last_id"]).to eq(
+        MessageBus.last_id(DiscourseModElections::State::CHANNEL),
+      )
+      expect(response.parsed_body["message_bus_last_id"]).to be > 0
+    end
   end
 
   describe "a candidate whose account is deleted" do

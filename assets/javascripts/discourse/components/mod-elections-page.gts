@@ -65,6 +65,7 @@ export default class ModElectionsPage extends Component<ModElectionsPageSignatur
   // Which request the page is waiting for: an older one that answers late
   // (a step change racing a click on a past election) is ignored.
   requested = 0;
+  subscribed = false;
 
   // A step changed: reload in place, unless someone is reading an older
   // election.
@@ -77,7 +78,6 @@ export default class ModElectionsPage extends Component<ModElectionsPageSignatur
   constructor(owner: Owner, args: ModElectionsPageSignature["Args"]) {
     super(owner, args);
     this.load();
-    this.messageBus.subscribe(STATE_CHANNEL, this.onStateChange);
   }
 
   willDestroy() {
@@ -222,6 +222,16 @@ export default class ModElectionsPage extends Component<ModElectionsPageSignatur
       const page = await this.modElections.page(this.args.electionId);
       if (request === this.requested && !this.isDestroying) {
         this.page = page;
+        // From the page's own point in the channel: subscribing "from now"
+        // missed a step that changed before the next poll reached the server.
+        if (!this.subscribed) {
+          this.subscribed = true;
+          this.messageBus.subscribe(
+            STATE_CHANNEL,
+            this.onStateChange,
+            page.message_bus_last_id
+          );
+        }
       }
     } catch (e) {
       if (!quiet) {
