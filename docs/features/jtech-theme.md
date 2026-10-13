@@ -1,6 +1,6 @@
 # JTech theme
 
-The forum's own theme ships with the plugin: AMOLED black and pure white, monochrome everywhere, hairline borders, rounded ("squircle") corners and the Geist typeface. Light and dark are exact inverses and follow each person's colour-mode choice. People who find the black too harsh can pick **JTech Dim** (soft grey) instead under Preferences → Interface → Color Palette → Dark mode; OLED black stays the default.
+The forum's own theme ships with the plugin: AMOLED black and pure white, monochrome everywhere, hairline borders, rounded ("squircle") corners and the Geist typeface. Light and dark are exact inverses and follow each person's colour-mode choice. People who find the black too harsh can pick **JTech Dim** (soft grey), and people who want colour can pick one of seven palettes; black and white stays the default. The palette button in the sidebar footer (in the ☰ menu on a phone) switches with one click, no reload.
 
 What it adds on top of a restyle:
 
@@ -91,7 +91,15 @@ JTech replaces the forum's theme components: each one it covers has a JTech sett
 
 The look itself is configured in the theme's own settings (corner style, cards, hero text, footer links, header home link and the other switches).
 
-The theme brings three palettes: **JTech Light** and **JTech Dark** (OLED black) are its light and dark defaults, and **JTech Dim** is offered to users as a softer dark mode. The plugin marks JTech Dim "users can select" once when it first installs it; turn that off under Customize → Colors and it stays off. Being user-selectable, it's also offered with other themes that let people pick any palette.
+The theme brings its palettes in pairs, a light and a dark of each:
+
+- **JTech Light** / **JTech Dark** (OLED black): the defaults, black and white.
+- **JTech Dim**: a softer grey dark mode, used with JTech Light.
+- **Nord**, **Catppuccin** (Latte / Mocha), **Rosé Pine** (Dawn / main), **Gruvbox**, **Tokyo Night** (Day / Night), **Everforest** and **Paper** (warm sepia for long reads). These follow the well-known editor palettes of the same names: their paper, ink and one accent, which colours buttons, links, the active tab, unread badges, focus rings and selected text. Where a palette's own accent or grey reads under 4.5:1 it is darkened (or lightened) until it does.
+
+The plugin marks every palette but the two defaults "users can select" once, when it first installs it (or when an update adds it); turn one off under Customize → Colors and it stays off. Being user-selectable, they're also offered with other themes that let people pick any palette.
+
+**Palette menu** (theme setting `palette_menu`, on): a palette button in the sidebar footer, beside Discourse's light / dark menu, lists every palette with a swatch and switches on the spot. A member's choice is saved to their account, the same setting as Preferences → Interface → Color Palette, so it follows them to other devices; a visitor's is kept in that browser. Picking JTech Dim while the page is light switches it to dark.
 
 ## Things outside the theme
 
