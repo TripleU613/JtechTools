@@ -61,10 +61,16 @@ const ModElectionsCandidate: TemplateOnlyComponent<{
         >{{@candidate.statement}}</p>
       {{/if}}
       {{#if (eq @candidate.status "disqualified")}}
-        <p class="mod-elections-candidate__flag">{{i18n
-            "mod_elections.candidates.disqualified"
-            reason=@candidate.disqualified_reason
-          }}</p>
+        <p class="mod-elections-candidate__flag">
+          {{#if @candidate.disqualified_reason}}
+            {{i18n
+              "mod_elections.candidates.disqualified"
+              reason=@candidate.disqualified_reason
+            }}
+          {{else}}
+            {{i18n "mod_elections.candidates.disqualified_no_reason"}}
+          {{/if}}
+        </p>
       {{/if}}
     </div>
   </article>

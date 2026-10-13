@@ -69,7 +69,10 @@ module DiscourseModElections
           results: day_label(election.voting_close_at, "%B %-d"),
         },
         topic_url: topic_url(election, guardian),
-        candidates: order(candidates, election, user).map { |c| candidate_json(c) },
+        candidates:
+          order(candidates, election, user).map do |c|
+            candidate_json(c, show_reason: user.present?)
+          end,
         result: election.published? ? result_json(election.result) : nil,
         turnout: election.published? ? turnout(election) : nil,
       }
@@ -115,14 +118,16 @@ module DiscourseModElections
       end
     end
 
-    def self.candidate_json(candidate)
+    # The reason an admin took someone off the ballot is for the forum's
+    # members, not for anyone (or any crawler) who opens the page.
+    def self.candidate_json(candidate, show_reason:)
       {
         id: candidate.id,
         user: basic_user(candidate.user),
         statement: candidate.statement,
         incumbent: candidate.incumbent,
         status: candidate.status,
-        disqualified_reason: candidate.disqualified_reason,
+        disqualified_reason: show_reason ? candidate.disqualified_reason : nil,
         elected: candidate.elected,
         seat_left_reason: candidate.seat_left_reason,
       }
@@ -260,7 +265,7 @@ module DiscourseModElections
             .includes(:user)
             .sort_by { |c| c.user&.username_lower.to_s }
             .map do |c|
-              candidate_json(c).merge(
+              candidate_json(c, show_reason: true).merge(
                 trust_level: c.user&.trust_level,
                 seat_left_at: c.seat_left_at,
               )

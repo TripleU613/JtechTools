@@ -74,6 +74,32 @@ RSpec.describe "Mod elections endpoints" do
     end
   end
 
+  describe "a candidate taken off the ballot" do
+    it "shows why to signed-in members, not to anyone who opens the page" do
+      election = start_election
+      candidate = DiscourseModElections::Nominations.run!(member, election, "")
+      DiscourseModElections::Nominations.disqualify!(
+        candidate,
+        "Alt account of a banned user",
+        admin,
+      )
+      row = ->(body) { body.dig("election", "candidates").find { |c| c["id"] == candidate.id } }
+
+      get "/jtech-elections/current.json"
+      expect(row.call(response.parsed_body)).to include(
+        "status" => "disqualified",
+        "disqualified_reason" => nil,
+      )
+      expect(response.body).not_to include("Alt account")
+
+      sign_in(other)
+      get "/jtech-elections/current.json"
+      expect(row.call(response.parsed_body)["disqualified_reason"]).to eq(
+        "Alt account of a banned user",
+      )
+    end
+  end
+
   describe "a candidate whose account is deleted" do
     let!(:election) { start_election }
 
@@ -353,6 +379,7 @@ RSpec.describe "Mod elections endpoints" do
       get "/jtech-elections/admin/elections/#{election.id}.json"
       expect(response.parsed_body["previewed_at"]).to be_present
 
+      ids_before = DiscourseModElections::Ballot.where(election: election).pluck(:id)
       post "/jtech-elections/admin/elections/#{election.id}/publish.json"
       expect(response.status).to eq(200)
       expect(moderator.reload).to be_moderator
@@ -368,6 +395,9 @@ RSpec.describe "Mod elections endpoints" do
       expect(ballots.pluck(:user_id, :ip_address, :voided_by_id).flatten.compact).to be_empty
       expect(ballots.where.not(voided_at: nil).pluck(:ranking)).to eq([[], []])
       expect(ballots.counted.pluck(:ranking)).to eq([[mod_candidate.id]])
+      # Nor under the ids the address report showed beside each voter.
+      expect(ballots.count).to eq(3)
+      expect(ballots.where(id: ids_before)).to be_empty
 
       # Each voter still sees what became of theirs.
       sign_in(other)
@@ -532,6 +562,16 @@ RSpec.describe "Mod elections endpoints" do
 
       post "/jtech-elections/admin/seats/fill.json"
       expect(response.parsed_body.dig("extras", "reason")).to eq("no_open_seat")
+    end
+
+    it "tells open elections pages when a seat is left or filled" do
+      seat = election.candidates.find_by(user: member)
+      messages =
+        MessageBus.track_publish(DiscourseModElections::State::CHANNEL) do
+          DiscourseModElections::Seats.vacate!(seat, "stepped_down", admin)
+          DiscourseModElections::Countback.fill!(election, admin)
+        end
+      expect(messages.size).to eq(2)
     end
 
     it "shows a voter, after the results, that their ballot was counted" do

@@ -8,7 +8,18 @@ module DiscourseModElections
   # the shared client renderer (lib/mod-note-notification.ts) picks these up
   # by the `mod_election` marker in data.
   module Notifier
-    KINDS = %w[on_ballot voting_open reminder closed results disqualified seat_filled].freeze
+    KINDS = %w[
+      on_ballot
+      voting_open
+      reminder
+      closed
+      results
+      disqualified
+      seat_filled
+      schedule_blocked
+    ].freeze
+    # For admins: they open the admin tab, not the elections page.
+    ADMIN_KINDS = %w[closed schedule_blocked].freeze
     # Being taken off the ballot can happen twice (taken off, put back,
     # taken off again); everything else happens once per election.
     REPEATABLE = %w[disqualified].freeze
@@ -76,7 +87,7 @@ module DiscourseModElections
         mod_election_id: election.id,
         message: "mod_elections.notifications.#{kind}",
         title: "mod_elections.title",
-        url: kind == "closed" ? "/admin/plugins/jtech-tools/mod-elections" : PAGE,
+        url: ADMIN_KINDS.include?(kind) ? "/admin/plugins/jtech-tools/mod-elections" : PAGE,
         display_username: "",
         excerpt: I18n.t("mod_elections.notifications.#{kind}"),
       }

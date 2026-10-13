@@ -55,6 +55,8 @@ module DiscourseModElections
           found
         end
 
+      # The results page lists the countback: open ones reload.
+      State.changed!
       Announcer.countback(election, candidate)
       Notifier.notify([candidate.user_id], election, "seat_filled")
       candidate

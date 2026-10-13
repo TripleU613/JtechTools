@@ -230,19 +230,17 @@ module DiscourseModElections
         break if remaining.size == 1
       end
 
-      chosen =
-        if remaining.size == 1
-          remaining.first
-        else
-          decided_at = nil
-          remaining.sort[@rng.rand(remaining.size)]
-        end
+      lot = remaining.size > 1
+      chosen = lot ? remaining.sort[@rng.rand(remaining.size)] : remaining.first
       into << Tie.new(
         purpose: purpose,
-        method: decided_at ? :earlier_stage : :lot,
-        among: tied.sort,
+        method: lot ? :lot : :earlier_stage,
+        # A lot is drawn only among those still level after the earlier
+        # stages; naming everyone first tied would make the published
+        # seed check out wrong.
+        among: lot ? remaining.sort : tied.sort,
         chosen: chosen,
-        decided_at: decided_at,
+        decided_at: lot ? nil : decided_at,
       )
       chosen
     end

@@ -75,6 +75,8 @@ module DiscourseModElections
         raise Error.new(:not_seated) unless candidate.elected? && candidate.seat_left_at.nil?
         candidate.update!(seat_left_at: Time.zone.now, seat_left_reason: reason)
       end
+      # The results page shows who left their seat: open ones reload.
+      State.changed!
       user = candidate.user
       StaffLog.log(
         actor,

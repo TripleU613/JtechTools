@@ -22,7 +22,7 @@ If a category is set, each election gets a topic there: the schedule when nomina
 
 ## Who can run and who can vote
 
-- **Running:** trust level 2 or higher, an account at least 90 days old, and no suspension or silence from an admin in the last 180 days (a moderator's don't count: sitting moderators are candidates too, and the tab lists any suspension or silence a moderator gives a candidate or a voter during the election). Sitting moderators can always run. Admins can't. An admin can take a candidate off the ballot, but has to give a reason, and it's shown on the page.
+- **Running:** trust level 2 or higher, an account at least 90 days old, and no suspension or silence from an admin in the last 180 days (a moderator's don't count: sitting moderators are candidates too, and the tab lists any suspension or silence a moderator gives a candidate or a voter during the election). Sitting moderators can always run. Admins can't. An admin can take a candidate off the ballot, but has to give a reason, and it's shown to signed-in members on the page.
 - **Voting:** the voter list is fixed when nominations open. It has every account at least 30 days old at trust level 1 or higher, not suspended, silenced or staged, and not an admin. **A vote counts as much as the voter's trust level** at that moment, so trust level 3 counts 3 and trust level 0 doesn't vote. New accounts and level-ups during the election change nothing. Accounts suspended or silenced since can't vote. Candidates vote too, just not for themselves.
 
 All of these are settings.
@@ -58,7 +58,7 @@ On the Mod elections tab an admin can mark a moderator as **stepped down** (they
 
 ## Starting one by hand
 
-The tab can also start an election off the calendar, with its own dates and number of seats, end a phase early, or cancel an election. A cancelled election stays cancelled; the schedule won't start it again, even if the time zone setting changes. While the module is off the tab still shows everything, but changes nothing.
+The tab can also start an election off the calendar, with its own dates and number of seats (Vote Week has to start in the future, so people have time to run), end a phase early, or cancel an election. A cancelled election stays cancelled; the schedule won't start it again, even if the time zone setting changes. Only one election runs at a time: if one is still unpublished when the next is due, the next doesn't start, and admins get a notification saying so. While the module is off the tab still shows everything, but changes nothing.
 
 ## Settings
 

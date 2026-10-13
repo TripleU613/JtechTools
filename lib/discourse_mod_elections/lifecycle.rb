@@ -24,11 +24,25 @@ module DiscourseModElections
       # old zone can fall on the last day of the previous month in the new.
       opens = dates[:nominations_open_at]
       month = (opens.beginning_of_month - 1.day)..(opens.end_of_month + 1.day)
+      blocking = nil
       creating do
         next if Election.where(nominations_open_at: month).exists?
-        next if Election.unfinished.exists?
+        blocking = Election.unfinished.order(:id).first
+        next if blocking
         Election.create!(dates.merge(seats: SiteSetting.mod_elections_seats))
       end
+      # Once Vote Week would have opened the schedule stops trying, so an
+      # election nobody published or cancelled would skip this one quietly.
+      # Admins hear about it (once per election in the way).
+      warn_blocked(blocking) if blocking
+    end
+
+    def self.warn_blocked(election)
+      Notifier.notify(User.real.where(admin: true).pluck(:id), election, "schedule_blocked")
+    rescue StandardError => e
+      Rails.logger.warn(
+        "#{DiscourseModElections::LOG_TAG} schedule_blocked notice failed: #{e.message}",
+      )
     end
 
     # One election at a time: the schedule and an admin starting one by
@@ -136,6 +150,9 @@ module DiscourseModElections
                nominations_open_at < voting_open_at && voting_open_at < voting_close_at
         raise Error.new(:invalid_dates)
       end
+      # Starting it moves it on at once: with Vote Week already open (a
+      # mistyped year, say) nobody would get the chance to run.
+      raise Error.new(:dates_in_past) if voting_open_at <= Time.zone.now
       election =
         Election.new(
           seats: seats,

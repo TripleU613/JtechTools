@@ -140,6 +140,34 @@ RSpec.describe DiscourseModElections::Stv do
       # And the draw isn't always the same person.
       expect(excluded.uniq.size).to be > 1
     end
+
+    it "names only those still level after the earlier stages as the lot's field" do
+      # After a's surplus moves, b, c and d all have 2. At the first stage d
+      # had 2 and b and c had 1 each, so d is safe; b and c were level at
+      # every stage, so a lot decides between those two only.
+      result =
+        count(
+          %w[a b c d e],
+          [
+            ballot(4, "a", "b"),
+            ballot(4, "a", "c"),
+            ballot(1, "b"),
+            ballot(1, "c"),
+            ballot(2, "d"),
+            ballot(3, "e"),
+          ],
+          seats: 2,
+        )
+
+      tie = result.stages.find { |s| s.action == :exclusion }.ties.sole
+      expect(tie).to have_attributes(
+        purpose: :exclusion,
+        method: :lot,
+        among: %w[b c],
+        decided_at: nil,
+      )
+      expect(%w[b c]).to include(tie.chosen)
+    end
   end
 
   describe "candidates with no votes" do

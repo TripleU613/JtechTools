@@ -342,6 +342,7 @@ module DiscourseDumbcourse
       mod_elections.notifications.results
       mod_elections.notifications.disqualified
       mod_elections.notifications.seat_filled
+      mod_elections.notifications.schedule_blocked
       discourse_mod_categories.whisper.whisper_notification
       discourse_mod_categories.note_notification
       discourse_mod_categories.note_reply_notification

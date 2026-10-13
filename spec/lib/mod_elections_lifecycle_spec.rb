@@ -259,6 +259,30 @@ RSpec.describe DiscourseModElections::Lifecycle do
     expect(DiscourseModElections::Election.count).to eq(1)
   end
 
+  it "tells admins once when an unfinished election keeps the next one from starting" do
+    tick_at(2027, 1, 1, 0, 5)
+    january = election
+    described_class.end_phase!(january, admin)
+    described_class.end_phase!(january, admin)
+    expect(january.reload).to be_closed
+
+    # Nobody publishes or cancels January's before April's nominations.
+    tick_at(2027, 4, 1, 0, 5)
+    tick_at(2027, 4, 2)
+    expect(DiscourseModElections::Election.count).to eq(1)
+
+    notes =
+      Notification
+        .where(user: admin)
+        .map { |n| JSON.parse(n.data) }
+        .select { |data| data["mod_election_kind"] == "schedule_blocked" }
+    expect(notes.size).to eq(1)
+    expect(notes.sole).to include(
+      "mod_election_id" => january.id,
+      "url" => "/admin/plugins/jtech-tools/mod-elections",
+    )
+  end
+
   describe ".end_phase!" do
     it "lets an admin end nominations and Vote Week early" do
       tick_at(2027, 1, 2)
@@ -294,6 +318,20 @@ RSpec.describe DiscourseModElections::Lifecycle do
       }.to raise_error(DiscourseModElections::Error) { |e|
         expect(e.reason).to eq(:election_in_progress)
       }
+    end
+
+    it "won't start one whose Vote Week has already begun" do
+      freeze_time
+      expect {
+        described_class.create!(
+          admin,
+          seats: 2,
+          nominations_open_at: 1.year.ago,
+          voting_open_at: 1.year.ago + 3.days,
+          voting_close_at: 1.year.ago + 6.days,
+        )
+      }.to raise_error(DiscourseModElections::Error) { |e| expect(e.reason).to eq(:dates_in_past) }
+      expect(DiscourseModElections::Election.count).to eq(0)
     end
   end
 end

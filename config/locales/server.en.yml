@@ -1139,6 +1139,7 @@ en:
       results: "The results are in."
       disqualified: "An admin took you off the ballot. The reason is on the elections page."
       seat_filled: "A seat opened up and the count gave it to you. You're a moderator."
+      schedule_blocked: "The next scheduled election can't start while this one is unfinished. Publish or cancel it, or that election is skipped."
     topic:
       title: "Mod elections: %{month}"
       nominations_open: |
@@ -1181,7 +1182,7 @@ en:
       empty_ballot: "Rank at least one candidate."
       invalid_ballot: "The ballot has changed. Reload the page and try again."
       self_vote: "You can't vote for yourself."
-      reason_required: "Give a reason. It's shown to the candidate and on the elections page."
+      reason_required: "Give a reason. It's shown to the candidate and to signed-in members on the elections page."
       finished: "This election is already over."
       not_closed: "Voting hasn't closed yet."
       count_previewed: "The count has been previewed, so the ballots are fixed: a ballot set aside now would show, in the difference between two previews, what was on it. Publish, or cancel the election."
@@ -1192,6 +1193,7 @@ en:
       election_in_progress: "Another election is still running. Publish or cancel it first."
       too_early: "Nominations haven't opened yet."
       invalid_dates: "Check the dates: nominations, then Vote Week, then the close, in that order."
+      dates_in_past: "Vote Week has to start in the future, so people have time to run. Check the dates."
       winners_cannot_serve: "%{names} can't take a seat any more (see the preview). Take them off the ballot, then publish: the count moves on to the next candidate."
       module_off: "Mod elections are off. Turn them on in the settings below first."
     reasons:

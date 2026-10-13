@@ -617,6 +617,8 @@ en:
         deleted: A deleted account
         moderator: Moderator
         disqualified: "Taken off the ballot: %{reason}"
+        # Visitors who aren't signed in don't get the reason.
+        disqualified_no_reason: Taken off the ballot
         elected: Elected
       run:
         button: Run for mod
@@ -719,6 +721,7 @@ en:
         results: The results are in.
         disqualified: An admin took you off the ballot.
         seat_filled: A seat opened up and the count gave it to you.
+        schedule_blocked: The next scheduled election can't start while this one is unfinished.
     jtech_tools:
       admin:
         # Tab labels on the /admin/plugins/jtech-tools config page.
@@ -787,7 +790,7 @@ en:
             disqualified: Taken off
           moderator: Moderator
           disqualify: Take off ballot
-          disqualify_prompt: Why? The candidate and everyone on the elections page see this reason.
+          disqualify_prompt: Why? The candidate and signed-in members see this reason on the elections page.
           reinstate: Put back
         turnout:
           title: Turnout

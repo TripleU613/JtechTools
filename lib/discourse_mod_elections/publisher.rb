@@ -62,15 +62,26 @@ module DiscourseModElections
           AND b.election_id = :election_id
           AND b.user_id = v.user_id
       SQL
-      now = Time.zone.now
-      election.ballots.voided.update_all(ranking: [], void_reason: nil)
-      election.ballots.update_all(
-        user_id: nil,
-        ip_address: nil,
-        voided_by_id: nil,
-        created_at: now,
-        updated_at: now,
-      )
+      # Written again under new ids in a random order: the address report
+      # showed admins each ballot's id beside its voter, so keeping the ids
+      # (or the order they were cast in) would tie a ranking to its voter.
+      DB.exec(<<~SQL, election_id: election.id, now: Time.zone.now)
+        WITH old AS (
+          DELETE FROM jtech_election_ballots
+          WHERE election_id = :election_id
+          RETURNING election_id, weight, ranking, voided_at
+        )
+        INSERT INTO jtech_election_ballots
+          (election_id, weight, ranking, voided_at, created_at, updated_at)
+        SELECT election_id,
+               weight,
+               CASE WHEN voided_at IS NULL THEN ranking ELSE '{}' END,
+               voided_at,
+               :now,
+               :now
+        FROM old
+        ORDER BY random()
+      SQL
     end
 
     def self.cancel!(election, actor)
