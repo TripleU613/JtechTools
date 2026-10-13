@@ -320,7 +320,7 @@ RSpec.describe DiscourseModElections::Lifecycle do
       }
     end
 
-    it "won't start one whose Vote Week has already begun" do
+    it "refuses one whose Vote Week has already begun" do
       freeze_time
       expect {
         described_class.create!(

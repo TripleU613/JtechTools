@@ -166,7 +166,7 @@ RSpec.describe DiscourseModElections::Stv do
         among: %w[b c],
         decided_at: nil,
       )
-      expect(%w[b c]).to include(tie.chosen)
+      expect(tie.chosen).to eq("b").or eq("c")
     end
   end
 
