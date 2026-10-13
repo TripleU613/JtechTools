@@ -35,7 +35,7 @@ RSpec.describe ::DiscourseJtechTheme::Installer do
       expect(theme.color_schemes.pluck(:name)).to contain_exactly(
         "JTech Light",
         "JTech Dark",
-        "JTech Dim",
+        *described_class::OFFERED_PALETTES,
       )
       expect(described_class.state["digest"]).to eq(described_class.digest)
     end
@@ -75,7 +75,7 @@ RSpec.describe ::DiscourseJtechTheme::Installer do
       expect(SiteSetting.default_theme_id).to eq(theme.id)
     end
 
-    it "lets people choose JTech Dim, but only the theme's defaults are the defaults" do
+    it "lets people choose JTech Dim and the colour pairs, but only the theme's defaults are the defaults" do
       described_class.sync_now
       theme = installed
 
@@ -84,7 +84,26 @@ RSpec.describe ::DiscourseJtechTheme::Installer do
       expect(dim.is_dark?).to eq(true)
       expect(theme.color_scheme.name).to eq("JTech Light")
       expect(theme.dark_color_scheme.name).to eq("JTech Dark")
-      expect(theme.color_schemes.where(user_selectable: true).pluck(:name)).to eq(["JTech Dim"])
+      expect(theme.color_schemes.where(user_selectable: true).pluck(:name)).to match_array(
+        described_class::OFFERED_PALETTES,
+      )
+      expect(theme.color_schemes.find_by(name: "Nord Light").is_dark?).to eq(false)
+      expect(theme.color_schemes.find_by(name: "Nord Dark").is_dark?).to eq(true)
+    end
+
+    it "offers palettes a later version adds" do
+      described_class.sync_now
+      # as installed by a version that only had JTech Dim to offer
+      installed.color_schemes.where.not(name: "JTech Dim").update_all(user_selectable: false)
+      described_class.save_state(
+        described_class.state.merge("digest" => "older", "offered_palettes" => ["JTech Dim"]),
+      )
+
+      described_class.sync_now
+
+      expect(installed.color_schemes.where(user_selectable: true).pluck(:name)).to match_array(
+        described_class::OFFERED_PALETTES,
+      )
     end
 
     it "doesn't offer JTech Dim again after an admin stops offering it" do
@@ -132,7 +151,7 @@ RSpec.describe ::DiscourseJtechTheme::Installer do
       expect(installed.color_schemes.pluck(:name)).to contain_exactly(
         "JTech Light",
         "JTech Dark",
-        "JTech Dim",
+        *described_class::OFFERED_PALETTES,
       )
     end
 

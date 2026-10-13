@@ -163,12 +163,13 @@
         color: var(--jt-text);
       }
 
-      // unread: the badge inverts, instead of taking the accent colour
+      // unread: the badge takes the palette's accent (inverted on the black
+      // and white palettes)
       .icon-avatar__icon-wrapper {
-        background: var(--jt-text);
+        background: var(--jt-accent);
 
         .d-icon {
-          color: var(--jt-surface);
+          color: var(--jt-on-accent);
         }
       }
     }
@@ -199,8 +200,8 @@
     }
 
     .badge-notification {
-      color: var(--jt-surface);
-      background: var(--jt-text);
+      color: var(--jt-on-accent);
+      background: var(--jt-accent);
     }
   }
 

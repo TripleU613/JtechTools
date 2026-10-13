@@ -121,6 +121,9 @@ color_mode_toggle:
 header_color_toggle:
   type: bool
   default: false
+palette_menu:
+  type: bool
+  default: true
 overlay_scrollbar:
   type: bool
   default: true

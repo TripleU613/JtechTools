@@ -31,12 +31,12 @@
   --jt-text: #{$primary};
   --jt-text-muted: #{$primary-high};
 
-  // #737373 is the lightest grey that still reads at 4.5:1 on white and on
-  // the sunken #fafafa (WCAG AA); it carries small text (dates, counts,
-  // column headers). JTech Light's primary-medium is the same grey, so core's
-  // own secondary text (timeline dates, "1 Reply", the hidden-reply link)
-  // reads too.
-  --jt-text-subtle: #{dark-light-choose(#737373, $primary-medium)};
+  // Small text (dates, counts, column headers). Every palette's
+  // primary-medium is the lightest grey that still reads at 4.5:1 on its
+  // paper and its sunken surface (WCAG AA): JTech Light's is #737373 on white
+  // and #fafafa. Core's own secondary text (timeline dates, "1 Reply", the
+  // hidden-reply link) uses it too.
+  --jt-text-subtle: #{$primary-medium};
 
   // Core's "view 1 hidden reply" and other quiet text use this, which on a
   // dark palette falls to secondary-high: #4d4d4d on black, 2.5:1. The
@@ -46,8 +46,12 @@
   // The topic's category beside its title in the header uses core's derived
   // header grey (#8c8c8c on white, 3.4:1)
   --header_primary-high: var(--jt-text-muted);
-  --jt-focus: #{$primary};
-  --jt-accent: #{$primary};
+
+  // The accent is the palette's tertiary: the same as the text on the black
+  // and white palettes (JTech Light, Dark, Dim), a colour on the others
+  // (Ocean, Forest…). It reads at 4.5:1 on the paper, and the paper on it.
+  --jt-focus: #{$tertiary};
+  --jt-accent: #{$tertiary};
   --jt-on-accent: #{$secondary};
 
   // Scrollbar thumbs: translucent so they sit on any surface

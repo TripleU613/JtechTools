@@ -178,8 +178,8 @@ h4 {
 }
 
 ::selection {
-  background: var(--jt-text);
-  color: var(--jt-surface);
+  background: var(--jt-accent);
+  color: var(--jt-on-accent);
 }
 
 .btn {
