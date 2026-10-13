@@ -4,7 +4,7 @@
     "@discourse/lint-configs": "3.7.0",
     "@glint/ember-tsc": "1.11.6",
     "@types/node": "^26.6.4",
-    "concurrently": "^10.0.5",
+    "concurrently": "^10.0.6",
     "discourse": "npm:@discourse/types@2026.10.0-a5125163",
     "esbuild": "0.28.2",
     "eslint": "10.6.0",
