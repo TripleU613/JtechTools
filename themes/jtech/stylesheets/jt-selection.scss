@@ -1,0 +1,40 @@
+// Core's keyboard selection bars also appear after clicking a row. A flat
+// fill keeps the selected topic or post visible without the heavy edge.
+.topic-list tr.selected td:first-of-type,
+.topic-list-item.selected td:first-of-type,
+.latest-topic-list-item.selected,
+.search-results .fps-result.selected,
+.featured-topic.selected,
+.topic-post.selected,
+.nested-view__op-article[data-keyboard-selected],
+.nested-post[data-keyboard-selected]
+  > .nested-post__main
+  > .nested-post__article,
+.nested-post[data-keyboard-selected]
+  > .nested-post__main
+  > .nested-post__collapsed-bar,
+.nested-post[data-keyboard-selected]
+  > .nested-post__main
+  > .nested-post__placeholder {
+  box-shadow: none;
+}
+
+.topic-list:not(.jt-cards) tr.selected > td,
+.topic-list.jt-cards .topic-list-item.selected,
+.topic-list:not(.jt-cards) .topic-list-item.selected > td,
+.latest-topic-list-item.selected,
+.search-results .fps-result.selected,
+.featured-topic.selected,
+.topic-post.selected,
+.nested-view__op-article[data-keyboard-selected],
+.nested-post[data-keyboard-selected]
+  > .nested-post__main
+  > .nested-post__article,
+.nested-post[data-keyboard-selected]
+  > .nested-post__main
+  > .nested-post__collapsed-bar,
+.nested-post[data-keyboard-selected]
+  > .nested-post__main
+  > .nested-post__placeholder {
+  background-color: var(--jt-active);
+}
