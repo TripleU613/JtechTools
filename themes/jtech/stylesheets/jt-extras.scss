@@ -83,8 +83,8 @@
 // The timeline ends at the page's right edge, where the header's icons, the
 // topic's title and the suggested list do. Core sets it in a column as wide
 // as its longest date and lines it up on the column's left, so the scrubber
-// and its buttons stopped about 100px short of everything else. The posts
-// keep their reading width. Not the phone's sheet, which fills the screen.
+// and its buttons stopped about 100px short of everything else. Not the
+// phone's sheet, which fills the screen.
 .timeline-container:not(.timeline-fullscreen) .topic-timeline {
   width: max-content;
   margin-left: auto;
@@ -93,6 +93,42 @@
   .timeline-footer-controls {
     right: 0;
   }
+}
+
+// On a computer the posts take the room beside the timeline. Core sets a
+// post's text at a fixed 690px in a column wider than that, and the timeline
+// in a column about twice its width: with the timeline at the right edge,
+// that left some 200px empty between them. The timeline's column is its own
+// width now and the posts' column the rest, and a post's text fills it (the
+// page's own maximum width keeps lines a readable length). Core's single
+// column at 924px and under stays.
+html.desktop-view .container.posts {
+  @media screen and (width > 924px) {
+    grid-template-columns: minmax(0, 1fr) max-content;
+    column-gap: var(--space-8);
+  }
+
+  // the topic map at the foot of the posts: as wide as they are
+  > .topic-map.--bottom {
+    max-width: none;
+  }
+
+  // Set on the wrapper's children, so 100cqi is the wrapper's width
+  .posts-wrapper {
+    container-type: inline-size;
+
+    > * {
+      --topic-body-width: calc(
+        100cqi - var(--topic-avatar-width) - var(--topic-body-width-padding) * 2
+      );
+    }
+  }
+}
+
+// The buttons under the topic run to the page's right edge, as the suggested
+// list under them does, instead of stopping at core's old post width
+html.desktop-view #topic-footer-buttons {
+  max-width: none;
 }
 
 // A 2×2 block under the timeline: reply and notifications on top, first and

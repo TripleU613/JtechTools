@@ -144,6 +144,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Fixed**
 
+- JTech theme: on a computer, a topic's posts stopped some 200px short of the timeline, an empty strip down the page. The posts fill the room beside the timeline now (the page's own maximum width keeps lines readable), the topic summary at their foot with them, and the buttons under the topic run to the page's edge like the suggested list.
 - JTech theme: on a topic, the timeline and its buttons stopped about 100px short of the right edge the header, the title and the suggested topics share. They end at that edge now. The posts keep their reading width.
 - JTech theme: on a computer the logo stuck out 20px to the left of the sidebar it sits over. It starts where the sidebar's icons start now, at any window size.
 - Moderator tools: a whisper to a trust level group (or everyone, or staff) notified every member, hundreds of people for trust level 2. They can still read it; only the people and the other groups it's to are notified.

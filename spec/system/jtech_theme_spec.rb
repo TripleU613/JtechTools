@@ -3617,6 +3617,24 @@ RSpec.describe "JTech theme" do
       expect_no_theme_errors
     end
 
+    # Core's fixed 690px post text, in a column wider than that, beside a
+    # timeline column twice the timeline's width, left some 200px empty
+    it "fills the room beside the timeline with the posts" do
+      sign_in(member)
+      visit(topic.relative_url)
+      expect(page).to have_css(".timeline-container .jt-jump__bottom")
+      gap, overflow = page.evaluate_script(<<~JS)
+        [
+          document.querySelector(".topic-timeline").getBoundingClientRect().left -
+            document.querySelector("#post_1 .topic-body").getBoundingClientRect().right,
+          document.documentElement.scrollWidth - window.innerWidth,
+        ]
+      JS
+      expect(gap).to be_between(16, 64)
+      expect(overflow).to eq(0)
+      expect_no_theme_errors
+    end
+
     # The logo stuck out 20px to the left of the sidebar it heads
     it "starts the logo where the sidebar's icons start" do
       SiteSetting.logo = Fabricate(:image_upload)
