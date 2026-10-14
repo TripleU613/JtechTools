@@ -3599,6 +3599,24 @@ RSpec.describe "JTech theme" do
       expect_no_theme_errors
     end
 
+    # Core lines the timeline up on the left of its column, so it stopped
+    # about 100px short of the edge the header, title and suggested list share
+    it "ends the timeline and its buttons at the page's right edge" do
+      sign_in(member)
+      visit(topic.relative_url)
+      expect(page).to have_css(".timeline-container .jt-jump__bottom")
+      edges = page.evaluate_script(<<~JS)
+        [
+          "#toggle-current-user",
+          "#main-outlet",
+          ".timeline-container .topic-timeline",
+          ".timeline-footer-controls .jt-jump__bottom",
+        ].map((selector) => Math.round(document.querySelector(selector).getBoundingClientRect().right))
+      JS
+      expect(edges.max - edges.min).to be <= 1
+      expect_no_theme_errors
+    end
+
     # The logo stuck out 20px to the left of the sidebar it heads
     it "starts the logo where the sidebar's icons start" do
       SiteSetting.logo = Fabricate(:image_upload)

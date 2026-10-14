@@ -80,6 +80,21 @@
   // fell back to the icon's 16px, so the arrows sat at the top of the bar.
 }
 
+// The timeline ends at the page's right edge, where the header's icons, the
+// topic's title and the suggested list do. Core sets it in a column as wide
+// as its longest date and lines it up on the column's left, so the scrubber
+// and its buttons stopped about 100px short of everything else. The posts
+// keep their reading width. Not the phone's sheet, which fills the screen.
+.timeline-container:not(.timeline-fullscreen) .topic-timeline {
+  width: max-content;
+  margin-left: auto;
+
+  // the buttons at the same edge (core places them absolutely, at the left)
+  .timeline-footer-controls {
+    right: 0;
+  }
+}
+
 // A 2×2 block under the timeline: reply and notifications on top, first and
 // last post under them. The arrows keep the second row even when a button
 // above is missing (visitors, closed topics). Core's own selector, so this
