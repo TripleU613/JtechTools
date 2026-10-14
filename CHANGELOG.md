@@ -142,6 +142,10 @@ What changed for forums running Jtech Tools. Newest first.
 
 - Mini-mod: a category moderator could still make their private category public, hand its moderation to any group, or move it under a category they don't moderate, by sending the change to the category's slug instead of its id (`/categories/<slug>.json`). Closed: the staff-only fields are stripped and the move is checked however the category is addressed. Reported by the-curious-2025.
 
+**Changed**
+
+- JTech theme: the topic list's tabs (Latest, New, Unread, Top…) are one dropdown on a computer too, as on a phone and as Discourse's Compact Nav component does. As a row they ran out of room beside the filters and New Topic and scrolled sideways.
+
 **Fixed**
 
 - JTech theme: on a computer, a topic's posts stopped some 200px short of the timeline, an empty strip down the page. The posts fill the room beside the timeline now (the page's own maximum width keeps lines readable), the topic summary at their foot with them, and the buttons under the topic run to the page's edge like the suggested list.
