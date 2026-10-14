@@ -279,6 +279,37 @@ nav.post-controls {
   }
 }
 
+// "Me too" sat as a full bordered button beside the reaction counts. It's a
+// pill like them: the hairline, the counts' size, the icon and the label
+// in the muted grey; pressed (you have it too), in the text colour.
+.post-action-menu__solved-shared-issue.btn {
+  height: auto;
+  min-height: 0;
+  padding: 0.3rem 0.65rem;
+  gap: 0.35rem;
+  font-size: var(--jt-text-sm);
+  color: var(--jt-text-muted);
+  background: transparent;
+  border: 1px solid var(--jt-border);
+  border-radius: var(--jt-radius-pill);
+
+  .d-icon {
+    color: inherit;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: var(--jt-text);
+    background: var(--jt-hover);
+    border-color: var(--jt-border-strong);
+  }
+
+  &.has-shared-issue {
+    color: var(--jt-text);
+    background: var(--jt-active);
+  }
+}
+
 // ── Topic footer buttons ──────────────────────────────────
 // Core puts the tracking menu on a line of its own under the buttons, beside
 // a sentence on why you're at that level. On desktop it joins the row, just

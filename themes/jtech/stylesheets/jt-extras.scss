@@ -40,37 +40,27 @@
 }
 
 // ── First-reply prompt (components/jt-first-reply) ────────
+// One quiet line under the opening post, where its text starts: no box (a
+// dashed card there read as an empty slot), the icon and the sentence in
+// the subtle grey.
 .jt-first-reply {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
-  max-width: calc(
-    var(--topic-avatar-width) + var(--topic-body-width) +
-      (var(--topic-body-width-padding) * 2)
+  gap: var(--space-2);
+  margin: var(--space-3) 0 var(--space-4);
+  padding-inline-start: calc(
+    var(--topic-avatar-width) + var(--topic-body-width-padding)
   );
-  margin: var(--space-4) 0;
-  padding: var(--space-4) var(--space-5);
-  color: var(--jt-text-muted);
-  background: var(--jt-surface-sunken);
-  border: 1px dashed var(--jt-border-strong);
-  border-radius: var(--jt-radius-lg);
+  font-size: var(--jt-text-sm);
+  color: var(--jt-text-subtle);
 
   &__icon .d-icon {
-    width: 1.5rem;
-    height: 1.5rem;
-    color: var(--jt-text-subtle);
+    width: 1em;
+    height: 1em;
   }
 
-  &__text {
-    display: flex;
-    flex-direction: column;
-    gap: 0.15rem;
-    font-size: var(--jt-text-md);
-
-    strong {
-      font-weight: 600;
-      color: var(--jt-text);
-    }
+  html.mobile-view & {
+    padding-inline-start: 0;
   }
 }
 

@@ -377,3 +377,14 @@ body {
     box-shadow: 0 0 0 1px var(--jt-border-strong);
   }
 }
+
+// Who's Online in the sidebar (api-initializers/jt-online): the row of
+// avatars the plugin puts over the topic list goes, and the section's avatars
+// take the theme's avatar shape.
+html.jt-has-online-section .online_users_widget {
+  display: none;
+}
+
+.sidebar-section[data-section-name="jt-online"] .prefix-image {
+  border-radius: var(--jt-radius-avatar);
+}

@@ -33,4 +33,30 @@ RSpec.describe "Whisper notifications" do
     expect(notifications.count).to eq(1)
     expect(JSON.parse(notifications.first.data)["mod_whisper"]).to eq(true)
   end
+
+  it "notifies a named group's members, not a trust level's" do
+    team = Fabricate(:group).tap { |g| g.add(target) }
+    regular = Fabricate(:user, trust_level: TrustLevel[2], refresh_auto_groups: true)
+    sign_in(moderator)
+    post "/posts.json",
+         params: {
+           :topic_id => topic.id,
+           :raw => "A word for the team and for trust level 2.",
+           DiscourseModCategories::POST_WHISPER_ARMED_PARAM => true,
+           DiscourseModCategories::POST_WHISPER_TARGET_GROUPS_FIELD => [
+             team.id,
+             Group::AUTO_GROUPS[:trust_level_2],
+           ],
+         }
+    expect(response.status).to eq(200)
+    whisper = Post.find(response.parsed_body["id"])
+
+    whisper_notes = ->(user) do
+      Notification.where(user: user, topic: topic, post_number: whisper.post_number)
+    end
+    expect(whisper_notes.(target).count).to eq(1)
+    expect(whisper_notes.(regular).count).to eq(0)
+    # still in the audience: they can read it
+    expect(Guardian.new(regular).can_see?(whisper)).to eq(true)
+  end
 end

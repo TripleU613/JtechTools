@@ -6,6 +6,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **New**
 
+- JTech theme: with the Who's Online plugin, the people online are listed in the sidebar (Online · 8) instead of in a row of avatars over the topic list. Setting: `sidebar_online`.
 - JTech theme: colour palettes. A palette button in the sidebar footer (in the ☰ menu on a phone) switches the forum's colours on the spot: JTech's black and white (still the default), JTech Dim, Discourse's own default colours, or Nord, Catppuccin, Rosé Pine, Gruvbox, Tokyo Night, Everforest and Paper, each with a light and a dark version that follow your light / dark choice. Buttons, links, unread badges and selected text take the palette's accent; every one reads at 4.5:1. Members keep their choice on every device (it's the same as Preferences → Interface → Color Palette), visitors in their browser. Setting: `palette_menu`.
 - Dumbcourse: the forum's colours. It shows the palettes you chose on the full site (light and dark), or the theme's own, instead of its own blue and grey. With the JTech theme that's black and white; notification counts and the New pill take the accent instead of red and green.
 - Trust level flair: members who haven't picked a flair show their trust level's, from trust level 0 up, instead of none. It follows their trust level, and picking another flair (or none) under Preferences → Account keeps that choice. Off by default: `jtech_trust_level_flair`.
@@ -143,6 +144,9 @@ What changed for forums running Jtech Tools. Newest first.
 **Fixed**
 
 - JTech theme: on a computer the logo stuck out 20px to the left of the sidebar it sits over. It starts where the sidebar's icons start now, at any window size.
+- Moderator tools: a whisper to a trust level group (or everyone, or staff) notified every member, hundreds of people for trust level 2. They can still read it; only the people and the other groups it's to are notified.
+- JTech theme: the square logo (scrolled into a topic, and on phones) had hard square corners; it's the theme's squircle, like an app icon.
+- JTech theme: under a topic nobody has replied to, "Be the first to reply" was a dashed card that read as an empty box. It's one quiet line now, "No replies yet. Be the first.", and Solved's Me too is a small pill like the reaction counts beside it.
 - JTech theme: on a long topic, the buttons under the timeline were out of line: Top replies took the first column, so the ↑ under it was as wide as it, and the bell sat alone on a row of its own. Top replies has the top row now, with reply, the bell and the two arrows as an even block under it.
 - Dumbcourse: the sidebar showed Dumbcourse twice when the forum's own sidebar (Community, say) already had a link to it. The plugin's own section stays out of the way then.
 - Moderator tools: a whisper's "Whisper to" line named a group bare ("trust_level_2") beside people with an @. Groups get the @ too.
