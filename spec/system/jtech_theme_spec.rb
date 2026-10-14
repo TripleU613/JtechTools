@@ -2718,6 +2718,34 @@ RSpec.describe "JTech theme" do
     expect_no_theme_errors
   end
 
+  # A square logo with hard corners looked cut out; it's an app icon
+  it "draws the square logo on a phone in the theme's squircle", mobile: true do
+    SiteSetting.logo_small = Fabricate(:image_upload)
+    visit("/latest")
+    expect(page).to have_css(".d-header img.logo-mobile")
+    radius = page.evaluate_script(<<~JS)
+      getComputedStyle(document.querySelector(".d-header img.logo-mobile")).borderTopLeftRadius
+    JS
+    expect(radius).not_to eq("0px")
+    expect_no_theme_errors
+  end
+
+  # Who's Online's row of avatars sat over the topic list, in the tabs' way.
+  # Only where the plugin is installed (CI doesn't have it).
+  it "lists who's online in the sidebar instead of over the topic list" do
+    skip("needs the Who's Online plugin") unless defined?(::DiscourseWhosOnline)
+    SiteSetting.whos_online_enabled = true
+    SiteSetting.whos_online_display_public = true
+    SiteSetting.whos_online_minimum_display = 1
+    sign_in(member)
+    visit("/latest")
+    online = ".sidebar-section[data-section-name='jt-online']"
+    expect(page).to have_css(online, text: "Online")
+    expect(page).to have_css("#{online} .sidebar-section-link", text: member.username)
+    expect(page).to have_no_css(".online_users_widget", visible: true)
+    expect_no_theme_errors
+  end
+
   # The jump arrows were 16px tall at the top of the capsule (a height of
   # 100% with nothing to measure against), above the wrench and the counter
   it "lines the capsule's arrows, wrench and counter up at one height", mobile: true do
@@ -3044,9 +3072,34 @@ RSpec.describe "JTech theme" do
     it "prompts for the first reply and numbers code lines" do
       sign_in(member)
       visit(lonely_topic.relative_url)
-      expect(page).to have_css(".jt-first-reply", text: "Be the first to reply")
+      expect(page).to have_css(".jt-first-reply", text: "No replies yet. Be the first.")
       expect(page).to have_css("pre.jt-numbered .jt-lines", text: "1\n2\n3")
       shot("first-reply")
+      expect_no_theme_errors
+    end
+
+    # The prompt was a dashed card, which read as an empty slot; and Solved's
+    # Me too a full bordered button beside the reaction counts
+    it "keeps the first-reply prompt to a line, and Me too to a small pill" do
+      category.custom_fields["enable_accepted_answers"] = "true"
+      category.save_custom_fields(true)
+      lonely_topic.update!(category: category)
+      SiteSetting.solved_enabled = true
+      SiteSetting.enable_solved_shared_issues = true
+      DiscourseSolved::AcceptedAnswerCache.reset_accepted_answer_cache
+      sign_in(member)
+      visit(lonely_topic.relative_url)
+      expect(page).to have_css(".jt-first-reply")
+      expect(page).to have_css(".post-action-menu__solved-shared-issue")
+      prompt, pill = page.evaluate_script(<<~JS)
+        [".jt-first-reply", ".post-action-menu__solved-shared-issue"].map((selector) => {
+          const style = getComputedStyle(document.querySelector(selector));
+          return [style.borderTopStyle, style.backgroundColor, Math.round(parseFloat(style.height))];
+        })
+      JS
+      expect(prompt[0..1]).to eq(["none", "rgba(0, 0, 0, 0)"])
+      expect(pill[1]).to eq("rgba(0, 0, 0, 0)")
+      expect(pill[2]).to be < 32
       expect_no_theme_errors
     end
 

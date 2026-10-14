@@ -6,6 +6,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **New**
 
+- JTech theme: with the Who's Online plugin, the people online are listed in the sidebar (Online · 8) instead of in a row of avatars over the topic list. Setting: `sidebar_online`.
 - JTech theme: colour palettes. A palette button in the sidebar footer (in the ☰ menu on a phone) switches the forum's colours on the spot: JTech's black and white (still the default), JTech Dim, Discourse's own default colours, or Nord, Catppuccin, Rosé Pine, Gruvbox, Tokyo Night, Everforest and Paper, each with a light and a dark version that follow your light / dark choice. Buttons, links, unread badges and selected text take the palette's accent; every one reads at 4.5:1. Members keep their choice on every device (it's the same as Preferences → Interface → Color Palette), visitors in their browser. Setting: `palette_menu`.
 - Dumbcourse: the forum's colours. It shows the palettes you chose on the full site (light and dark), or the theme's own, instead of its own blue and grey. With the JTech theme that's black and white; notification counts and the New pill take the accent instead of red and green.
 - Trust level flair: members who haven't picked a flair show their trust level's, from trust level 0 up, instead of none. It follows their trust level, and picking another flair (or none) under Preferences → Account keeps that choice. Off by default: `jtech_trust_level_flair`.
@@ -142,6 +143,9 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Fixed**
 
+- Moderator tools: a whisper to a trust level group (or everyone, or staff) notified every member, hundreds of people for trust level 2. They can still read it; only the people and the other groups it's to are notified.
+- JTech theme: the square logo (scrolled into a topic, and on phones) had hard square corners; it's the theme's squircle, like an app icon.
+- JTech theme: under a topic nobody has replied to, "Be the first to reply" was a dashed card that read as an empty box. It's one quiet line now, "No replies yet. Be the first.", and Solved's Me too is a small pill like the reaction counts beside it.
 - JTech theme: pressing a row of a topic list that isn't cards (suggested topics under a topic) did nothing until the next page opened; it sinks a little and springs back now, as a card does. The row you came back to was marked with a bar down one side; it's tinted all across now.
 - JTech theme: with the user menu in the sidebar, Preferences → Security had no icon (hide_lock_icons hid every lock in the sidebar, its own included), and a private category's padlock still showed when Lucide icons were on. Only a category's padlock is hidden now, whichever icons are on.
 - JTech theme: on Preferences → Security, the menu beside each recently used device was a wide empty box. It's the size of its wrench now.

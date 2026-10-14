@@ -387,7 +387,10 @@ en:
 
     mod_notify_whisper_targets: Sends a bell notification to a whisper's
       audience when one is posted, and to a user when staff add them to a
-      whisper. Off means whispers still work but arrive silently.
+      whisper. Members of an automatic group the whisper is to (a trust level,
+      everyone, staff) can read it but aren't notified, so a whisper to a
+      trust level doesn't ring hundreds of bells. Off means whispers still
+      work but arrive silently.
 
     mod_auto_mark_notifications_seen: Opening a topic, or the review queue,
       marks THIS plugin's own note and whisper notifications for it as read.

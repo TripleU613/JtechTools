@@ -302,7 +302,17 @@ module DiscourseModCategories
       ids = []
       ids.concat(staff_user_ids) unless post.user&.staff?
       ids.concat(::User.where(id: d[:user_ids]).pluck(:id)) if d[:user_ids].any?
-      ids.concat(::GroupUser.where(group_id: d[:group_ids]).pluck(:user_id)) if d[:group_ids].any?
+      # Not the automatic groups (trust levels, everyone, staff): their
+      # members still see the whisper, but a whisper to trust_level_2 rang
+      # the bell for hundreds of people.
+      if d[:group_ids].any?
+        ids.concat(
+          ::GroupUser
+            .joins(:group)
+            .where(group_id: d[:group_ids], groups: { automatic: false })
+            .pluck(:user_id),
+        )
+      end
       ids.concat(::UserBadge.where(badge_id: d[:badge_ids]).pluck(:user_id)) if d[:badge_ids].any?
       ids.compact.uniq - [post.user_id]
     end

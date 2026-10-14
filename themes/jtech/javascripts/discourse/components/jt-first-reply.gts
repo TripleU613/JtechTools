@@ -43,10 +43,7 @@ export default class JtFirstReply extends Component<JtFirstReplySignature> {
   <template>
     <div class="jt-first-reply">
       <span class="jt-first-reply__icon">{{dIcon "far-comment"}}</span>
-      <div class="jt-first-reply__text">
-        <strong>{{i18n (themePrefix "jt.first_reply.title")}}</strong>
-        <span>{{i18n (themePrefix "jt.first_reply.description")}}</span>
-      </div>
+      <span>{{i18n (themePrefix "jt.first_reply.title")}}</span>
     </div>
   </template>
 }

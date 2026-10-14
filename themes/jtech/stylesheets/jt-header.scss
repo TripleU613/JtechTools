@@ -372,3 +372,17 @@ html.mobile-view {
 .d-header .extra-info-wrapper {
   padding-inline-start: 1rem;
 }
+
+// The square logo is an app icon: in the theme's squircle (a rounded box
+// where corner-shape doesn't work), not a hard-edged square. Core's small
+// logo while scrolled into a topic, and on phones, where mobile_small_logo
+// puts the small logo in the mobile one's place.
+.d-header img.logo-small {
+  border-radius: var(--jt-radius-avatar);
+}
+
+@if $mobile_small_logo == "true" {
+  .d-header img.logo-mobile {
+    border-radius: var(--jt-radius-avatar);
+  }
+}
