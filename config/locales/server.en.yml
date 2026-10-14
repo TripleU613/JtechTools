@@ -89,6 +89,15 @@ en:
       icon site setting in the web manifest only; turn this off to use that
       upload instead. Reinstall the app to pick up a change.
 
+    jtech_trust_level_flair: Show each member's trust level as their avatar
+      flair when they haven't picked one, using the flair of their highest
+      trust level group that has one (set the flair on the trust level groups
+      under Groups). It moves up and down with their trust level. A member who
+      picks another flair, or takes this one off, under Preferences → Account
+      keeps their choice. Turning it on sets it for everyone within a few
+      minutes; turning it off leaves the flairs it gave, which members can
+      change.
+
     # ── Jtech — Dislike ────────────────────────────────────────────────────
     discourse_no_likes_enabled: Turn on phantom reactions. When off, likes and
       reactions behave exactly as Discourse ships them in every category and
