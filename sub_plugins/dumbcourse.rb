@@ -41,6 +41,7 @@ require_relative "../lib/discourse_dumbcourse/engine"
 require_relative "../lib/discourse_dumbcourse/push_sender"
 require_relative "../lib/discourse_dumbcourse/pairing"
 require_relative "../lib/discourse_dumbcourse/legacy_redirect"
+require_relative "../lib/discourse_dumbcourse/palette"
 
 after_initialize do
   # NOTE: no `enabled_site_setting :dumbcourse_enabled` here. That call is a

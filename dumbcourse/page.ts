@@ -1,18 +1,20 @@
 // The page the server sends for every Dumbcourse URL. build.ts writes it to
 // public/index.html; app_controller.rb fills in the {{PLACEHOLDERS}} per
 // request ({{EARLY}} is the inline early script, hashed for the CSP, and the
-// only inline script there may be).
+// only inline script there may be; {{PALETTE}} the reader's forum palettes as
+// the stylesheet's colour tokens, lib/discourse_dumbcourse/palette.rb).
 export const PAGE = `<!DOCTYPE html>
 <html lang="en" class="dark" data-default-theme="{{DEFAULT_THEME}}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#111317">
+<meta name="theme-color" content="#000000">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="robots" content="noindex">
 <title>{{TITLE}}</title>
 <link rel="icon" href="{{ICON}}">
 <link rel="stylesheet" href="{{BASE}}/dumbcourse.css?v={{VERSION}}">
+<style>{{PALETTE}}</style>
 <script>{{EARLY}}</script>
 </head>
 <body class="dc">

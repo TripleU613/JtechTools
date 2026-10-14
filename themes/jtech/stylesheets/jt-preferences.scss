@@ -120,7 +120,9 @@
     }
   }
 
-  .select-kit.single-select:not(.color-palette-picker) {
+  // Not the icon-only menus (a device's wrench under Security): 12rem made
+  // that a wide empty box beside the device
+  .select-kit.single-select:not(.color-palette-picker, .dropdown-select-box) {
     min-width: 12rem;
   }
 

@@ -117,6 +117,68 @@ RSpec.describe "Dumbcourse app page" do
     end
   end
 
+  describe "colours" do
+    def palette(name, paper, ink, accent, selectable: false)
+      Fabricate(
+        :color_scheme,
+        name: name,
+        theme: theme,
+        user_selectable: selectable,
+        color_scheme_colors: [
+          ColorSchemeColor.new(name: "primary", hex: ink),
+          ColorSchemeColor.new(name: "secondary", hex: paper),
+          ColorSchemeColor.new(name: "tertiary", hex: accent),
+        ],
+      )
+    end
+
+    fab!(:theme)
+    let!(:light) { palette("Forum Light", "ffffff", "111111", "0055aa") }
+    let!(:dark) { palette("Forum Dark", "050505", "eeeeee", "66aaff") }
+    let!(:sepia) { palette("Sepia", "f8f4ec", "2b2118", "8a4b1f", selectable: true) }
+    let!(:midnight) { palette("Midnight", "0b1220", "e2e8f0", "60a5fa", selectable: true) }
+
+    before do
+      theme.update!(color_scheme_id: light.id, dark_color_scheme_id: dark.id)
+      SiteSetting.default_theme_id = theme.id
+    end
+
+    def tokens
+      style = response.body[%r{<style>(.*?)</style>}m, 1]
+      expect(style).to be_present
+      {
+        dark: style[/:root\{(.*?)\}/, 1].to_s.scan(/--([\w-]+):(#\h+);/).to_h,
+        light: style[/html\.light\{(.*?)\}/, 1].to_s.scan(/--([\w-]+):(#\h+);/).to_h,
+      }
+    end
+
+    it "takes the forum theme's palettes" do
+      get "/dumb/"
+      expect(tokens[:dark]).to include("bg" => "#050505", "fg" => "#eeeeee", "accent" => "#66aaff")
+      expect(tokens[:light]).to include("surface" => "#ffffff", "accent" => "#0055aa")
+    end
+
+    it "takes the reader's own palettes, this device's over their account's" do
+      user.user_option.update!(color_scheme_id: sepia.id, dark_scheme_id: midnight.id)
+      sign_in(user)
+      get "/dumb/"
+      expect(tokens[:light]).to include("surface" => "#f8f4ec", "accent" => "#8a4b1f")
+      expect(tokens[:dark]).to include("bg" => "#0b1220", "accent" => "#60a5fa")
+
+      cookies[:color_scheme_id] = light.id.to_s
+      get "/dumb/"
+      expect(tokens[:light]).to include("accent" => "#0055aa")
+    end
+
+    it "ignores a palette the reader may not use" do
+      sepia.update!(user_selectable: false)
+      user.user_option.update!(color_scheme_id: sepia.id)
+      sign_in(user)
+      get "/dumb/"
+      expect(tokens[:light]).to include("accent" => "#0055aa")
+    end
+  end
+
   it "is not served when switched off" do
     SiteSetting.dumbcourse_enabled = false
     sign_in(user)

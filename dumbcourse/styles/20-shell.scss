@@ -66,8 +66,8 @@
   min-width: 1.15rem;
   padding: 0 0.3rem;
   border-radius: 999px;
-  background: var(--danger);
-  color: #fff;
+  background: var(--accent);
+  color: var(--accent-fg);
   font-size: 0.68rem;
   font-weight: 700;
   line-height: 1.15rem;
@@ -249,7 +249,7 @@ html.with-softkeys #softkeys {
 
 .toast-error {
   background: var(--danger);
-  color: #fff;
+  color: var(--danger-fg);
 }
 
 html.with-softkeys .toast {

@@ -1,30 +1,34 @@
 /* Theme tokens. The build gives every var() a plain fallback (dark) and
-   repeats the light theme for engines without custom properties. */
+   repeats the light theme for engines without custom properties. The colours
+   are JTech Dark (:root) and JTech Light (html.light) as
+   lib/discourse_dumbcourse/palette.rb maps a palette; the page replaces them
+   with the reader's own palettes where custom properties work. */
 
 :root {
-  --bg: #111317;
-  --surface: #1a1d23;
-  --surface2: #23272f;
-  --surface3: #2c313b;
-  --line: #2f343e;
-  --fg: #eceff4;
-  --fg2: #a9b1be;
-  --fg3: #7c8594;
-  --accent: #5ea8ff;
-  --accent-strong: #8cc0ff;
-  --accent-fg: #06111f;
-  --accent-soft: #1b2d45;
-  --focus: #ffcf5c;
-  --focus-soft: #2e2a1a;
-  --danger: #ff7a7a;
-  --danger-soft: #3a1f22;
-  --ok: #52cc8f;
-  --ok-soft: #173327;
+  --bg: #000000;
+  --surface: #0a0a0a;
+  --surface2: #111111;
+  --surface3: #1a1a1a;
+  --line: #2e2e2e;
+  --fg: #ffffff;
+  --fg2: #a1a1a1;
+  --fg3: #8f8f8f;
+  --accent: #ffffff;
+  --accent-strong: #cccccc;
+  --accent-fg: #000000;
+  --accent-soft: #1f1f1f;
+  --focus: #ffffff;
+  --focus-soft: #111111;
+  --danger: #ff6166;
+  --danger-fg: #000000;
+  --danger-soft: #240e0e;
+  --ok: #62c073;
+  --ok-soft: #0e1b10;
   --warn: #f2b84b;
-  --unread: #5ea8ff;
+  --unread: #ffffff;
   --shadow: rgba(0, 0, 0, 0.5);
   --backdrop: rgba(0, 0, 0, 0.6);
-  --code: #0c0e11;
+  --code: #0a0a0a;
   --radius: 10px;
   --radius-s: 6px;
   --top-h: 2.9rem;
@@ -32,27 +36,28 @@
 }
 
 html.light {
-  --bg: #f4f5f8;
+  --bg: #fafafa;
   --surface: #ffffff;
-  --surface2: #eef1f6;
-  --surface3: #e2e7ef;
-  --line: #dde2ea;
-  --fg: #151920;
-  --fg2: #525c6c;
-  --fg3: #7f8898;
-  --accent: #1c6bd6;
-  --accent-strong: #0f55b3;
+  --surface2: #f2f2f2;
+  --surface3: #ebebeb;
+  --line: #e0e0e0;
+  --fg: #000000;
+  --fg2: #666666;
+  --fg3: #737373;
+  --accent: #000000;
+  --accent-strong: #383838;
   --accent-fg: #ffffff;
-  --accent-soft: #e2edfc;
-  --focus: #1c6bd6;
-  --focus-soft: #e7f0fd;
-  --danger: #c9302c;
-  --danger-soft: #fbe6e5;
-  --ok: #1f8f58;
-  --ok-soft: #e1f5ea;
+  --accent-soft: #ebebeb;
+  --focus: #000000;
+  --focus-soft: #fafafa;
+  --danger: #da2f35;
+  --danger-fg: #ffffff;
+  --danger-soft: #fae2e3;
+  --ok: #297c3b;
+  --ok-soft: #e1ede4;
   --warn: #a86a00;
-  --unread: #1c6bd6;
+  --unread: #000000;
   --shadow: rgba(20, 30, 50, 0.18);
   --backdrop: rgba(10, 15, 25, 0.45);
-  --code: #f1f3f7;
+  --code: #fafafa;
 }

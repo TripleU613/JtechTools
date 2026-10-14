@@ -53,8 +53,8 @@ svg.i.st-on {
 }
 
 .pill.new {
-  background: var(--ok);
-  color: #fff;
+  background: var(--accent);
+  color: var(--accent-fg);
 }
 
 .pill.waiting {
@@ -1088,7 +1088,7 @@ mark {
   width: 1rem;
   height: 1rem;
   border-radius: 50%;
-  background: #fff;
+  background: var(--fg2);
   box-shadow: 0 1px 2px var(--shadow);
   transition: left 0.15s;
 }
@@ -1099,6 +1099,7 @@ mark {
 
 .switch.on span {
   left: 1.15rem;
+  background: var(--accent-fg);
 }
 
 .form {

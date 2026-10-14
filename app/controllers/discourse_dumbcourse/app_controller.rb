@@ -172,6 +172,8 @@ module DiscourseDumbcourse
         # value can close the <script> element.
         "{{BOOT}}" => ERB::Util.json_escape(boot_payload.to_json),
         "{{EARLY}}" => early,
+        # Only hex colours in custom properties (Palette.declarations)
+        "{{PALETTE}}" => Palette.style(user: current_user, cookies: cookies),
       }
       template.gsub(/\{\{[A-Z_]+\}\}/) { |m| replacements.fetch(m, "") }
     end
