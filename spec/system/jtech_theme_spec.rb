@@ -2731,7 +2731,9 @@ RSpec.describe "JTech theme" do
   end
 
   # Who's Online's row of avatars sat over the topic list, in the tabs' way.
-  # Only where the plugin is installed (CI doesn't have it).
+  # In the sidebar it comes second, as faces: as the last section it was below
+  # the bottom of the window. Only where the plugin is installed (CI doesn't
+  # have it).
   it "lists who's online in the sidebar instead of over the topic list" do
     skip("needs the Who's Online plugin") unless defined?(::DiscourseWhosOnline)
     SiteSetting.whos_online_enabled = true
@@ -2741,8 +2743,13 @@ RSpec.describe "JTech theme" do
     visit("/latest")
     online = ".sidebar-section[data-section-name='jt-online']"
     expect(page).to have_css(online, text: "Online")
-    expect(page).to have_css("#{online} .sidebar-section-link", text: member.username)
+    expect(page).to have_css("#{online} a[href='/u/#{member.username}'] img.prefix-image")
     expect(page).to have_no_css(".online_users_widget", visible: true)
+    above_categories = page.evaluate_script(<<~JS)
+      document.querySelector("#{online}").getBoundingClientRect().top <
+        document.querySelector(".sidebar-section[data-section-name='categories']").getBoundingClientRect().top
+    JS
+    expect(above_categories).to eq(true)
     expect_no_theme_errors
   end
 
@@ -4102,7 +4109,7 @@ RSpec.describe "JTech theme" do
       visit("/latest")
       expect(page).to have_css(".topic-list.jt-cards .topic-excerpt")
 
-      find(".jt-palette-menu").click
+      find(".jt-density-menu").click
       find(".jt-palettes.--density .jt-palettes__option", text: "Compact").click
       expect(page).to have_css("html.jt-density-compact")
       expect(page).to have_no_css(".topic-list.jt-cards .topic-excerpt")
@@ -4112,7 +4119,7 @@ RSpec.describe "JTech theme" do
       expect(page).to have_css(".jt-card")
       expect(page).to have_no_css(".topic-list.jt-cards .topic-excerpt")
 
-      find(".jt-palette-menu").click
+      find(".jt-density-menu").click
       expect(page).to have_css(
         ".jt-palettes.--density .jt-palettes__option[aria-checked='true']",
         text: "Compact",
@@ -4130,6 +4137,7 @@ RSpec.describe "JTech theme" do
       visit("/latest")
       expect(page).to have_css(".jt-card")
       expect(page).to have_no_css(".jt-palette-menu")
+      expect(page).to have_css(".jt-density-menu")
     end
   end
 

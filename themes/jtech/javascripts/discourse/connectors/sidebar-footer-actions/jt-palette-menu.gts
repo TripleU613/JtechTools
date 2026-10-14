@@ -1,12 +1,11 @@
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
-import { concat, fn } from "@ember/helper";
+import { fn } from "@ember/helper";
 import { on } from "@ember/modifier";
 import { action } from "@ember/object";
 import { service } from "@ember/service";
 import { type TrustedHTML, trustHTML } from "@ember/template";
 import DMenu from "float-kit/components/d-menu";
-import { eq } from "truth-helpers";
 import { settings, themePrefix } from "virtual:theme";
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
@@ -17,12 +16,6 @@ import type User from "discourse/models/user";
 import type InterfaceColor from "discourse/services/interface-color";
 import dIcon from "discourse/ui-kit/helpers/d-icon";
 import { i18n } from "discourse-i18n";
-import {
-  currentDensity,
-  DENSITIES,
-  type Density,
-  setDensity,
-} from "../../lib/jt-density";
 
 interface Scheme {
   id: number;
@@ -113,8 +106,6 @@ export default class JtPaletteMenu extends Component {
   // Read when the menu opens: what's on screen changes without telling us
   // (core's light/dark switch, the device's own mode).
   @tracked families: Family[] = [];
-  @tracked density: Density = currentDensity();
-  densities = DENSITIES;
 
   get theme(): SiteTheme | undefined {
     const id = currentThemeId() as number;
@@ -174,7 +165,6 @@ export default class JtPaletteMenu extends Component {
 
   @action
   refresh() {
-    this.density = currentDensity();
     this.families = this.readFamilies();
   }
 
@@ -222,12 +212,6 @@ export default class JtPaletteMenu extends Component {
     updateColorSchemeCookie(null, { dark: true });
   }
 
-  @action
-  chooseDensity(density: Density) {
-    setDensity(density);
-    this.density = density;
-  }
-
   <template>
     {{#if this.available}}
       <DMenu
@@ -240,58 +224,27 @@ export default class JtPaletteMenu extends Component {
         @triggerClass="btn-flat sidebar-footer-actions-button"
       >
         <:content as |menu|>
-          <div class="jt-palettes__panel">
-            <ul class="jt-palettes" role="menu">
-              {{#each this.families as |family|}}
-                <li role="none">
-                  <button
-                    aria-checked={{if family.active "true" "false"}}
-                    class="btn btn-transparent jt-palettes__option
-                      {{if family.active '--active'}}"
-                    role="menuitemradio"
-                    type="button"
-                    {{on "click" (fn this.choose family menu.close)}}
-                  >
-                    <span
-                      class="jt-palettes__swatch"
-                      style={{family.swatch}}
-                    ></span>
-                    <span class="jt-palettes__name">{{family.name}}</span>
-                    {{#if family.active}}{{dIcon "check"}}{{/if}}
-                  </button>
-                </li>
-              {{/each}}
-            </ul>
-            <div class="jt-palettes__heading" id="jt-density-heading">
-              {{i18n (themePrefix "jt.density.title")}}
-            </div>
-            <ul
-              aria-labelledby="jt-density-heading"
-              class="jt-palettes --density"
-              role="menu"
-            >
-              {{#each this.densities as |density|}}
-                <li role="none">
-                  <button
-                    aria-checked={{if (eq density this.density) "true" "false"}}
-                    class="btn btn-transparent jt-palettes__option
-                      {{if (eq density this.density) '--active'}}"
-                    role="menuitemradio"
-                    type="button"
-                    {{on "click" (fn this.chooseDensity density)}}
-                  >
-                    <span class="jt-density-preview --{{density}}">
-                      <span></span><span></span><span></span>
-                    </span>
-                    <span class="jt-palettes__name">
-                      {{i18n (themePrefix (concat "jt.density." density))}}
-                    </span>
-                    {{#if (eq density this.density)}}{{dIcon "check"}}{{/if}}
-                  </button>
-                </li>
-              {{/each}}
-            </ul>
-          </div>
+          <ul class="jt-palettes" role="menu">
+            {{#each this.families as |family|}}
+              <li role="none">
+                <button
+                  aria-checked={{if family.active "true" "false"}}
+                  class="btn btn-transparent jt-palettes__option
+                    {{if family.active '--active'}}"
+                  role="menuitemradio"
+                  type="button"
+                  {{on "click" (fn this.choose family menu.close)}}
+                >
+                  <span
+                    class="jt-palettes__swatch"
+                    style={{family.swatch}}
+                  ></span>
+                  <span class="jt-palettes__name">{{family.name}}</span>
+                  {{#if family.active}}{{dIcon "check"}}{{/if}}
+                </button>
+              </li>
+            {{/each}}
+          </ul>
         </:content>
       </DMenu>
     {{/if}}

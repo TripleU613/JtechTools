@@ -124,6 +124,9 @@ header_color_toggle:
 palette_menu:
   type: bool
   default: true
+density_menu:
+  type: bool
+  default: true
 overlay_scrollbar:
   type: bool
   default: true

@@ -1,6 +1,6 @@
 // How tightly topic lists are set (Gmail's Density): default, the cards as
 // they are; comfortable, cards without excerpt or picture; compact, one row a
-// topic. Chosen in the sidebar's palette menu, kept per browser, and shown as
+// topic. Chosen in the sidebar's density menu, kept per browser, and shown as
 // a class on <html> (jt-density-comfortable / jt-density-compact) that
 // jt-cards.scss styles.
 

@@ -321,11 +321,14 @@ body {
   }
 }
 
-// The footer's palette menu (connectors/sidebar-footer-actions): each
-// palette's swatch is its paper with its accent in the middle, in the mode
-// on screen. On a phone the footer is in the header's menu panel, so the
-// menu goes up to the header's layer, as core's Color mode menu does.
-.fk-d-menu[data-identifier="jt-palette-menu"] {
+// The footer's palette and density menus (connectors/sidebar-footer-actions):
+// each palette's swatch is its paper with its accent in the middle, in the
+// mode on screen. On a phone the footer is in the header's menu panel, so the
+// menus go up to the header's layer, as core's Color mode menu does.
+.fk-d-menu:is(
+  [data-identifier="jt-palette-menu"],
+  [data-identifier="jt-density-menu"]
+) {
   z-index: z("header");
 
   .jt-palettes {
@@ -379,35 +382,78 @@ body {
 }
 
 // Who's Online in the sidebar (api-initializers/jt-online): the row of
-// avatars the plugin puts over the topic list goes, and the section's avatars
-// take the theme's avatar shape.
+// avatars the plugin puts over the topic list goes. The section comes second,
+// under Topics: as the last one it sat under Categories, Tags and the inboxes,
+// below the bottom of the window, and nobody found it. The people are a row of
+// faces rather than a line each, so it stays short; a face's name is its
+// tooltip, and stays the link's text for screen readers.
 html.jt-has-online-section .online_users_widget {
   display: none;
 }
 
-.sidebar-section[data-section-name="jt-online"] .prefix-image {
-  border-radius: var(--jt-radius-avatar);
+// The phone's menu panel lays the sections out as blocks, where order does
+// nothing; the docked sidebar's is a column already
+.sidebar-sections:has(> [data-section-name="jt-online"]) {
+  display: flex;
+  flex-direction: column;
 }
 
-// The menu's Density section (lib/jt-density): a heading under the palettes,
-// and for each choice a small picture of a list at that density, like
-// Gmail's: a card with lines, two rows, three rows.
-.fk-d-menu[data-identifier="jt-palette-menu"] {
-  // the palettes, then Density under them (the menu's content is a row)
-  .jt-palettes__panel {
+.sidebar-sections > .sidebar-custom-sections {
+  order: -2;
+}
+
+.sidebar-sections > .sidebar-section[data-section-name="jt-online"] {
+  order: -1;
+
+  .sidebar-section-content {
     display: flex;
-    flex-direction: column;
+    flex-flow: row wrap;
+    gap: 0.375rem;
+    padding: 0.25rem var(--d-sidebar-row-horizontal-padding) 0.5rem;
   }
 
-  .jt-palettes__heading {
-    margin: var(--space-2) var(--space-2) 0;
-    padding: var(--space-2) var(--space-2) var(--space-1);
-    border-top: 1px solid var(--jt-border);
-    font-size: var(--jt-text-xs);
-    font-weight: 500;
-    color: var(--jt-text-subtle);
+  .sidebar-section-link-wrapper {
+    width: auto;
   }
 
+  .sidebar-section-link {
+    width: auto;
+    height: auto;
+    padding: 0;
+    border-radius: var(--jt-radius-avatar);
+
+    &:hover,
+    &:focus-visible {
+      background: none;
+      opacity: 0.8;
+    }
+  }
+
+  .sidebar-section-link-prefix {
+    width: 2rem;
+    height: 2rem;
+    margin: 0;
+  }
+
+  .prefix-image {
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--jt-radius-avatar);
+  }
+
+  .sidebar-section-link-content-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    white-space: nowrap;
+    clip-path: inset(50%);
+  }
+}
+
+// The density menu (lib/jt-density): for each choice a small picture of a
+// list at that density, like Gmail's: a card with lines, two rows, three rows.
+.fk-d-menu[data-identifier="jt-density-menu"] {
   .jt-density-preview {
     display: flex;
     flex: none;

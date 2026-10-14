@@ -4,7 +4,7 @@ en:
     back_to_top: "Back to top"
     dismiss: "Dismiss"
     palettes:
-      title: "Colors and density"
+      title: "Colors"
     density:
       title: "Density"
       default: "Default"
@@ -124,6 +124,7 @@ en:
       color_mode_toggle: "Light / dark switch in the command menu (and its g o shortcut), and in the header when header_color_toggle is on. Clicking back to the mode your device uses returns to following the device."
       header_color_toggle: "Light / dark icon in the header, beside the bell (needs color_mode_toggle). Off: people switch from the sidebar's Color mode menu or the command menu. The sidebar menu is Discourse's own; it shows while the site setting interface color selector is set to sidebar footer. While the icon shows, it replaces Discourse's header colour selector."
       palette_menu: "Palette button in the sidebar footer: every palette the theme offers (JTech, Dim and the colour pairs), switched with one click and no reload. Members keep their choice on every device (it is the same setting as Preferences → Interface); visitors keep it in this browser. Hidden when there is only one palette to choose."
+      density_menu: "Density button in the sidebar footer, beside the palette button: topic lists as they are, Comfortable (cards without the excerpt and picture) or Compact (one row a topic), like Gmail's. Kept in this browser."
       overlay_scrollbar: "Thin overlay scrollbar for the page (macOS style) on mouse/trackpad devices, instead of the browser's wide classic one."
       back_to_top: "Floating back-to-top button on long pages (not on topics, which have their own)."
       command_menu: "⌘K / Ctrl+K command menu: jump to pages, categories, topics and people, or run an action."
@@ -145,7 +146,7 @@ en:
       post_badges: "Badges to show after a poster's name on their posts, when they have them, in this order. Each links to its badge page. Use each badge's exact name from Admin → Badges (case doesn't matter, spaces do)."
       image_carousels: "Show the pictures in posts written with the Post Image Carousel component ([wrap=Carousel]) as Discourse's own carousel, the one [grid mode=carousel] makes. The component's autoplay, loop and thumbnails aren't carried over."
       sidebar_inboxes: "For people in groups with a shared inbox (on the forum, staff): an Inboxes section in the sidebar with their own messages and each group's, with unread counts. Everyone else keeps Discourse's My Messages link."
-      sidebar_online: "With the Who's Online plugin: the people online as a section of the sidebar (Online · 8, up to 12 by name, live) instead of the row of avatars over the topic list. Shown to whoever the plugin shows its row to, while at least its minimum are online."
+      sidebar_online: "With the Who's Online plugin: the people online as a section of the sidebar, second under Topics (Online · 8, a row of up to 18 faces with their names on hover, live) instead of the row of avatars over the topic list. Shown to whoever the plugin shows its row to, while at least its minimum are online."
       reader_mode: "A reader mode switch at the top of a topic's timeline (and Ctrl+Alt+R): the sidebar goes, the header and the posts' buttons fade back until pointed at, and the posts' text can be made larger, narrower or wider, or set in a serif. Text settings are kept per browser."
       qr_code_share: "Add QR code to the share options (sharing a topic or a post, and the buttons over a quote): the link as a code to scan with a phone, with a button to save it as an image."
       topic_jump_buttons: "First-post and last-post buttons under the topic timeline, and beside the progress button on phones."

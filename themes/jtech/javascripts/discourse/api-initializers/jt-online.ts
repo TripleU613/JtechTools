@@ -21,13 +21,14 @@ interface OnlineSiteSettings {
   whos_online_minimum_display?: number;
 }
 
-// The most people the section lists; its title counts everyone online
-const SHOWN = 12;
+// The most faces the section shows (three rows); its title counts everyone
+// online
+const SHOWN = 18;
 
 // Who's Online (the plugin) puts a row of avatars over the topic list, in the
 // way of the tabs. With setting sidebar_online it's a sidebar section
-// instead, "Online · 8", listing the people online by name with their
-// avatars, live; the row over the list is hidden (jt-sidebar.scss). It shows
+// instead, "Online · 8", second in the sidebar, the people online as a row
+// of faces, live; the row over the list is hidden (jt-sidebar.scss). It shows
 // to the people the plugin shows its row to, and only while as many people
 // are online as the plugin's own minimum.
 export default apiInitializer((api) => {
@@ -78,7 +79,7 @@ export default apiInitializer((api) => {
         }
 
         get prefixValue() {
-          return avatarUrl(this.user.avatar_template, "small");
+          return avatarUrl(this.user.avatar_template, "medium");
         }
       }
 

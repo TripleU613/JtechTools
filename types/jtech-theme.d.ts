@@ -35,6 +35,7 @@ declare module "virtual:theme" {
     color_mode_toggle: boolean;
     header_color_toggle: boolean;
     palette_menu: boolean;
+    density_menu: boolean;
     overlay_scrollbar: boolean;
     back_to_top: boolean;
     command_menu: boolean;
