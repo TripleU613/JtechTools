@@ -2816,14 +2816,15 @@ RSpec.describe "JTech theme" do
   end
 
   # Core marks the selected tab with a solid 2px bar. The theme: a 1px line
-  # that glows, with a faint light behind the label.
+  # that glows, with a faint light behind the label. (The topic list's tabs
+  # are a dropdown; a profile's are a row.)
   it "marks the selected tab with a thin glowing line" do
     sign_in(member)
-    visit("/latest")
-    expect(page).to have_css(".navigation-container .nav-pills > li > a.active")
+    visit("/u/#{member.username}/summary")
+    expect(page).to have_css(".user-navigation .nav-pills > li > a.active")
     tab = page.evaluate_script(<<~JS)
       (() => {
-        const tab = document.querySelector(".navigation-container .nav-pills > li > a.active");
+        const tab = document.querySelector(".user-navigation .nav-pills > li > a.active");
         const line = getComputedStyle(tab, "::after");
         return {
           line: line.height,
