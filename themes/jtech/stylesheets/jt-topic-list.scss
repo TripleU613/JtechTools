@@ -231,23 +231,32 @@ body:has(.jt-online-box) .online_users_widget {
   }
 }
 
+// Closed, the faces are a quiet hint: small, grey and faded into the box,
+// the count saying the rest
 .jt-online-box__stack {
   display: flex;
 
   .jt-online-box__face {
-    filter: grayscale(1);
-    opacity: 0.7;
-    box-shadow: 0 0 0 2px var(--jt-surface);
+    width: 1.25rem;
+    height: 1.25rem;
+    filter: grayscale(1) contrast(0.8);
+    opacity: 0.4;
+    box-shadow: 0 0 0 1.5px var(--jt-surface);
 
     + .jt-online-box__face {
-      margin-left: -0.6rem;
+      margin-left: -0.5rem;
     }
   }
 }
 
+.jt-online-box__toggle:hover .jt-online-box__face {
+  opacity: 0.6;
+}
+
 .jt-online-box__count {
   font-variant-numeric: tabular-nums;
-  font-weight: 600;
+  font-weight: 500;
+  color: var(--jt-text-muted);
 }
 
 // Closed, the strip is no wider than the box (hidden under it), so it can't
