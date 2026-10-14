@@ -149,7 +149,9 @@ export function applyPrefs(): void {
   const meta = document.querySelector(
     'meta[name="theme-color"]'
   ) as HTMLMetaElement | null;
-  if (meta) meta.content = isLight() ? "#f6f7f9" : "#121418";
+  // The page's own background: the palette's, or the stylesheet's on browsers
+  // without custom properties
+  if (meta) meta.content = window.getComputedStyle(document.body).backgroundColor;
 }
 
 export function watchSystemTheme(): void {

@@ -62,6 +62,14 @@ minifies it, still ES5 → **espree** parses the result as ECMAScript 5, and
 the build fails if anything newer slipped in. The styles go through **Sass**
 first, then the `var()` fallbacks below.
 
+Colours are the tokens in `styles/00-tokens.scss` (`:root` dark, `html.light`
+light), and nothing else: no colour is written into a rule. Their values are
+JTech Dark and JTech Light as `lib/discourse_dumbcourse/palette.rb` maps a
+palette (a spec keeps the two equal). The page adds a `<style>` after the
+stylesheet (`{{PALETTE}}`) with the reader's own palettes, picked as core
+picks them (this device's cookie, their account, the theme's), so browsers
+with custom properties show the forum's colours.
+
 What stops newer *APIs* (not just syntax) from reaching old phones:
 
 - `tsconfig.json` uses `lib: ES5 + Promise`, so `Array#includes`,
