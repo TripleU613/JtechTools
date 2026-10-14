@@ -2682,6 +2682,9 @@ RSpec.describe "JTech theme" do
       })()
     JS
     expect(selected).to eq(["none", true])
+    expect_no_theme_errors
+  end
+
   # hide_lock_icons hid every lock in a sidebar link, the Security link's own
   # icon among them (user navigation in the sidebar); and the device menu on
   # that page was a 12rem empty box, as wide as the page's text dropdowns
