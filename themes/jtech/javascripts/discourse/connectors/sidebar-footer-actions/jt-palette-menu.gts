@@ -16,6 +16,7 @@ import type User from "discourse/models/user";
 import type InterfaceColor from "discourse/services/interface-color";
 import dIcon from "discourse/ui-kit/helpers/d-icon";
 import { i18n } from "discourse-i18n";
+import { showingDark, vanillaShown } from "../../lib/jt-vanilla";
 
 interface Scheme {
   id: number;
@@ -36,10 +37,10 @@ type PaletteSite = Site & {
   user_themes?: SiteTheme[] | null;
 };
 
-type PaletteUser = User & { username: string };
+type PaletteUser = User & { username: string; jtech_icon_style?: string };
 
 // A palette pair: "Ocean Light" and "Ocean Dark" are one row. A palette
-// without a partner (JTech Dim) takes the theme's default for the other mode.
+// without a partner takes the theme's default for the other mode.
 interface Family {
   name: string;
   light: Scheme;
@@ -54,11 +55,6 @@ const HEX = /^[0-9a-f]{3,8}$/i;
 function color(scheme: Scheme, name: string): string {
   const hex = scheme.colors?.find((c) => c.name === name)?.hex ?? "";
   return HEX.test(hex) ? `#${hex}` : "transparent";
-}
-
-function showingDark(): boolean {
-  const dark = document.querySelector<HTMLLinkElement>("link.dark-scheme");
-  return !!dark && window.matchMedia(dark.media).matches;
 }
 
 // Puts a palette's stylesheet in place of the head's light or dark one. The
@@ -114,6 +110,12 @@ export default class JtPaletteMenu extends Component {
 
   get available(): boolean {
     return settings.palette_menu && this.readFamilies().length > 1;
+  }
+
+  get iconsFollowPalette(): boolean {
+    return (
+      settings.lucide_icons && this.currentUser?.jtech_icon_style !== "classic"
+    );
   }
 
   readFamilies(): Family[] {
@@ -172,6 +174,7 @@ export default class JtPaletteMenu extends Component {
   async choose(family: Family, close: () => void) {
     void close();
     const themeId = currentThemeId() as number;
+    const wasVanilla = vanillaShown(this.site);
     try {
       await Promise.all([
         swapStylesheet(family.light, false, themeId),
@@ -183,6 +186,11 @@ export default class JtPaletteMenu extends Component {
         this.interfaceColor.forceLightMode();
       }
       await this.remember(family);
+      // Into or out of a Discourse palette the icons change too (Font
+      // Awesome there, Lucide elsewhere), and those are set as the page loads
+      if (vanillaShown(this.site) !== wasVanilla && this.iconsFollowPalette) {
+        window.location.reload();
+      }
     } catch (error) {
       popupAjaxError(error);
     }

@@ -18,7 +18,13 @@ body {
   --font-family: var(--jt-font-sans);
   --heading-font-family: var(--jt-font-sans);
   --d-font-family--monospace: var(--jt-font-mono);
+}
 
+// The rest restyles core's own hooks in the theme's flat black and white. A
+// Discourse palette shows stock Discourse (jt-vanilla.scss), so there core's
+// values stand.
+html:not(.jt-vanilla),
+html:not(.jt-vanilla) body {
   // Borders
   --token-color-border-default: var(--jt-border);
   --token-color-border-input: var(--jt-border-strong);
@@ -75,7 +81,7 @@ body {
   --d-unread-notification-background: var(--d-selected);
 }
 
-#discourse-tooltip {
+html:not(.jt-vanilla) #discourse-tooltip {
   --d-tooltip-background: var(--jt-surface-raised);
   --d-tooltip-border: 1px solid var(--jt-border);
 }

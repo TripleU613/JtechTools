@@ -449,6 +449,12 @@ html.desktop-view #topic-footer-buttons {
 }
 
 // ── Who's Online ─────────────────────────────────────────────
+// The online ring's colour: the accent; the plugin's own green under a
+// Discourse palette (jt-vanilla.scss)
+:root {
+  --jt-online: var(--jt-accent);
+}
+
 // The plugin marks people who are online with a green glow or ring. Here
 // it's always a thin ring in the accent (the text colour on the black and
 // white palettes), apart from the avatar by a gap of the page. .avatar is
@@ -459,7 +465,7 @@ html.whos-online-ring {
   body.user-page-online .primary img.avatar.avatar {
     box-shadow:
       0 0 0 2px var(--secondary),
-      0 0 0 4px var(--jt-accent);
+      0 0 0 4px var(--jt-online);
   }
 
   .topic-avatar.user-online img.avatar.avatar,
@@ -470,12 +476,12 @@ html.whos-online-ring {
   body.user-page-online .collapsed-info .primary img.avatar.avatar {
     box-shadow:
       0 0 0 1px var(--secondary),
-      0 0 0 3px var(--jt-accent);
+      0 0 0 3px var(--jt-online);
   }
 
   .topic-map .avatars .user-online img.avatar.avatar {
     box-shadow:
       0 0 0 1px var(--secondary),
-      0 0 0 2px var(--jt-accent);
+      0 0 0 2px var(--jt-online);
   }
 }

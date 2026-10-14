@@ -1,8 +1,9 @@
 // Restyles for third-party components JTech shares with Default. Done here in
 // CSS (not via component settings) so Default keeps looking the way it does.
 
-// Topic timeline: hairline track, solid handle
-.timeline-container .topic-timeline {
+// Topic timeline: hairline track, solid handle (core's blue under a
+// Discourse palette, jt-vanilla.scss)
+html:not(.jt-vanilla) .timeline-container .topic-timeline {
   .timeline-scrollarea {
     border-left-color: var(--jt-border-strong);
   }

@@ -4097,7 +4097,10 @@ RSpec.describe "JTech theme" do
     expect_no_theme_errors
   end
 
-  it "lets people pick JTech Dim instead of OLED black" do
+  # Discourse Dark is stock Discourse on JTech Dim's greys: the page goes to
+  # Dim's #161616, and the forum takes Discourse's look (html.jt-vanilla),
+  # Font Awesome icons included
+  it "lets people pick Discourse Dark, stock Discourse on soft greys" do
     page.driver.with_playwright_page { |pw| pw.emulate_media(colorScheme: "dark") }
     sign_in(member)
     preferences = PageObjects::Pages::UserPreferencesInterface.new.visit(member)
@@ -4105,15 +4108,25 @@ RSpec.describe "JTech theme" do
     # the theme's own default, by name rather than core's "-1"
     expect(dark).to have_selected_name("JTech Dark")
     dark.expand
-    expect(dark).to have_option_name("JTech Dim")
-    dark.select_row_by_name("JTech Dim")
+    expect(dark).to have_no_option_name("JTech Dim")
+    dark.select_row_by_name("Discourse Dark")
     preferences.save_changes
 
     visit("/latest")
     expect(page).to have_css(".jt-card")
-    background = page.evaluate_script("getComputedStyle(document.body).backgroundColor")
+    expect(page).to have_css("html.jt-vanilla")
+    background, header, sprite = page.evaluate_script(<<~JS)
+      [
+        getComputedStyle(document.body).backgroundColor,
+        getComputedStyle(document.querySelector(".d-header"), "::before").backgroundColor,
+        document.querySelector(".sidebar-section-link-prefix .d-icon use")?.getAttribute("href"),
+      ]
+    JS
     expect(background).to eq("rgb(22, 22, 22)")
-    shot("dim-latest")
+    # the top bar darker than the page, as stock's
+    expect(header).to eq("rgb(10, 10, 10)")
+    expect(sprite).not_to start_with("#jt-")
+    shot("discourse-dark-latest")
     expect_no_theme_errors
   end
 
@@ -4157,7 +4170,7 @@ RSpec.describe "JTech theme" do
       expect_no_theme_errors
     end
 
-    it "keeps a visitor's palette in this browser, and shows a dark-only one in dark" do
+    it "keeps a visitor's palette in this browser, and gives a Discourse one Discourse's look" do
       visit("/latest")
       expect(page).to have_css(".jt-card")
 
@@ -4167,9 +4180,16 @@ RSpec.describe "JTech theme" do
       expect(page).to have_css(".jt-card")
       expect(page.evaluate_script(background)).to eq("rgb(251, 241, 199)")
 
-      # JTech Dim has no light partner, so picking it in light switches to dark
-      pick("JTech Dim")
-      try_until_success { expect(page.evaluate_script(background)).to eq("rgb(22, 22, 22)") }
+      expect(page).to have_no_css("html.jt-vanilla")
+
+      # stock Discourse's look, Font Awesome icons and all: the page reloads
+      # to swap the icons
+      pick("Discourse")
+      expect(page).to have_css("html.jt-vanilla")
+      try_until_success { expect(page.evaluate_script(background)).to eq("rgb(255, 255, 255)") }
+      visit("/latest")
+      expect(page).to have_css("html.jt-vanilla")
+      expect(page).to have_no_css(".sidebar-section-link-prefix .d-icon use[href^='#jt-']")
       expect_no_theme_errors
     end
 
@@ -4222,9 +4242,13 @@ RSpec.describe "JTech theme" do
     PageObjects::Pages::UserPreferencesInterface.new.visit(member)
     dark = PageObjects::Components::SelectKit.new(".dark-color-scheme .select-kit")
     dark.expand
-    dark.select_row_by_name("JTech Dim")
-    # the preview waits on the server compiling JTech Dim's stylesheet
-    expect(page).to have_css("link#cs-preview-dark[href*='jtech-dim']", visible: :all, wait: 10)
+    dark.select_row_by_name("Discourse Dark")
+    # the preview waits on the server compiling Discourse Dark's stylesheet
+    expect(page).to have_css(
+      "link#cs-preview-dark[href*='discourse-dark']",
+      visible: :all,
+      wait: 10,
+    )
     background = "getComputedStyle(document.body).backgroundColor"
     try_until_success { expect(page.evaluate_script(background)).to eq("rgb(22, 22, 22)") }
 

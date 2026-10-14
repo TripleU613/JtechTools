@@ -1,0 +1,87 @@
+// A Discourse palette (html.jt-vanilla, lib/jt-vanilla): stock Discourse's
+// look, not only its colours. Elsewhere the theme flattens core into black
+// and white hairlines; here core's own values stand (jt-tokens, jt-sidebar,
+// jt-mono and the timeline leave them alone under this class) and the theme's
+// tokens take stock Discourse's: solid lines in the palette's greys, its
+// hover and selection tints, 4px corners, round avatars, a solid header.
+// Layout (cards, spacing, the header's search) stays the theme's.
+html.jt-vanilla {
+  --jt-border: var(--primary-low);
+  --jt-border-strong: var(--primary-low-mid);
+  --jt-fill: var(--secondary);
+  --jt-surface-raised: var(--secondary);
+  --jt-hover: var(--d-hover);
+  --jt-active: var(--d-selected);
+  --jt-pressed: var(--d-selected);
+  --jt-header-blur-bg: var(--header_background);
+  --jt-fade: 0px;
+  --jt-online: var(--success-medium);
+
+  // Stock Discourse's corners: 4px on controls and surfaces, round avatars
+  --jt-radius-sm: 4px;
+  --jt-radius-md: 4px;
+  --jt-radius-lg: 8px;
+  --jt-radius-xl: 8px;
+  --jt-radius-control: 4px;
+  --jt-radius-pill: 4px;
+  --jt-radius-avatar: 50%;
+
+  @supports (corner-shape: squircle) {
+    * {
+      corner-shape: round;
+    }
+  }
+
+  // The header: solid in the palette's header colour (a black bar over the
+  // dark page), on core's line, not glass over the page
+  .d-header {
+    border-bottom: 0;
+    box-shadow: var(--shadow-header);
+
+    &::before {
+      backdrop-filter: none;
+    }
+  }
+
+  // Header icons in core's quieter header grey
+  .d-header .d-header-icons > li:not(.current-user) > :is(.icon, .btn.no-text) {
+    color: var(--d-header-icon-color);
+  }
+
+  // Buttons as stock draws them: no outline on primary ones or on a post's
+  // Reply, a pill of a timeline handle
+  .btn-primary {
+    border-color: transparent;
+  }
+
+  nav.post-controls .actions .post-action-menu__reply,
+  nav.post-controls :is(.show-replies, .post-action-menu__show-replies) {
+    border-color: transparent;
+  }
+
+  .timeline-container .topic-timeline .timeline-handle {
+    border-radius: 0.8em;
+  }
+
+  // A poster's name in core's grey
+  .topic-post .topic-meta-data .names .first a {
+    color: var(--primary-high-or-secondary-low);
+  }
+
+  // Sections as in stock: an uppercase heading, a line under each
+  .sidebar-wrapper {
+    border-image: none;
+    border-right-color: var(--d-sidebar-border-color);
+  }
+
+  .sidebar-section-wrapper {
+    border-bottom: 1px solid var(--d-sidebar-border-color);
+
+    .sidebar-section-header {
+      font-size: var(--font-down-1);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+  }
+}

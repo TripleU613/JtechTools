@@ -20,25 +20,22 @@ module ::DiscourseJtechTheme
     ABOUT_URL = "https://jtechforums.org"
 
     # Palettes people can choose (interface preferences, the sidebar's palette
-    # menu) besides the theme's own light and dark defaults: JTech Dim (grey
-    # instead of OLED black) and the colour pairs. Core only applies a palette
-    # someone chose if it's user-selectable, and imported palettes never are;
-    # each is switched on once, so an admin who turns one off again
-    # (Customize → Colors) isn't overruled.
-    OFFERED_PALETTES = [
-      "JTech Dim",
-      *[
-        "Discourse",
-        "Nord",
-        "Catppuccin",
-        "Rosé Pine",
-        "Gruvbox",
-        "Tokyo Night",
-        "Everforest",
-        "Paper",
-        "Horizon",
-      ].flat_map { |f| ["#{f} Light", "#{f} Dark"] },
-    ].freeze
+    # menu) besides the theme's own light and dark defaults: the pairs, from
+    # Discourse's (stock Discourse's look, on JTech Dim's greys in dark) to the
+    # editors'. Core only applies a palette someone chose if it's
+    # user-selectable, and imported palettes never are; each is switched on
+    # once, so an admin who turns one off again (Customize → Colors) isn't
+    # overruled.
+    OFFERED_PALETTES =
+      %w[Discourse Nord Catppuccin Rosé\ Pine Gruvbox Tokyo\ Night Everforest Paper Horizon]
+        .flat_map { |f| ["#{f} Light", "#{f} Dark"] }
+        .freeze
+
+    # Palettes that left the theme, and the one their people move to. Core
+    # deletes a palette that's gone from about.json when the theme is
+    # imported; without this, whoever had picked it would drop back to the
+    # default. JTech Dim's greys became Discourse Dark's.
+    RETIRED_PALETTES = { "JTech Dim" => "Discourse Dark" }.freeze
 
     def self.directory
       ENV["JTECH_THEME_DIR"].presence || File.expand_path("../../themes/jtech", __dir__)
@@ -155,6 +152,7 @@ module ::DiscourseJtechTheme
       # An adopted Git install would otherwise keep pulling the old repo over
       # this copy whenever that repo gets a commit (core's themes:update).
       Theme.find(theme_id).update!(remote_theme: nil) if adopted
+      retire_palettes(theme_id) if theme_id
       theme =
         RemoteTheme.import_theme_from_directory(
           directory,
@@ -169,6 +167,16 @@ module ::DiscourseJtechTheme
       Stylesheet::Manager.clear_theme_cache!
       return :adopted if adopted
       theme_id ? :updated : :installed
+    end
+
+    def self.retire_palettes(theme_id)
+      RETIRED_PALETTES.each do |name, successor|
+        from = ColorScheme.find_by(theme_id: theme_id, name: name)
+        to = ColorScheme.find_by(theme_id: theme_id, name: successor)
+        next if !from || !to
+        UserOption.where(color_scheme_id: from.id).update_all(color_scheme_id: to.id)
+        UserOption.where(dark_scheme_id: from.id).update_all(dark_scheme_id: to.id)
+      end
     end
 
     def self.offer_palettes(theme)

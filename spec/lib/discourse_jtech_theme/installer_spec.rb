@@ -75,13 +75,11 @@ RSpec.describe ::DiscourseJtechTheme::Installer do
       expect(SiteSetting.default_theme_id).to eq(theme.id)
     end
 
-    it "lets people choose JTech Dim and the colour pairs, but only the theme's defaults are the defaults" do
+    it "lets people choose the colour pairs, but only the theme's defaults are the defaults" do
       described_class.sync_now
       theme = installed
 
-      dim = theme.color_schemes.find_by(name: "JTech Dim")
-      expect(dim.user_selectable).to eq(true)
-      expect(dim.is_dark?).to eq(true)
+      expect(theme.color_schemes.find_by(name: "JTech Dim")).to be_nil
       expect(theme.color_scheme.name).to eq("JTech Light")
       expect(theme.dark_color_scheme.name).to eq("JTech Dark")
       expect(theme.color_schemes.where(user_selectable: true).pluck(:name)).to match_array(
@@ -93,10 +91,16 @@ RSpec.describe ::DiscourseJtechTheme::Installer do
 
     it "offers palettes a later version adds" do
       described_class.sync_now
-      # as installed by a version that only had JTech Dim to offer
-      installed.color_schemes.where.not(name: "JTech Dim").update_all(user_selectable: false)
+      # as installed by a version that only had Nord to offer
+      installed
+        .color_schemes
+        .where.not(name: ["Nord Light", "Nord Dark"])
+        .update_all(user_selectable: false)
       described_class.save_state(
-        described_class.state.merge("digest" => "older", "offered_palettes" => ["JTech Dim"]),
+        described_class.state.merge(
+          "digest" => "older",
+          "offered_palettes" => ["Nord Light", "Nord Dark"],
+        ),
       )
 
       described_class.sync_now
@@ -106,14 +110,31 @@ RSpec.describe ::DiscourseJtechTheme::Installer do
       )
     end
 
-    it "doesn't offer JTech Dim again after an admin stops offering it" do
+    it "doesn't offer a palette again after an admin stops offering it" do
       described_class.sync_now
-      installed.color_schemes.find_by(name: "JTech Dim").update!(user_selectable: false)
+      installed.color_schemes.find_by(name: "Nord Dark").update!(user_selectable: false)
       described_class.save_state(described_class.state.merge("digest" => "older"))
 
       described_class.sync_now
 
-      expect(installed.color_schemes.find_by(name: "JTech Dim").user_selectable).to eq(false)
+      expect(installed.color_schemes.find_by(name: "Nord Dark").user_selectable).to eq(false)
+    end
+
+    # JTech Dim's greys became Discourse Dark's: whoever had picked Dim moves
+    # there before the import deletes it
+    it "moves the people on a retired palette to the one that replaced it" do
+      described_class.sync_now
+      dim = installed.color_schemes.create!(name: "JTech Dim", user_selectable: true)
+      user = Fabricate(:user)
+      user.user_option.update!(dark_scheme_id: dim.id, color_scheme_id: dim.id)
+      described_class.save_state(described_class.state.merge("digest" => "older"))
+
+      described_class.sync_now
+
+      successor = installed.color_schemes.find_by(name: "Discourse Dark")
+      expect(ColorScheme.exists?(dim.id)).to eq(false)
+      expect(user.user_option.reload.dark_scheme_id).to eq(successor.id)
+      expect(user.user_option.color_scheme_id).to eq(successor.id)
     end
 
     it "leaves a theme an admin deleted deleted" do

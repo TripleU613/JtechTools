@@ -19,6 +19,15 @@ body {
   --d-sidebar-section-link-icon-size: 1rem; // 16px glyph in an 18px box
   --d-sidebar-section-link-emoji-size: 1.0625rem;
   --d-sidebar-animation-time: 0.2s;
+
+  @media (pointer: coarse) {
+    --d-sidebar-row-height: 2.75rem; // 44px
+  }
+}
+
+// The sidebar's colours; a Discourse palette keeps core's (jt-vanilla.scss)
+html:not(.jt-vanilla),
+html:not(.jt-vanilla) body {
   --d-sidebar-background: var(--jt-surface);
   --d-sidebar-border-color: var(--jt-border);
   --d-sidebar-section-border-color: transparent;
@@ -38,10 +47,6 @@ body {
   --d-sidebar-active-icon-color: var(--jt-text);
   --d-sidebar-active-font-weight: 400;
   --d-sidebar-footer-fade: transparent;
-
-  @media (pointer: coarse) {
-    --d-sidebar-row-height: 2.75rem; // 44px
-  }
 }
 
 // The hamburger panel (phones, and desktop with the sidebar off) is a raised

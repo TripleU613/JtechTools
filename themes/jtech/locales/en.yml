@@ -180,5 +180,5 @@ en:
       monochrome_categories: "Show category colors in grayscale (badges and sidebar icons)."
       monochrome_letter_avatars: "Render generated letter avatars in grayscale. Uploaded avatars keep their color."
       monochrome_heatmap: "Use weight instead of orange/red for busy view and reply counts."
-      lucide_icons: "Draw Discourse's icons with Lucide's thin outline set (lucide.dev) instead of Font Awesome: the header, sidebar, post menu, notifications and the rest. Brand logos and icons without a Lucide match keep Font Awesome."
+      lucide_icons: "Draw Discourse's icons with Lucide's thin outline set (lucide.dev) instead of Font Awesome: the header, sidebar, post menu, notifications and the rest. Brand logos and icons without a Lucide match keep Font Awesome, and so does everything under the Discourse palette, which looks like stock Discourse."
       monochrome_flair: "Draw the avatar flair of trust levels, moderators and admins in black and white with JTech's own marks: a ring for new users, one to three chevrons for trust levels 1–3, a star for 4, a shield for staff (filled for admins). The groups' own colors and icons are ignored while it's on; other groups' flair keeps them."
