@@ -1179,6 +1179,39 @@ RSpec.describe "JTech theme" do
     end
   end
 
+  # Who's Online marks a row whose last poster is online and its phone rule
+  # lit every avatar in it, so a card's whole stack glowed. CI doesn't install
+  # the plugin: its classes are set here as it sets them.
+  it "marks only the last poster's face on a card when they're online", mobile: true do
+    # as posting does: the replier is the last poster, beside the author
+    topic.update!(last_post_user_id: admin.id)
+    TopicFeaturedUsers.ensure_consistency!(topic.id)
+    sign_in(member)
+    visit("/latest")
+    expect(page).to have_css(".jt-card .jt-card__people img.avatar", minimum: 2)
+    shadows = page.evaluate_script(<<~JS)
+      (() => {
+        document.documentElement.classList.add("whos-online-glow");
+        // the plugin's own phone rule, which rings every avatar in the row
+        document.head.insertAdjacentHTML(
+          "beforeend",
+          "<style>html.whos-online-glow.mobile-view .topic-list-item.last-poster-online img.avatar { box-shadow: 0 0 4px 1px green; }</style>"
+        );
+        const row = [...document.querySelectorAll(".topic-list-item")].find(
+          (r) => r.querySelectorAll(".jt-card__people img.avatar").length > 1
+        );
+        row.classList.add("last-poster-online");
+        return [...row.querySelectorAll(".jt-card__people img.avatar")].map((img) => [
+          img.classList.contains("latest"),
+          getComputedStyle(img).boxShadow !== "none",
+        ]);
+      })()
+    JS
+    expect(shadows.count { |last, _| last }).to eq(1)
+    expect(shadows).to all(satisfy { |last, ringed| last == ringed })
+    expect_no_theme_errors
+  end
+
   it "keeps New Topic on the row of tabs when the window narrows" do
     sign_in(member)
     resize_window(width: 900) do

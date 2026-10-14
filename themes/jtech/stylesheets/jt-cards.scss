@@ -496,3 +496,24 @@
     }
   }
 }
+
+// Who's Online (its "glow" or "ring" indicator, on topic lists) marks a row
+// whose last poster is online, and its phone rule lights every avatar in the
+// row: on a card the whole stack glowed as one blob. Here only the last
+// poster's face (core marks it .latest) is marked, with a thin ring, raised
+// over its neighbours.
+html.whos-online-glow,
+html.whos-online-ring {
+  .topic-list-item.last-poster-online .jt-card .jt-card__people img.avatar {
+    box-shadow: none;
+  }
+
+  .topic-list-item.last-poster-online
+    .jt-card
+    .jt-card__people
+    img.avatar.latest {
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 0 0 1.5px var(--success);
+  }
+}
