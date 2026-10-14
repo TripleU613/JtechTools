@@ -4,7 +4,12 @@ en:
     back_to_top: "Back to top"
     dismiss: "Dismiss"
     palettes:
-      title: "Color palette"
+      title: "Colors and density"
+    density:
+      title: "Density"
+      default: "Default"
+      comfortable: "Comfortable"
+      compact: "Compact"
     online:
       title: "Online · %{count}"
     icon_style:

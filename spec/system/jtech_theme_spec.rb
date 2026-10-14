@@ -4078,6 +4078,33 @@ RSpec.describe "JTech theme" do
       expect_no_theme_errors
     end
 
+    it "sets the lists' density, Gmail's way, and keeps it in this browser" do
+      topic.update!(excerpt: "Setting up a flip phone that blocks the browser.")
+      sign_in(member)
+      visit("/latest")
+      expect(page).to have_css(".topic-list.jt-cards .topic-excerpt")
+
+      find(".jt-palette-menu").click
+      find(".jt-palettes.--density .jt-palettes__option", text: "Compact").click
+      expect(page).to have_css("html.jt-density-compact")
+      expect(page).to have_no_css(".topic-list.jt-cards .topic-excerpt")
+
+      visit("/latest")
+      expect(page).to have_css("html.jt-density-compact")
+      expect(page).to have_css(".jt-card")
+      expect(page).to have_no_css(".topic-list.jt-cards .topic-excerpt")
+
+      find(".jt-palette-menu").click
+      expect(page).to have_css(
+        ".jt-palettes.--density .jt-palettes__option[aria-checked='true']",
+        text: "Compact",
+      )
+      find(".jt-palettes.--density .jt-palettes__option", text: "Default").click
+      expect(page).to have_no_css("html.jt-density-compact")
+      expect(page).to have_css(".topic-list.jt-cards .topic-excerpt")
+      expect_no_theme_errors
+    end
+
     it "is left out when the theme setting is off" do
       jtech_theme.update_setting(:palette_menu, false)
       jtech_theme.save!

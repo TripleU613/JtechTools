@@ -101,7 +101,7 @@ The theme brings its palettes in pairs, a light and a dark of each:
 
 The plugin marks every palette but the two defaults "users can select" once, when it first installs it (or when an update adds it); turn one off under Customize → Colors and it stays off. Being user-selectable, they're also offered with other themes that let people pick any palette.
 
-**Palette menu** (theme setting `palette_menu`, on): a palette button in the sidebar footer, beside Discourse's light / dark menu, lists every palette with a swatch and switches on the spot. A member's choice is saved to their account, the same setting as Preferences → Interface → Color Palette, so it follows them to other devices; a visitor's is kept in that browser. Picking JTech Dim while the page is light switches it to dark.
+**Palette menu** (theme setting `palette_menu`, on): a palette button in the sidebar footer, beside Discourse's light / dark menu, lists every palette with a swatch and switches on the spot. A member's choice is saved to their account, the same setting as Preferences → Interface → Color Palette, so it follows them to other devices; a visitor's is kept in that browser. Picking JTech Dim while the page is light switches it to dark. Under the palettes the same menu has **Density**, as in Gmail: Default (the cards as they are), Comfortable (cards without excerpt or picture, a little tighter) and Compact (one row a topic, in one divided list); it's kept in that browser.
 
 ## Things outside the theme
 

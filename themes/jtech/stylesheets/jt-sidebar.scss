@@ -388,3 +388,64 @@ html.jt-has-online-section .online_users_widget {
 .sidebar-section[data-section-name="jt-online"] .prefix-image {
   border-radius: var(--jt-radius-avatar);
 }
+
+// The menu's Density section (lib/jt-density): a heading under the palettes,
+// and for each choice a small picture of a list at that density, like
+// Gmail's: a card with lines, two rows, three rows.
+.fk-d-menu[data-identifier="jt-palette-menu"] {
+  // the palettes, then Density under them (the menu's content is a row)
+  .jt-palettes__panel {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .jt-palettes__heading {
+    margin: var(--space-2) var(--space-2) 0;
+    padding: var(--space-2) var(--space-2) var(--space-1);
+    border-top: 1px solid var(--jt-border);
+    font-size: var(--jt-text-xs);
+    font-weight: 500;
+    color: var(--jt-text-subtle);
+  }
+
+  .jt-density-preview {
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    width: 1.75rem;
+    height: 1.25rem;
+    padding: 2px;
+    border: 1px solid var(--jt-border-strong);
+    border-radius: 4px;
+
+    > span {
+      height: 2px;
+      border-radius: 1px;
+      background: var(--jt-text-subtle);
+    }
+
+    // default: a title and an excerpt in one roomy card
+    &.--default > span:nth-child(2) {
+      width: 70%;
+    }
+
+    &.--default > span:nth-child(3) {
+      display: none;
+    }
+
+    &.--comfortable > span:nth-child(3) {
+      display: none;
+    }
+
+    &.--comfortable,
+    &.--compact {
+      gap: 3px;
+    }
+
+    &.--compact {
+      gap: 2px;
+    }
+  }
+}
