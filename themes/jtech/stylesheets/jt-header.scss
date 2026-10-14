@@ -63,8 +63,14 @@
       display: none;
     }
 
+    // The logo starts where the sidebar's icons do: the page's own inset
+    // (core's wrap padding), the sidebar's, and a row's. At a fixed 0.5333rem
+    // it stuck out 20px to their left, past the column it heads.
     .d-header > .wrap {
-      padding-left: 0.5333rem;
+      padding-left: calc(
+        var(--d-wrap-padding-x) + 0.5rem +
+          var(--d-sidebar-row-horizontal-padding)
+      );
     }
 
     // A header component reserves 3.7em left of the logo for the ☰

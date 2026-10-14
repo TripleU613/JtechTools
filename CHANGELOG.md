@@ -142,6 +142,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Fixed**
 
+- JTech theme: on a computer the logo stuck out 20px to the left of the sidebar it sits over. It starts where the sidebar's icons start now, at any window size.
 - JTech theme: pressing a row of a topic list that isn't cards (suggested topics under a topic) did nothing until the next page opened; it sinks a little and springs back now, as a card does. The row you came back to was marked with a bar down one side; it's tinted all across now.
 - JTech theme: with the user menu in the sidebar, Preferences → Security had no icon (hide_lock_icons hid every lock in the sidebar, its own included), and a private category's padlock still showed when Lucide icons were on. Only a category's padlock is hidden now, whichever icons are on.
 - JTech theme: on Preferences → Security, the menu beside each recently used device was a wide empty box. It's the size of its wrench now.

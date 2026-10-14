@@ -3523,6 +3523,22 @@ RSpec.describe "JTech theme" do
       expect_no_theme_errors
     end
 
+    # The logo stuck out 20px to the left of the sidebar it heads
+    it "starts the logo where the sidebar's icons start" do
+      SiteSetting.logo = Fabricate(:image_upload)
+      sign_in(member)
+      visit("/latest")
+      expect(page).to have_css(".d-header img#site-logo")
+      expect(page).to have_css(".sidebar-section-link .sidebar-section-link-prefix")
+      logo, icon = page.evaluate_script(<<~JS)
+        [".d-header img#site-logo", ".sidebar-section-link .sidebar-section-link-prefix"].map(
+          (selector) => document.querySelector(selector).getBoundingClientRect().left
+        )
+      JS
+      expect(logo).to be_within(1).of(icon)
+      expect_no_theme_errors
+    end
+
     it "opens a sidebar link to a page outside the forum as a page load" do
       section = Fabricate(:sidebar_section, title: "Links", public: true, user: admin)
       homepage = Fabricate(:sidebar_url, name: "Homepage", value: "/home")
