@@ -35,6 +35,11 @@ jtech:
   jtech_app_icon:
     default: true
     client: false
+  # Members without a flair of their own show their trust level group's
+  # (lib/discourse_trust_level_flair.rb). Off by default: it sets users' flair.
+  jtech_trust_level_flair:
+    default: false
+    client: false
 
 # ───────────────────────────────────────────────────────────────────────────
 # Jtech — Dislike (phantom reactions in restricted categories)

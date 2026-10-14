@@ -43,6 +43,7 @@ enabled_site_setting :jtech_enabled
   listing_format
   jtech_theme
   mod_elections
+  trust_level_flair
 ].each do |sub|
   path = File.expand_path("sub_plugins/#{sub}.rb", __dir__)
   instance_eval(File.read(path), path, 1)
