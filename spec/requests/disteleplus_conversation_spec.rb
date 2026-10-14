@@ -212,6 +212,24 @@ RSpec.describe "Disteleplus conversation API" do
     end
   end
 
+  describe "unread mentions" do
+    it "counts only messages that mention the reader, until they read them" do
+      sign_in(member)
+      create!(other, "nobody in particular", notify: true)
+      mention = create!(other, "@#{member.username} have a look", notify: true)
+
+      get "#{base}/conversation.json"
+      expect(response.parsed_body["meta"]).to include(
+        "unread_count" => 2,
+        "unread_mention_count" => 1,
+        "message_bus_last_id" => MessageBus.last_id(DiscourseDisteleplus::Publisher::CHANNEL),
+      )
+
+      post "#{base}/read.json", params: { message_id: mention.id }
+      expect(response.parsed_body).to include("unread_count" => 0, "unread_mention_count" => 0)
+    end
+  end
+
   describe "POST /read" do
     it "advances the cursor and reports unread" do
       sign_in(member)

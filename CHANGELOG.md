@@ -141,6 +141,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Fixed**
 
+- Disteleplus: the header icon's count was red and went up with every message in the conversation. It counts only messages that mention you (or a group you're in), as the bell does, in the theme's accent colour instead of red; the browser tab's count does the same. A message sent while the conversation was loading could also go missing from it until a reload.
 - JTech theme: on a phone, the first / last post arrows in the bar at the bottom of a topic sat at its top edge, above the wrench and the post counter. They line up with them now.
 - Dumbcourse: with Discourse's Unified New switched on, the New tab also listed topics with unread replies, the same as the Unread tab, and Dismiss all new said it worked but dismissed nothing. New lists new topics only again, and Dismiss all new dismisses them.
 - JTech theme: with Who's Online showing who's online on topic lists, a topic card lit up its whole row of faces in green when the last poster was online, so the faces blurred together. Now only the last poster's face gets a thin green ring.
