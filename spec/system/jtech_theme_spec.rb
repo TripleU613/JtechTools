@@ -3645,6 +3645,40 @@ RSpec.describe "JTech theme" do
       expect_no_theme_errors
     end
 
+    # Each attribute write restyles. The overlay scrollbar rewrote its class
+    # on every scroll event (classList.add with the class already there), and
+    # the posts' width was written on <html>, restyling the page, each time
+    # the column grew as posts loaded
+    it "doesn't rewrite the scrollbar's or the page's attributes while scrolling" do
+      8.times { |i| Fabricate(:post, topic: topic, raw: "Reply #{i}. " + "A line. " * 120) }
+      sign_in(member)
+      visit(topic.relative_url)
+      expect(page).to have_css(".jt-scrollbar")
+      writes = page.evaluate_async_script(<<~JS)
+        const done = arguments[0];
+        const count = { scrollbar: 0, html: 0 };
+        const watch = (el, key) =>
+          new MutationObserver((m) => (count[key] += m.length)).observe(el, {
+            attributes: true,
+            attributeFilter: ["class", "style"],
+          });
+        watch(document.querySelector(".jt-scrollbar"), "scrollbar");
+        watch(document.documentElement, "html");
+        let y = 0;
+        const t0 = performance.now();
+        const step = () => {
+          window.scrollTo(0, (y += 40));
+          if (performance.now() - t0 < 1500) requestAnimationFrame(step);
+          else setTimeout(() => done(count), 100);
+        };
+        requestAnimationFrame(step);
+      JS
+      # the thumb shows once when scrolling starts; <html> gets nothing
+      expect(writes["scrollbar"]).to be <= 2
+      expect(writes["html"]).to be <= 1
+      expect_no_theme_errors
+    end
+
     # The logo stuck out 20px to the left of the sidebar it heads
     it "starts the logo where the sidebar's icons start" do
       SiteSetting.logo = Fabricate(:image_upload)

@@ -8,9 +8,16 @@ import { apiInitializer } from "discourse/lib/api";
 export default apiInitializer((api) => {
   const root = document.documentElement;
   let observed: Element | null = null;
+  let shown = 0;
 
+  // The column also resizes as posts load (its height), and a write on
+  // <html> restyles the whole page: only a new width is written.
   const observer = new ResizeObserver(([entry]) => {
     const width = Math.floor(entry.borderBoxSize[0].inlineSize);
+    if (width === shown) {
+      return;
+    }
+    shown = width;
     // a column that has just left the page reports 0: never size the
     // composer from that
     if (width > 0) {
@@ -33,6 +40,7 @@ export default apiInitializer((api) => {
       if (posts) {
         observer.observe(posts);
       } else {
+        shown = 0;
         root.style.removeProperty("--jt-posts-width");
       }
     });

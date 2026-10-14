@@ -44,13 +44,25 @@ export default class JtScrollbar extends Component<JtScrollbarSignature> {
       return { max, room };
     };
 
+    // Each write restyles: only what changed is written. (classList.add
+    // rewrites the attribute even when the class is already there.)
+    let shownSize = -1;
+    let shownOffset = -1;
     const render = () => {
       frame = null;
       const { max, room } = metrics();
       track.classList.toggle("--off", max <= 1);
-      const offset = max > 0 ? (window.scrollY / max) * (room - size) : 0;
-      thumb.style.height = `${size}px`;
-      thumb.style.transform = `translateY(${Math.round(offset)}px)`;
+      const offset = Math.round(
+        max > 0 ? (window.scrollY / max) * (room - size) : 0
+      );
+      if (size !== shownSize) {
+        thumb.style.height = `${size}px`;
+        shownSize = size;
+      }
+      if (offset !== shownOffset) {
+        thumb.style.transform = `translateY(${offset}px)`;
+        shownOffset = offset;
+      }
     };
 
     const schedule = () => {
@@ -58,7 +70,9 @@ export default class JtScrollbar extends Component<JtScrollbarSignature> {
     };
 
     const wake = () => {
-      track.classList.add("--active");
+      if (!track.classList.contains("--active")) {
+        track.classList.add("--active");
+      }
       clearTimeout(idle);
       idle = setTimeout(() => {
         if (!drag) {
