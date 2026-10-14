@@ -85,24 +85,9 @@
     display: contents;
   }
 
-  &.--progress {
-    height: 100%;
-
-    .btn {
-      height: 100%;
-      min-height: 0;
-      padding: 0.4em 0.6em;
-      color: var(--jt-text-muted);
-      background: var(--jt-surface-raised);
-      border: 1px solid var(--jt-border);
-
-      &:hover,
-      &:focus-visible {
-        color: var(--jt-text);
-        border-color: var(--jt-border-strong);
-      }
-    }
-  }
+  // In the topic progress capsule (jt-topic-progress.scss) they stretch to
+  // the bar's height with the wrench and the counter. A height of 100% there
+  // fell back to the icon's 16px, so the arrows sat at the top of the bar.
 }
 
 // A 2×2 block under the timeline: reply and notifications on top, first and

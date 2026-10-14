@@ -2641,6 +2641,24 @@ RSpec.describe "JTech theme" do
     expect_no_theme_errors
   end
 
+  # The jump arrows were 16px tall at the top of the capsule (a height of
+  # 100% with nothing to measure against), above the wrench and the counter
+  it "lines the capsule's arrows, wrench and counter up at one height", mobile: true do
+    sign_in(admin)
+    visit(topic.relative_url)
+    expect(page).to have_css("#topic-progress-wrapper .jt-jump__bottom")
+    expect(page).to have_css("#topic-progress-wrapper .toggle-admin-menu")
+    boxes = page.evaluate_script(<<~JS)
+      [".jt-jump__top", ".jt-jump__bottom", ".toggle-admin-menu", "#topic-progress"].map((s) => {
+        const box = document.querySelector(`#topic-progress-wrapper ${s}`).getBoundingClientRect();
+        return [Math.round(box.top), Math.round(box.height)];
+      })
+    JS
+    expect(boxes.uniq.size).to eq(1)
+    expect(boxes.first.last).to be >= 36
+    expect_no_theme_errors
+  end
+
   # On a phone the timeline opens as a sheet, where core's own rule makes its
   # controls a wrapping row: at 320px the last-post arrow wrapped alone, under
   # Jump to… and the first-post arrow
