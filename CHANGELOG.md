@@ -149,6 +149,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Fixed**
 
+- Dumbcourse: on a computer the selected post had a thick, glaring rim (a ring outside its border as well as the bar); it keeps the border and a slimmer bar now. The top bar's buttons and title line up with the content's column instead of the window's edges.
 - JTech theme: smoother scrolling on a computer. The overlay scrollbar rewrote its class on every scroll event, and the posts' width was written on the page each time the column grew as posts loaded; each write made the browser restyle. They're written only when they change now.
 - JTech theme: on a topic list the tabs' dropdown floated in the middle of the row; it sits beside the filters now.
 - JTech theme: a guide's table of contents had stopped showing beside the posts on a computer (the posts filling the room beside the timeline left its column too slim). Topics with contents keep the old columns, the contents in that room.

@@ -216,12 +216,13 @@ img.emoji.status {
   border: 1px solid var(--line);
 }
 
+/* The selected post: its border and a bar down the left in the focus
+   colour. A ring outside the border as well made a thick, glaring rim
+   (white on the JTech palette). */
 .post:focus {
   outline: none;
   border-color: var(--focus);
-  box-shadow:
-    0 0 0 2px var(--focus),
-    inset 4px 0 0 var(--focus);
+  box-shadow: inset 3px 0 0 var(--focus);
 }
 
 .post.mine {

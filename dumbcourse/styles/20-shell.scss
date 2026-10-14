@@ -9,7 +9,9 @@
   height: var(--top-h);
   display: flex;
   align-items: center;
-  padding: 0 0.25rem;
+  /* On a wide screen the buttons and title line up with the content's
+     column (#app, 44rem) instead of the window's edges */
+  padding: 0 max(0.25rem, (100% - 44rem) / 2);
   background: var(--surface);
   border-bottom: 1px solid var(--line);
 }

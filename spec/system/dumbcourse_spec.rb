@@ -249,6 +249,31 @@ RSpec.describe "Dumbcourse" do
       end
     end
 
+    # On a computer: the selected post had a ring outside its border as well
+    # as the bar, a glaring white rim on the JTech palette, and the top bar's
+    # buttons sat at the window's edges, far from the 44rem column under them
+    it "marks the selected post calmly and keeps the top bar to the column on a wide screen" do
+      resize_window(width: 1400, height: 900) do
+        visit "/dumb/t/#{topic.slug}/#{topic.id}"
+        expect(page).to have_css(".post[data-n='1']")
+        ring, bar_left, column_left = page.evaluate_script(<<~JS)
+          (() => {
+            const post = document.querySelector(".post[data-n='1']");
+            post.focus();
+            return [
+              getComputedStyle(post).boxShadow,
+              document.querySelector("#topbar > *").getBoundingClientRect().left,
+              document.querySelector("#app").getBoundingClientRect().left,
+            ];
+          })()
+        JS
+        # one shadow, the inset bar: no ring outside the border
+        expect(ring.scan(/rgba?\(/).size).to eq(1)
+        expect(ring).to include("inset")
+        expect(bar_left).to be_within(8).of(column_left)
+      end
+    end
+
     it "lists a post's links in its action sheet" do
       phone do
         visit "/dumb/t/#{topic.slug}/#{topic.id}"
