@@ -313,8 +313,8 @@ html.jt-has-color-toggle .d-header-icons .header-color-scheme-toggle {
   font-weight: 600;
   line-height: 1;
   font-variant-numeric: tabular-nums;
-  color: var(--jt-surface);
-  background: var(--jt-text);
+  color: var(--jt-on-accent);
+  background: var(--jt-accent);
   border: 2px solid var(--jt-surface);
   border-radius: 999px;
   pointer-events: none;

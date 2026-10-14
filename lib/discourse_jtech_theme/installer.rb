@@ -19,12 +19,24 @@ module ::DiscourseJtechTheme
     THEME_NAME = "JTech"
     ABOUT_URL = "https://jtechforums.org"
 
-    # Palettes people can choose in their interface preferences besides the
-    # theme's own light and dark defaults (JTech Dim: grey instead of OLED
-    # black). Core only applies a palette someone chose if it's
-    # user-selectable, and imported palettes never are; it's switched on once,
-    # so an admin who turns it off again (Customize → Colors) isn't overruled.
-    OFFERED_PALETTES = ["JTech Dim"].freeze
+    # Palettes people can choose (interface preferences, the sidebar's palette
+    # menu) besides the theme's own light and dark defaults: JTech Dim (grey
+    # instead of OLED black) and the colour pairs. Core only applies a palette
+    # someone chose if it's user-selectable, and imported palettes never are;
+    # each is switched on once, so an admin who turns one off again
+    # (Customize → Colors) isn't overruled.
+    OFFERED_PALETTES = [
+      "JTech Dim",
+      *[
+        "Nord",
+        "Catppuccin",
+        "Rosé Pine",
+        "Gruvbox",
+        "Tokyo Night",
+        "Everforest",
+        "Paper",
+      ].flat_map { |f| ["#{f} Light", "#{f} Dark"] },
+    ].freeze
 
     def self.directory
       ENV["JTECH_THEME_DIR"].presence || File.expand_path("../../themes/jtech", __dir__)

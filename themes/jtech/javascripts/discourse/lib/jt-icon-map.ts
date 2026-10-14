@@ -145,6 +145,7 @@ export const JT_ICON_MAP: Record<string, string> = {
   "mobile-screen-button": "smartphone",
   moon: "moon",
   paintbrush: "paintbrush",
+  palette: "palette",
   "paper-plane": "send",
   paperclip: "paperclip",
   "pen-to-square": "square-pen",

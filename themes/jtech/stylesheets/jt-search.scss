@@ -139,8 +139,8 @@ $jt-search-glyph: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' 
       }
 
       .badge-notification {
-        background: var(--jt-text);
-        color: var(--jt-surface);
+        background: var(--jt-accent);
+        color: var(--jt-on-accent);
       }
     }
 

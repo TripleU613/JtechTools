@@ -17,6 +17,9 @@ module DiscourseModElections
         limits: limits,
         history: history,
         next_opening: next_opening,
+        # The page listens for step changes from here on, so one that lands
+        # between this answer and its subscription isn't lost.
+        message_bus_last_id: MessageBus.last_id(State::CHANNEL),
       }
     end
 

@@ -145,6 +145,8 @@ export interface ModElectionPage {
   history: ModElectionHistoryRow[];
   // When the next election opens, as a day on the forum's calendar.
   next_opening: string | null;
+  // The step-change channel's last message when this was built
+  message_bus_last_id: number;
 }
 
 // current_user.mod_election

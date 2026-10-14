@@ -118,8 +118,8 @@ $jt-review-check: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' 
 
 // The avatar's review-queue count, as the bell's and the envelope's
 .d-header .current-user .badge-notification.new-reviewables {
-  color: var(--jt-surface);
-  background: var(--jt-text);
+  color: var(--jt-on-accent);
+  background: var(--jt-accent);
   border: 2px solid var(--jt-surface);
   box-shadow: none;
 

@@ -880,7 +880,7 @@ RSpec.describe "JTech theme" do
     JS
     expect(card_border).to eq("1px")
     expect(filter_height).to eq(35) # 2.2rem, like the other toolbars
-    expect(badge_bg).to eq(label_color) # the text colour, not the accent
+    expect(badge_bg).to eq(label_color) # JTech Light's accent is its text colour
     expect_no_theme_errors
   end
 
@@ -3782,6 +3782,72 @@ RSpec.describe "JTech theme" do
     expect(background).to eq("rgb(22, 22, 22)")
     shot("dim-latest")
     expect_no_theme_errors
+  end
+
+  describe "the sidebar's palette menu" do
+    let(:background) { "getComputedStyle(document.body).backgroundColor" }
+
+    def scheme_id(name)
+      jtech_theme.color_schemes.find_by(name: name).id
+    end
+
+    def pick(name)
+      find(".jt-palette-menu").click
+      find(".jt-palettes__option", exact_text: name).click
+    end
+
+    it "switches a member's palette on the spot and keeps it on every device" do
+      sign_in(member)
+      visit("/latest")
+      expect(page).to have_css(".jt-card")
+
+      pick("Nord")
+      try_until_success { expect(page.evaluate_script(background)).to eq("rgb(236, 239, 244)") }
+      try_until_success do
+        expect(member.user_option.reload.color_scheme_id).to eq(scheme_id("Nord Light"))
+      end
+      expect(member.user_option.dark_scheme_id).to eq(scheme_id("Nord Dark"))
+      shot("palette-nord")
+
+      visit("/latest")
+      expect(page).to have_css(".jt-card")
+      expect(page.evaluate_script(background)).to eq("rgb(236, 239, 244)")
+      find(".jt-palette-menu").click
+      expect(page).to have_css(".jt-palettes__option[aria-checked='true']", exact_text: "Nord")
+      shot("palette-menu")
+
+      # back to black and white: saved as the theme's default
+      find(".jt-palettes__option", exact_text: "JTech").click
+      try_until_success { expect(page.evaluate_script(background)).to eq("rgb(255, 255, 255)") }
+      try_until_success { expect(member.user_option.reload.color_scheme_id).to eq(-1) }
+      expect(member.user_option.dark_scheme_id).to eq(-1)
+      expect_no_theme_errors
+    end
+
+    it "keeps a visitor's palette in this browser, and shows a dark-only one in dark" do
+      visit("/latest")
+      expect(page).to have_css(".jt-card")
+
+      pick("Gruvbox")
+      try_until_success { expect(page.evaluate_script(background)).to eq("rgb(251, 241, 199)") }
+      visit("/latest")
+      expect(page).to have_css(".jt-card")
+      expect(page.evaluate_script(background)).to eq("rgb(251, 241, 199)")
+
+      # JTech Dim has no light partner, so picking it in light switches to dark
+      pick("JTech Dim")
+      try_until_success { expect(page.evaluate_script(background)).to eq("rgb(22, 22, 22)") }
+      expect_no_theme_errors
+    end
+
+    it "is left out when the theme setting is off" do
+      jtech_theme.update_setting(:palette_menu, false)
+      jtech_theme.save!
+      sign_in(member)
+      visit("/latest")
+      expect(page).to have_css(".jt-card")
+      expect(page).to have_no_css(".jt-palette-menu")
+    end
   end
 
   # Picking a palette in preferences previews it with a stylesheet core leaves
