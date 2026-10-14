@@ -151,7 +151,8 @@ export function applyPrefs(): void {
   ) as HTMLMetaElement | null;
   // The page's own background: the palette's, or the stylesheet's on browsers
   // without custom properties
-  if (meta) meta.content = window.getComputedStyle(document.body).backgroundColor;
+  if (meta)
+    meta.content = window.getComputedStyle(document.body).backgroundColor;
 }
 
 export function watchSystemTheme(): void {
