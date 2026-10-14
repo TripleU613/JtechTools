@@ -3131,6 +3131,29 @@ RSpec.describe "JTech theme" do
       expect_no_theme_errors
     end
 
+    # A long topic's Top replies took the first column (widening ↑ under it)
+    # and pushed notifications onto a row of its own
+    it "keeps the 2×2 block under Top replies on a long topic" do
+      SiteSetting.summary_timeline_button = true
+      topic.update!(has_summary: true)
+      sign_in(member)
+      visit(topic.relative_url)
+      expect(page).to have_css(".timeline-container .show-summary")
+      expect(page).to have_css(".timeline-container .jt-jump .jt-jump__bottom")
+      summary, reply, bell, top, bottom = page.evaluate_script(<<~JS)
+        [".show-summary", ".reply-to-post", ".notifications-tracking-trigger", ".jt-jump__top", ".jt-jump__bottom"]
+          .map((selector) => document.querySelector(`.timeline-footer-controls ${selector}`))
+          .map((b) => b.getBoundingClientRect())
+          .map((r) => [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)])
+      JS
+      expect([reply, bell, top, bottom].map { |b| b[2..] }.uniq.size).to eq(1)
+      expect(summary[1]).to be < reply[1]
+      expect(bell[1]).to eq(reply[1])
+      expect([top[0], bottom[0], bottom[1]]).to eq([reply[0], bell[0], top[1]])
+      expect(top[1]).to be > reply[1]
+      expect_no_theme_errors
+    end
+
     it "copies a post's Markdown from the post menu" do
       sign_in(member)
       visit(topic.relative_url)

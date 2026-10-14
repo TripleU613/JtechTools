@@ -3,6 +3,10 @@ import getURL from "discourse/lib/get-url";
 import type SiteSettingsService from "discourse/services/site-settings";
 import { i18n } from "discourse-i18n";
 
+interface SidebarSection {
+  links?: { value?: string }[];
+}
+
 type DumbcourseSiteSettings = SiteSettingsService & {
   dumbcourse_enabled: boolean;
   dumbcourse_sidebar_link_enabled: boolean;
@@ -25,6 +29,26 @@ export default apiInitializer((api) => {
     ""
   );
 
+  // An admin who put a Dumbcourse link in one of the sidebar's own sections
+  // (Community, say) gets that one, not a second in a section of its own.
+  const path = getURL(`/${basePath || "dumb"}`);
+  const linkedElsewhere = (): boolean => {
+    const user = api.getCurrentUser() as {
+      sidebar_sections?: SidebarSection[];
+    } | null;
+    const site = api.container.lookup("service:site") as {
+      anonymous_sidebar_sections?: SidebarSection[];
+    };
+    const sections = user
+      ? user.sidebar_sections
+      : site.anonymous_sidebar_sections;
+    return (sections || []).some((section) =>
+      (section.links || []).some(
+        (link) => (link.value || "").replace(/\/+$/, "") === path
+      )
+    );
+  };
+
   api.addSidebarSection(
     (BaseCustomSidebarSection, BaseCustomSidebarSectionLink) => {
       class DumbcourseLink extends BaseCustomSidebarSectionLink {
@@ -32,7 +56,7 @@ export default apiInitializer((api) => {
         classNames = "raw-link";
         text = i18n("dumbcourse.sidebar_link_text");
         title = i18n("dumbcourse.sidebar_link_title");
-        href = getURL(`/${basePath || "dumb"}`);
+        href = path;
         prefixType = "icon";
         prefixValue = "mobile-screen-button";
       }
@@ -42,6 +66,10 @@ export default apiInitializer((api) => {
         text = i18n("dumbcourse.sidebar_section_title");
         title = i18n("dumbcourse.sidebar_section_title");
         hideSectionHeader = true;
+
+        get displaySection() {
+          return !linkedElsewhere();
+        }
 
         get links() {
           return [new DumbcourseLink()];
