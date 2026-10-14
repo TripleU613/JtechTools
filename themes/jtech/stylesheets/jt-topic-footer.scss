@@ -37,9 +37,8 @@
       border-top: 0;
     }
 
+    // pressed, selected and focused: jt-topic-list.scss
     .topic-list-item {
-      transition: background-color var(--jt-motion);
-
       &:hover {
         background: var(--jt-hover);
       }

@@ -44,11 +44,50 @@
   }
 }
 
-// Core takes the focus ring off topic titles in its own lists (suggested
-// topics under a topic)
-.topic-list .main-link a.title:focus-visible {
-  outline: 2px solid var(--jt-focus);
-  outline-offset: 2px;
+// Rows of a list that isn't cards (suggested topics under a topic; any list
+// with topic_cards off). Core gives a pressed row nothing, marks the row you
+// came back to (.selected) with a bar down one side of its first cell, and
+// takes the focus ring off titles. Here a pressed row sinks a little with
+// the pressed tint and springs back, as a card does; the row you came back
+// to is tinted all across; a title with keyboard focus rings its whole row,
+// inside it, so the list's rounded box can't clip one side of it off.
+.topic-list:not(.jt-cards) .topic-list-item {
+  -webkit-tap-highlight-color: transparent;
+
+  // let go, it springs back: a little past full size, then settles
+  transition:
+    background-color var(--jt-motion),
+    scale 0.45s cubic-bezier(0.3, 1.8, 0.5, 1);
+
+  // not while a control in the row is pressed (category, tags, a poster)
+  &:active:not(:has(:is(a, button, input, label):not(.raw-topic-link):active)) {
+    scale: 0.985;
+    background: var(--jt-active);
+    transition:
+      background-color var(--jt-motion),
+      scale 0.1s cubic-bezier(0.2, 0, 0, 1);
+
+    @media (prefers-reduced-motion: reduce) {
+      scale: none;
+    }
+  }
+
+  &.selected {
+    background: var(--jt-active);
+
+    td:first-of-type {
+      box-shadow: none;
+    }
+  }
+
+  &:has(.main-link a.title:focus-visible) {
+    outline: 2px solid var(--jt-focus);
+    outline-offset: -2px;
+  }
+
+  .main-link a.title:focus-visible {
+    outline: none;
+  }
 }
 
 // ── Desktop list controls: filters · tabs · New Topic ──

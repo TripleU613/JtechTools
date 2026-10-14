@@ -2641,6 +2641,50 @@ RSpec.describe "JTech theme" do
     expect_no_theme_errors
   end
 
+  # Core gives a pressed row of a table list (suggested topics) nothing, and
+  # marks the row you came back to with a bar down one side of its first cell
+  it "sinks a pressed suggested topic's row, and tints a selected one all across" do
+    sign_in(member)
+    visit(topic.relative_url)
+    row = ".more-topics__container .topic-list-item"
+    expect(page).to have_css(row, minimum: 2)
+    page.execute_script(
+      "document.querySelector(#{row.to_json}).scrollIntoView({ block: 'center' })",
+    )
+    x, y = page.evaluate_script(<<~JS)
+      (() => {
+        const box = document.querySelector("#{row} .num.views").getBoundingClientRect();
+        return [box.x + box.width / 2, box.y + box.height / 2];
+      })()
+    JS
+    scale = "getComputedStyle(document.querySelector(#{row.to_json})).scale"
+
+    # pressed and held; let go elsewhere, so it doesn't open the topic
+    page.driver.with_playwright_page do |pw|
+      pw.mouse.move(x, y)
+      pw.mouse.down
+    end
+    try_until_success { expect(page.evaluate_script(scale)).to eq("0.985") }
+    page.driver.with_playwright_page do |pw|
+      pw.mouse.move(1, 1)
+      pw.mouse.up
+    end
+    try_until_success { expect(page.evaluate_script(scale)).to eq("none") }
+
+    selected = page.evaluate_script(<<~JS)
+      (() => {
+        const [first, second] = document.querySelectorAll("#{row}");
+        second.classList.add("selected");
+        return [
+          getComputedStyle(second.querySelector("td")).boxShadow,
+          getComputedStyle(second).backgroundColor !== getComputedStyle(first).backgroundColor,
+        ];
+      })()
+    JS
+    expect(selected).to eq(["none", true])
+    expect_no_theme_errors
+  end
+
   # The jump arrows were 16px tall at the top of the capsule (a height of
   # 100% with nothing to measure against), above the wrench and the counter
   it "lines the capsule's arrows, wrench and counter up at one height", mobile: true do

@@ -28,6 +28,7 @@ module ::DiscourseJtechTheme
     OFFERED_PALETTES = [
       "JTech Dim",
       *[
+        "Discourse",
         "Nord",
         "Catppuccin",
         "Rosé Pine",
