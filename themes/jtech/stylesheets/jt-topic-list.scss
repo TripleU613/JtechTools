@@ -44,13 +44,18 @@
   }
 }
 
+// Core takes the focus ring off topic titles in its own lists (suggested
+// topics under a topic)
+.topic-list .main-link a.title:focus-visible {
+  outline: 2px solid var(--jt-focus);
+  outline-offset: 2px;
+}
+
 // Rows of a list that isn't cards (suggested topics under a topic; any list
-// with topic_cards off). Core gives a pressed row nothing, marks the row you
-// came back to (.selected) with a bar down one side of its first cell, and
-// takes the focus ring off titles. Here a pressed row sinks a little with
-// the pressed tint and springs back, as a card does; the row you came back
-// to is tinted all across; a title with keyboard focus rings its whole row,
-// inside it, so the list's rounded box can't clip one side of it off.
+// with topic_cards off). Core gives a pressed row nothing, and marks the row
+// you came back to (.selected) with a bar down one side of its first cell.
+// Here a pressed row sinks a little with the pressed tint and springs back,
+// as a card does, and the row you came back to is tinted all across.
 .topic-list:not(.jt-cards) .topic-list-item {
   -webkit-tap-highlight-color: transparent;
 
@@ -78,15 +83,6 @@
     td:first-of-type {
       box-shadow: none;
     }
-  }
-
-  &:has(.main-link a.title:focus-visible) {
-    outline: 2px solid var(--jt-focus);
-    outline-offset: -2px;
-  }
-
-  .main-link a.title:focus-visible {
-    outline: none;
   }
 }
 

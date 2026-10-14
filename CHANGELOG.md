@@ -141,7 +141,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Fixed**
 
-- JTech theme: pressing a row of a topic list that isn't cards (suggested topics under a topic) did nothing until the next page opened; it sinks a little and springs back now, as a card does. The row you came back to was marked with a bar down one side; it's tinted all across now, and a title with keyboard focus rings its whole row.
+- JTech theme: pressing a row of a topic list that isn't cards (suggested topics under a topic) did nothing until the next page opened; it sinks a little and springs back now, as a card does. The row you came back to was marked with a bar down one side; it's tinted all across now.
 - Disteleplus: the header icon's count was red and went up with every message in the conversation. It counts only messages that mention you (or a group you're in), as the bell does, in the theme's accent colour instead of red; the browser tab's count does the same. A message sent while the conversation was loading could also go missing from it until a reload.
 - JTech theme: on a phone, the first / last post arrows in the bar at the bottom of a topic sat at its top edge, above the wrench and the post counter. They line up with them now.
 - Dumbcourse: with Discourse's Unified New switched on, the New tab also listed topics with unread replies, the same as the Unread tab, and Dismiss all new said it worked but dismissed nothing. New lists new topics only again, and Dismiss all new dismisses them.
