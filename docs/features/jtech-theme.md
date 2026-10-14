@@ -97,7 +97,7 @@ The theme brings its palettes in pairs, a light and a dark of each:
 - **JTech Light** / **JTech Dark** (OLED black): the defaults, black and white.
 - **JTech Dim**: a softer grey dark mode, used with JTech Light.
 - **Discourse**: Discourse's own default colours, its white and blue and its dark grey (the light blue a shade darker, so links read at 4.5:1).
-- **Nord**, **Catppuccin** (Latte / Mocha), **Rosé Pine** (Dawn / main), **Gruvbox**, **Tokyo Night** (Day / Night), **Everforest** and **Paper** (warm sepia for long reads). These follow the well-known editor palettes of the same names: their paper, ink and one accent, which colours buttons, links, the active tab, unread badges, focus rings and selected text. Where a palette's own accent or grey reads under 4.5:1 it is darkened (or lightened) until it does.
+- **Nord**, **Catppuccin** (Latte / Mocha), **Rosé Pine** (Dawn / main), **Gruvbox**, **Tokyo Night** (Day / Night), **Everforest**, **Paper** (warm sepia for long reads) and **Horizon** (Discourse's Horizon theme: near-black on white, a periwinkle accent, periwinkle hover and selection). These follow the well-known editor palettes of the same names: their paper, ink and one accent, which colours buttons, links, the active tab, unread badges, focus rings and selected text. Where a palette's own accent or grey reads under 4.5:1 it is darkened (or lightened) until it does.
 
 The plugin marks every palette but the two defaults "users can select" once, when it first installs it (or when an update adds it); turn one off under Customize → Colors and it stays off. Being user-selectable, they're also offered with other themes that let people pick any palette.
 

@@ -36,6 +36,7 @@ module ::DiscourseJtechTheme
         "Tokyo Night",
         "Everforest",
         "Paper",
+        "Horizon",
       ].flat_map { |f| ["#{f} Light", "#{f} Dark"] },
     ].freeze
 
