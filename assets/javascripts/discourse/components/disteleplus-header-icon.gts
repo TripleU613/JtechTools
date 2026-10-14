@@ -36,7 +36,9 @@ export default class DisteleplusHeaderIcon extends Component<DisteleplusHeaderIc
   }
 
   get showBadge(): boolean {
-    return this.disteleplus.unreadCount > 0 && !this.disteleplus.isActive;
+    return (
+      this.disteleplus.unreadMentionCount > 0 && !this.disteleplus.isActive
+    );
   }
 
   // Mirrors Chat's header icon: full page on mobile or when the user chose
@@ -87,7 +89,7 @@ export default class DisteleplusHeaderIcon extends Component<DisteleplusHeaderIc
         {{icon (if this.disteleplus.isFullPageActive "shuffle" "comments")}}
         {{#if this.showBadge}}
           <span class="disteleplus-header-icon__badge">
-            {{this.disteleplus.unreadCount}}
+            {{this.disteleplus.unreadMentionCount}}
           </span>
         {{/if}}
       </DButton>

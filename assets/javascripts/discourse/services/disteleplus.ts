@@ -20,6 +20,7 @@ export type DisteleplusCurrentUser = User & {
   moderator: boolean;
   staff: boolean;
   can_access_disteleplus?: boolean;
+  groups?: { name: string }[];
 };
 
 // Core's SiteSettingsService declaration carries no settings; these are the
@@ -185,6 +186,8 @@ interface ConversationMeta {
   has_more: boolean;
   has_newer?: boolean;
   unread_count?: number;
+  unread_mention_count?: number;
+  message_bus_last_id?: number;
   latest_message_id?: number | null;
   last_read_message_id?: number | null;
   read_receipts_enabled?: boolean;
@@ -299,6 +302,9 @@ export default class DisteleplusService extends Service {
   @tracked loaded = false;
   @tracked sending = false;
   @tracked unreadCount = 0;
+  // Unread messages that mention the user: the header badge and the tab
+  // title count only these, as the bell does
+  @tracked unreadMentionCount = 0;
   @tracked hasMore = false;
   @tracked error: unknown = null;
   // Composer draft, restored across navigations (and reloads via localStorage).
@@ -395,6 +401,7 @@ export default class DisteleplusService extends Service {
       );
       if (payload.message.user?.id !== this.currentUser.id) {
         this.unreadCount += 1;
+        this.countMention(payload.message);
       }
       return;
     }
@@ -410,6 +417,7 @@ export default class DisteleplusService extends Service {
       const mine = message.user?.id === this.currentUser.id;
       if (!mine && !this.viewing) {
         this.unreadCount += 1;
+        this.countMention(message);
       }
       // The timeline decides whether to auto-scroll (and mark read) or show
       // the "new messages" pill, so a reader scrolled up is not yanked down.
@@ -589,6 +597,7 @@ export default class DisteleplusService extends Service {
           this.hydrate(message)
         );
         this.unreadCount = response.meta.unread_count || 0;
+        this.unreadMentionCount = response.meta.unread_mention_count || 0;
         this.hasMore = response.meta.has_more;
         this.latestMessageId = response.meta.latest_message_id;
         this.lastReadMessageId = response.meta.last_read_message_id;
@@ -596,7 +605,7 @@ export default class DisteleplusService extends Service {
         this.readReceiptsEnabled = !!response.meta.read_receipts_enabled;
         this.pollsEnabled = !!response.meta.polls_enabled;
         this.loaded = true;
-        this.subscribe();
+        this.subscribe(response.meta.message_bus_last_id);
         if (response.meta.polls_topic_id) {
           this.ensurePollChannel(response.meta.polls_topic_id);
         }
@@ -694,12 +703,42 @@ export default class DisteleplusService extends Service {
     this.upsert(response.message);
   }
 
+  // As the server's Notifier.mentioned_user_ids: an @mention of the user, or
+  // of a group they're in, by the link's target or else its text
+  countMention(message: { cooked?: string | null }): void {
+    const user = this.currentUser;
+    if (!user || !message.cooked) {
+      return;
+    }
+    const doc = new DOMParser().parseFromString(message.cooked, "text/html");
+    const target = (el: Element, path: RegExp) =>
+      (
+        el.getAttribute("href")?.match(path)?.[1] ||
+        el.textContent?.replace(/^@/, "") ||
+        ""
+      ).toLowerCase();
+    const groups = new Set(
+      (user.groups || []).map((group) => group.name.toLowerCase())
+    );
+    const mentioned =
+      [...doc.querySelectorAll("a.mention, span.mention")].some(
+        (el) => target(el, /\/u\/([^/?#]+)/) === user.username.toLowerCase()
+      ) ||
+      [...doc.querySelectorAll("a.mention-group, span.mention-group")].some(
+        (el) => groups.has(target(el, /\/groups\/([^/?#]+)/))
+      );
+    if (mentioned) {
+      this.unreadMentionCount += 1;
+    }
+  }
+
   async markRead(id: number | null = this.latestMessageId): Promise<void> {
     if (!id || id <= (this.lastReadMessageId || 0)) {
       return;
     }
     this.lastReadMessageId = id;
     this.unreadCount = 0;
+    this.unreadMentionCount = 0;
     await ajax(`${BASE}/read`, {
       type: "POST",
       data: { message_id: id },
@@ -714,11 +753,13 @@ export default class DisteleplusService extends Service {
     }
   }
 
-  subscribe(): void {
+  // From the conversation's own point in the channel: subscribing "from now"
+  // missed a message sent before the next poll reached the server.
+  subscribe(lastId?: number): void {
     if (this.subscribed) {
       return;
     }
-    this.messageBus.subscribe(CHANNEL, this.onRealtime);
+    this.messageBus.subscribe(CHANNEL, this.onRealtime, lastId);
     this.messageBus.subscribe(TYPING_CHANNEL, this.onTyping);
     this.subscribed = true;
   }

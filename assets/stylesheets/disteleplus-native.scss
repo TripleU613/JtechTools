@@ -19,7 +19,9 @@
     border: 2px solid var(--secondary);
     border-radius: 1rem;
     color: var(--secondary);
-    background: var(--danger);
+
+    // the accent, as core Chat's unread dot: it counts mentions, not errors
+    background: var(--tertiary);
     font-size: 0.65rem;
     font-weight: 700;
     line-height: 1;
