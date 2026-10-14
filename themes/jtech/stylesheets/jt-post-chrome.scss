@@ -266,10 +266,14 @@ nav.post-controls {
 // (still on the right) rather than run past the post's edge. Phones keep the
 // plugin's own row.
 @include viewport.from(lg) {
+  // top: core's .post-menu-area margin, so both start on the same line. The
+  // pill is shorter than the menu's buttons (39px: 8px padding, a line, 1px
+  // borders), so the row is their height and centres it, or it sat 5px high.
   .post__contents > .solved-shared-issue-row {
     float: left;
-
-    // top: core's .post-menu-area margin, so both start on the same line
+    display: flex;
+    align-items: center;
+    min-height: 39px;
     margin: 20px var(--space-2) 0 0;
   }
 

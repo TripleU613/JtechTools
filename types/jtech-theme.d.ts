@@ -68,7 +68,7 @@ declare module "virtual:theme" {
     post_badges: string;
     image_carousels: boolean;
     sidebar_inboxes: boolean;
-    sidebar_online: boolean;
+    online_box: boolean;
     reader_mode: boolean;
     qr_code_share: boolean;
   }

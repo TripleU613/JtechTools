@@ -7,7 +7,7 @@ What changed for forums running Jtech Tools. Newest first.
 **New**
 
 - JTech theme: list density, like Gmail's. A density button in the sidebar footer, beside the palette button (in the ☰ menu on a phone): Default, Comfortable (cards without the excerpt and picture) or Compact (one row a topic). Kept in your browser. Setting: `density_menu`.
-- JTech theme: with the Who's Online plugin, the people online are in the sidebar, second under Topics (Online · 8, a row of faces with their names on hover), instead of in a row of avatars over the topic list. Setting: `sidebar_online`.
+- JTech theme: with the Who's Online plugin, the people online are a box beside the topic list's tabs instead of the plugin's row of avatars over the list: a few faces stacked in grey and how many are online. Click it and it opens to the right with everyone online in full colour, each a link to their profile. Setting: `online_box`.
 - JTech theme: colour palettes. A palette button in the sidebar footer (in the ☰ menu on a phone) switches the forum's colours on the spot: JTech's black and white (still the default), JTech Dim, Discourse's own default colours, or Nord, Catppuccin, Rosé Pine, Gruvbox, Tokyo Night, Everforest and Paper, each with a light and a dark version that follow your light / dark choice. Buttons, links, unread badges and selected text take the palette's accent; every one reads at 4.5:1. Members keep their choice on every device (it's the same as Preferences → Interface → Color Palette), visitors in their browser. Setting: `palette_menu`.
 - Dumbcourse: the forum's colours. It shows the palettes you chose on the full site (light and dark), or the theme's own, instead of its own blue and grey. With the JTech theme that's black and white; notification counts and the New pill take the accent instead of red and green.
 - Trust level flair: members who haven't picked a flair show their trust level's, from trust level 0 up, instead of none. It follows their trust level, and picking another flair (or none) under Preferences → Account keeps that choice. Off by default: `jtech_trust_level_flair`.
@@ -148,6 +148,9 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Fixed**
 
+- JTech theme: on a topic list the tabs' dropdown floated in the middle of the row; it sits beside the filters now.
+- JTech theme: a guide's table of contents had stopped showing beside the posts on a computer (the posts filling the room beside the timeline left its column too slim). Topics with contents keep the old columns, the contents in that room.
+- JTech theme: Solved's Me too pill sat 5px above the post menu's line.
 - JTech theme: on a computer, a topic's posts stopped some 200px short of the timeline, an empty strip down the page. The posts fill the room beside the timeline now (the page's own maximum width keeps lines readable), the topic summary at their foot with them, and the buttons under the topic run to the page's edge like the suggested list.
 - JTech theme: on a topic, the timeline and its buttons stopped about 100px short of the right edge the header, the title and the suggested topics share. They end at that edge now. The posts keep their reading width.
 - JTech theme: on a computer the logo stuck out 20px to the left of the sidebar it sits over. It starts where the sidebar's icons start now, at any window size.

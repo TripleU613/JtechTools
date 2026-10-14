@@ -1223,22 +1223,37 @@ RSpec.describe "JTech theme" do
     expect_no_theme_errors
   end
 
-  it "keeps the filters, tabs and New Topic on one line when the window narrows" do
+  it "moves the filters up a line rather than parting the tabs from New Topic" do
     Fabricate(:category, name: "Filter apps", parent_category: category)
     sign_in(admin)
     resize_window(width: 900) do
       visit(category.url)
       expect(page).to have_css(".list-controls #create-topic")
-      tops, scrolls_sideways = page.evaluate_script(<<~JS)
-        [[".category-breadcrumb", "#navigation-bar", "#create-topic"]
-           .map((s) => document.querySelector(`.list-controls ${s}`).getBoundingClientRect())
-           .map((box) => Math.round(box.top + box.height / 2)),
-         document.documentElement.scrollWidth > window.innerWidth]
+      filters, tabs, new_topic, scrolls_sideways = page.evaluate_script(<<~JS)
+        [".category-breadcrumb", "#navigation-bar", "#create-topic"]
+          .map((s) => document.querySelector(`.list-controls ${s}`).getBoundingClientRect())
+          .map((box) => Math.round(box.top + box.height / 2))
+          .concat(document.documentElement.scrollWidth > window.innerWidth)
       JS
-      expect(tops.max - tops.min).to be <= 2
+      expect(filters).to be < tabs
+      expect(new_topic).to be_within(2).of(tabs)
       expect(scrolls_sideways).to eq(false)
       expect_no_theme_errors
     end
+  end
+
+  # Packed to the left: with the filters pushed left too, the dropdown floated
+  # in the middle of the row
+  it "puts the tabs' dropdown beside the filters" do
+    sign_in(member)
+    visit("/latest")
+    expect(page).to have_css(".list-controls .list-control-toggle-link-trigger")
+    gap = page.evaluate_script(<<~JS)
+      document.querySelector(".list-controls #navigation-bar").getBoundingClientRect().left -
+        document.querySelector(".list-controls .category-breadcrumb").getBoundingClientRect().right
+    JS
+    expect(gap).to be_between(0, 24)
+    expect_no_theme_errors
   end
 
   # Core fills highlighted text with the palette's highlight colour, a mid
@@ -2717,25 +2732,27 @@ RSpec.describe "JTech theme" do
   end
 
   # Who's Online's row of avatars sat over the topic list, in the tabs' way.
-  # In the sidebar it comes second, as faces: as the last section it was below
-  # the bottom of the window. Only where the plugin is installed (CI doesn't
-  # have it).
-  it "lists who's online in the sidebar instead of over the topic list" do
+  # It's a box beside the tabs' dropdown: faces stacked in grey and the count,
+  # opening to the right with everyone. Only where the plugin is installed
+  # (CI doesn't have it).
+  it "shows who's online as a box beside the tabs that opens to the right" do
     skip("needs the Who's Online plugin") unless defined?(::DiscourseWhosOnline)
     SiteSetting.whos_online_enabled = true
     SiteSetting.whos_online_display_public = true
     SiteSetting.whos_online_minimum_display = 1
     sign_in(member)
     visit("/latest")
-    online = ".sidebar-section[data-section-name='jt-online']"
-    expect(page).to have_css(online, text: "Online")
-    expect(page).to have_css("#{online} a[href='/u/#{member.username}'] img.prefix-image")
+    expect(page).to have_css(".jt-online-box__toggle", text: "1")
     expect(page).to have_no_css(".online_users_widget", visible: true)
-    above_categories = page.evaluate_script(<<~JS)
-      document.querySelector("#{online}").getBoundingClientRect().top <
-        document.querySelector(".sidebar-section[data-section-name='categories']").getBoundingClientRect().top
-    JS
-    expect(above_categories).to eq(true)
+    expect(page).to have_no_css(".sidebar-section[data-section-name='jt-online']")
+
+    find(".jt-online-box__toggle").click
+    expect(page).to have_css(".jt-online-box.--open")
+    expect(page).to have_css(
+      ".jt-online-box__people a[href='/u/#{member.username}'] img.jt-online-box__face",
+    )
+    find(".jt-online-box__label").click
+    expect(page).to have_no_css(".jt-online-box.--open")
     expect_no_theme_errors
   end
 

@@ -101,8 +101,10 @@
 // that left some 200px empty between them. The timeline's column is its own
 // width now and the posts' column the rest, and a post's text fills it (the
 // page's own maximum width keeps lines a readable length). Core's single
-// column at 924px and under stays.
-html.desktop-view .container.posts {
+// column at 924px and under stays. A topic with a table of contents
+// (connectors/topic-navigation/jt-toc) keeps core's columns: the contents
+// take that room, and show only where the column is wide enough for them.
+html.desktop-view .container.posts:not(:has(.jt-toc-probe)) {
   @media screen and (width > 924px) {
     grid-template-columns: minmax(0, 1fr) max-content;
     column-gap: var(--space-8);

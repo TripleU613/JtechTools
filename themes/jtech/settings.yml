@@ -223,7 +223,7 @@ image_carousels:
 sidebar_inboxes:
   type: bool
   default: true
-sidebar_online:
+online_box:
   type: bool
   default: true
 reader_mode:
