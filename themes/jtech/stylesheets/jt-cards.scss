@@ -521,3 +521,86 @@ html.whos-online-ring {
     box-shadow: 0 0 0 1.5px var(--jt-accent);
   }
 }
+
+// Density (lib/jt-density, chosen in the sidebar's palette menu). Comfortable:
+// the cards without excerpt or picture, a little tighter. Compact: one row a
+// topic, the title with the category and tags after it and the counts at the
+// end, the rows one divided card.
+html.jt-density-comfortable,
+html.jt-density-compact {
+  // as specific as the excerpt's own rule above, which sets its display
+  .topic-list.jt-cards .topic-list-item .jt-card .topic-excerpt,
+  .jt-card__thumb {
+    display: none;
+  }
+}
+
+html.jt-density-comfortable .topic-list.jt-cards {
+  .topic-list-body {
+    gap: var(--space-2);
+  }
+
+  .jt-card {
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-4);
+  }
+}
+
+html.jt-density-compact .topic-list.jt-cards {
+  .topic-list-body {
+    gap: 0;
+    overflow: hidden;
+    border: 1px solid var(--jt-border);
+    border-radius: var(--jt-radius-lg);
+  }
+
+  .topic-list-item {
+    border: 0;
+    border-radius: 0;
+
+    & + .topic-list-item {
+      border-top: 1px solid var(--jt-border);
+    }
+  }
+
+  .jt-card {
+    flex-flow: row wrap;
+    align-items: center;
+    gap: var(--space-1) var(--space-3);
+    padding: var(--space-2) var(--space-4);
+  }
+
+  .jt-card__body {
+    order: 1;
+    flex: 1 1 16rem;
+    min-width: 0;
+  }
+
+  .jt-card__title {
+    font-size: var(--jt-text-md);
+  }
+
+  .jt-card__meta {
+    order: 2;
+  }
+
+  .jt-card__flags {
+    margin-left: 0;
+  }
+
+  .jt-card__foot {
+    order: 3;
+    margin: 0 0 0 auto;
+  }
+
+  .jt-card__people {
+    display: none;
+  }
+
+  // "Last visit" as a band of its own between the rows
+  .topic-list-item-separator {
+    padding: var(--space-1) var(--space-4);
+    background: var(--jt-surface-sunken);
+    border-block: 1px solid var(--jt-border);
+  }
+}
