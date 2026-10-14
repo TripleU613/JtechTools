@@ -500,20 +500,21 @@
 // Who's Online (its "glow" or "ring" indicator, on topic lists) marks a row
 // whose last poster is online, and its phone rule lights every avatar in the
 // row: on a card the whole stack glowed as one blob. Here only the last
-// poster's face (core marks it .latest) is marked, with a thin ring, raised
-// over its neighbours.
+// poster's face (core marks it .latest) is marked, with a thin ring in the
+// accent, raised over its neighbours. .avatar is doubled to outrank the
+// theme's own phone-wide ring for the plugin (jt-extras.scss).
 html.whos-online-glow,
 html.whos-online-ring {
-  .topic-list-item.last-poster-online .jt-card .jt-card__people img.avatar {
+  .topic-list-item.last-poster-online .jt-card .jt-card__people img.avatar.avatar {
     box-shadow: none;
   }
 
   .topic-list-item.last-poster-online
     .jt-card
     .jt-card__people
-    img.avatar.latest {
+    img.avatar.avatar.latest {
     position: relative;
     z-index: 1;
-    box-shadow: 0 0 0 1.5px var(--success);
+    box-shadow: 0 0 0 1.5px var(--jt-accent);
   }
 }

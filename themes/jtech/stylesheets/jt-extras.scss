@@ -186,12 +186,17 @@
   .search-menu .results .restricted,
   .category-title-name,
   .category-box-heading,
-  .sidebar-section-link,
   [href^="/c/"] {
     .d-icon-lock,
     [class*="d-icon-category.restricted"] {
       display: none;
     }
+  }
+
+  // In the sidebar only a category's padlock (core's prefix badge): a lock
+  // is also the Security link's own icon under Preferences
+  .sidebar-section-link .prefix-badge {
+    display: none;
   }
 }
 
@@ -376,5 +381,37 @@
     font-size: var(--font-down-1);
     text-align: center;
     overflow-wrap: anywhere;
+  }
+}
+
+// ── Who's Online ─────────────────────────────────────────────
+// The plugin marks people who are online with a green glow or ring. Here
+// it's always a thin ring in the accent (the text colour on the black and
+// white palettes), apart from the avatar by a gap of the page. .avatar is
+// doubled to outrank the plugin's own rules, which match these exactly.
+html.whos-online-glow,
+html.whos-online-ring {
+  #user-card.user-online .user-card-avatar img.avatar.avatar,
+  body.user-page-online .primary img.avatar.avatar {
+    box-shadow:
+      0 0 0 2px var(--secondary),
+      0 0 0 4px var(--jt-accent);
+  }
+
+  .topic-avatar.user-online img.avatar.avatar,
+  &.mobile-view .topic-list-item.last-poster-online img.avatar.avatar,
+  .latest-topic-list
+    .latest-topic-list-item.last-poster-online
+    img.avatar.avatar,
+  body.user-page-online .collapsed-info .primary img.avatar.avatar {
+    box-shadow:
+      0 0 0 1px var(--secondary),
+      0 0 0 3px var(--jt-accent);
+  }
+
+  .topic-map .avatars .user-online img.avatar.avatar {
+    box-shadow:
+      0 0 0 1px var(--secondary),
+      0 0 0 2px var(--jt-accent);
   }
 }

@@ -2641,6 +2641,39 @@ RSpec.describe "JTech theme" do
     expect_no_theme_errors
   end
 
+  # hide_lock_icons hid every lock in a sidebar link, the Security link's own
+  # icon among them (user navigation in the sidebar); and the device menu on
+  # that page was a 12rem empty box, as wide as the page's text dropdowns
+  it "keeps the Security link's lock, hides a private category's, and a compact device menu" do
+    SiteSetting.sidebar_user_navigation = true
+    group = Fabricate(:group).tap { |g| g.add(admin) }
+    private_category = Fabricate(:private_category, group: group, name: "Inner circle")
+    SidebarSectionLink.create!(user: admin, linkable: private_category)
+    UserAuthToken.generate!(
+      user_id: admin.id,
+      user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/140.0 Safari/537.36",
+      client_ip: "203.0.113.7",
+    )
+    sign_in(admin)
+
+    visit("/latest")
+    padlock = ".sidebar-section-link .prefix-badge"
+    expect(page).to have_css(padlock, visible: :all)
+    expect(
+      page.evaluate_script("getComputedStyle(document.querySelector(#{padlock.to_json})).display"),
+    ).to eq("none")
+
+    visit("/u/#{admin.username}/preferences/security")
+    lock = ".sidebar-section-link[data-link-name='user-nav-preferences-security'] .prefix-icon"
+    expect(page).to have_css(lock)
+    expect(page).to have_css(".pref-auth-tokens .auth-token-dropdown")
+    width = page.evaluate_script(<<~JS)
+      document.querySelector(".pref-auth-tokens .auth-token-dropdown").getBoundingClientRect().width
+    JS
+    expect(width).to be < 60
+    expect_no_theme_errors
+  end
+
   # The jump arrows were 16px tall at the top of the capsule (a height of
   # 100% with nothing to measure against), above the wrench and the counter
   it "lines the capsule's arrows, wrench and counter up at one height", mobile: true do
