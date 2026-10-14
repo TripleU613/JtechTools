@@ -1212,44 +1212,30 @@ RSpec.describe "JTech theme" do
     expect_no_theme_errors
   end
 
-  it "keeps New Topic on the row of tabs when the window narrows" do
+  # Discourse's Compact Nav: the tabs are one dropdown on a computer too
+  it "shows the list's tabs as one dropdown" do
     sign_in(member)
-    resize_window(width: 900) do
-      visit("/latest")
-      expect(page).to have_css("#create-topic")
-      tops = page.evaluate_script(<<~JS)
-        ["#navigation-bar", "#create-topic"]
-          .map((selector) => document.querySelector(selector).getBoundingClientRect().top)
-          .map(Math.round)
-      JS
-      expect(tops.uniq.size).to eq(1)
-      expect_no_theme_errors
-    end
+    visit("/latest")
+    find(".list-control-toggle-link-trigger").click
+    find(".list-control-toggle-link-content .nav-item_new a").click
+    expect(page).to have_current_path("/new")
+    expect(page).to have_css(".list-control-toggle-link-trigger", text: "New")
+    expect_no_theme_errors
   end
 
-  it "moves the filters up a line rather than squeezing the tabs" do
+  it "keeps the filters, tabs and New Topic on one line when the window narrows" do
     Fabricate(:category, name: "Filter apps", parent_category: category)
     sign_in(admin)
     resize_window(width: 900) do
       visit(category.url)
       expect(page).to have_css(".list-controls #create-topic")
-      filters, tabs, new_topic, tabs_fit, scrolls_sideways = page.evaluate_script(<<~JS)
-        (() => {
-          const row = document.querySelector(".list-controls .navigation-container");
-          const tabs = row.querySelector(":scope > #navigation-bar");
-          const top = (e) => Math.round(e.getBoundingClientRect().top);
-          return [
-            top(row.querySelector(":scope > .category-breadcrumb")),
-            top(tabs),
-            top(row.querySelector("#create-topic")),
-            tabs.scrollWidth <= tabs.clientWidth + 1,
-            document.documentElement.scrollWidth > window.innerWidth,
-          ];
-        })()
+      tops, scrolls_sideways = page.evaluate_script(<<~JS)
+        [[".category-breadcrumb", "#navigation-bar", "#create-topic"]
+           .map((s) => document.querySelector(`.list-controls ${s}`).getBoundingClientRect())
+           .map((box) => Math.round(box.top + box.height / 2)),
+         document.documentElement.scrollWidth > window.innerWidth]
       JS
-      expect(filters).to be < tabs
-      expect(new_topic).to eq(tabs)
-      expect(tabs_fit).to eq(true)
+      expect(tops.max - tops.min).to be <= 2
       expect(scrolls_sideways).to eq(false)
       expect_no_theme_errors
     end

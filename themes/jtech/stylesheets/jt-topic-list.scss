@@ -88,14 +88,14 @@
 
 // ── Desktop list controls: filters · tabs · New Topic ──
 // Core wraps the row item by item when it runs out of room, which dropped
-// "New Topic" onto a line of its own. Here the tabs and the buttons always
-// share a line. When the whole row doesn't fit, the filters move up to a line
-// of their own: the row runs right to left and wraps upwards, so the filters
-// are what breaks off. The tabs are never wider than the room beside the
-// buttons (--jt-list-buttons, kept by api-initializers/jt-list-controls), so
-// they can't part from them either; below that they scroll sideways, fading
-// at whichever edge is cut off. Below 66rem New Topic keeps only its icon
-// (the header's + does the same).
+// "New Topic" onto a line of its own. Here the tabs (one dropdown,
+// api-initializers/jt-compact-nav) and the buttons always share a line. When
+// the whole row doesn't fit, the filters move up to a line of their own: the
+// row runs right to left and wraps upwards, so the filters are what breaks
+// off. Below 66rem New Topic keeps only its icon (the header's + does the
+// same).
+
+// REQ-PM's tab strip (jt-tabs) fades at whichever edge is cut off
 @property --jt-tabs-fade-start {
   syntax: "<length>";
   inherits: false;
@@ -142,9 +142,8 @@ html.rtl {
 }
 
 html.desktop-view .list-controls .navigation-container {
-  --jt-list-gap: var(--space-3);
   flex-flow: row-reverse wrap-reverse;
-  gap: var(--jt-list-gap);
+  gap: var(--space-3);
 
   // `order` runs right to left here; anything a plugin adds after the
   // filters (outlet after-breadcrumbs) stays between them and the tabs
@@ -161,33 +160,6 @@ html.desktop-view .list-controls .navigation-container {
 
   > #navigation-bar {
     order: 2;
-    flex: 1 1 auto;
-    flex-wrap: nowrap;
-    min-width: 0;
-    max-width: calc(100% - var(--jt-list-buttons, 25rem) - var(--jt-list-gap));
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-    scrollbar-width: none;
-
-    > li {
-      flex: none;
-    }
-
-    // only while the tabs actually scroll (no scroll timeline otherwise)
-    @supports (animation-timeline: scroll()) {
-      mask-image: linear-gradient(
-        var(--jt-tabs-fade-to),
-        transparent,
-        #000 var(--jt-tabs-fade-start),
-        #000 calc(100% - var(--jt-tabs-fade-end)),
-        transparent
-      );
-      animation: jt-tabs-fade linear both;
-      animation-timeline: scroll(self inline);
-
-      // scroll-driven, so the duration stays auto (see jt-sidebar's fade)
-      animation-duration: auto !important;
-    }
   }
 
   > .category-breadcrumb {
@@ -206,6 +178,56 @@ html.desktop-view .list-controls .navigation-container {
 
       .d-icon {
         margin: 0;
+      }
+    }
+  }
+}
+
+// The tabs' dropdown (api-initializers/jt-compact-nav). Core styles it for
+// phones only, where it opens as a sheet: on a computer the button is a field
+// like the filters beside it, and the menu's tabs are rows like the palette
+// menu's.
+html.desktop-view {
+  .list-control-toggle-link-trigger {
+    gap: 0.5rem;
+    color: var(--jt-text);
+    background: var(--jt-surface);
+    border: 1px solid var(--jt-border-strong);
+    border-radius: var(--jt-radius-field);
+
+    .d-icon {
+      margin: 0;
+      color: var(--jt-text-subtle);
+    }
+
+    &:hover,
+    &.-expanded {
+      color: var(--jt-text);
+      background: var(--jt-surface);
+      border-color: var(--jt-text-subtle);
+    }
+  }
+
+  .list-control-toggle-link-content .dropdown-menu {
+    min-width: 12rem;
+    margin: 0;
+    padding: 0.25rem;
+    list-style: none;
+
+    a {
+      display: block;
+      padding: 0.4rem 0.5rem;
+      color: var(--jt-text);
+      border-radius: var(--jt-radius-control);
+
+      &:hover,
+      &:focus-visible {
+        background: var(--jt-hover);
+      }
+
+      &.active {
+        font-weight: 600;
+        background: var(--jt-active);
       }
     }
   }
