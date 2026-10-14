@@ -93,7 +93,7 @@ RSpec.describe "Moderator whisper" do
       expect(page).to have_css(".cooked.mod-whisper .mod-whisper-banner", wait: 15)
       expect(page).to have_css(
         ".mod-whisper-banner .mod-whisper-banner__group",
-        text: whisper_group.name,
+        exact_text: "@#{whisper_group.name}",
         wait: 15,
       )
       shot("76_group_whisper_banner")

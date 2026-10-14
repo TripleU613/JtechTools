@@ -99,6 +99,27 @@
   .jt-jump__bottom {
     grid-area: 2 / 2;
   }
+
+  // On a long topic core adds Top replies, first. In the grid it took the
+  // first column, widening the ↑ under it, and pushed notifications to a
+  // row of its own. It gets the top row across both columns; the 2×2 block
+  // goes under it, in equal columns.
+  &:has(.show-summary) {
+    grid-template-columns: 1fr 1fr;
+    width: max-content;
+
+    .show-summary {
+      grid-column: 1 / -1;
+    }
+
+    .jt-jump__top {
+      grid-area: 3 / 1;
+    }
+
+    .jt-jump__bottom {
+      grid-area: 3 / 2;
+    }
+  }
 }
 
 // On a phone the timeline opens as a sheet and core's own, more specific rule

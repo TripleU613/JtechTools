@@ -321,7 +321,8 @@ export default {
               const link = document.createElement("a");
               link.className = "mod-whisper-banner__group";
               link.href = `/g/${g.name}`;
-              link.textContent = g.name;
+              // "@" as a mention of the group, like the people beside it
+              link.textContent = `@${g.name}`;
               banner.appendChild(link);
             });
 
