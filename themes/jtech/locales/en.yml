@@ -10,6 +10,11 @@ en:
       default: "Default"
       comfortable: "Comfortable"
       compact: "Compact"
+    dismiss_unread:
+      button: "Dismiss all"
+      confirm:
+        one: "Dismiss %{count} new and unread topic? It will be marked read."
+        other: "Dismiss all %{count} new and unread topics? They will be marked read."
     online:
       box: "Online: %{count}"
       title: "Online · %{count}"

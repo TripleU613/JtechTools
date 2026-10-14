@@ -2793,6 +2793,38 @@ RSpec.describe "JTech theme" do
     end
   end
 
+  # "New & Unread Topics" under a topic had no way to clear them: each one had
+  # to be opened to go away
+  it "dismisses the new and unread topics under a topic in one go" do
+    unread =
+      Array.new(2) do |i|
+        t = Fabricate(:topic, category: category, user: admin, title: "Unread guide part #{i + 1}")
+        Fabricate(:post, topic: t, user: admin, raw: "The first part of this guide.")
+        PostTiming.process_timings(member, t.id, 1000, [[1, 1000]])
+        TopicUser.change(
+          member.id,
+          t.id,
+          notification_level: TopicUser.notification_levels[:tracking],
+        )
+        Fabricate(:post, topic: t, user: admin, raw: "A new reply to this guide.")
+        t
+      end
+    sign_in(member)
+    visit(topic.relative_url)
+    expect(page).to have_css("#suggested-topics a.badge-notification")
+
+    find(".jt-dismiss-unread__button").click
+    find(".dialog-footer .btn-primary").click
+    expect(page).to have_no_css("#suggested-topics a.badge-notification")
+    expect(page).to have_no_css(".jt-dismiss-unread")
+    try_until_success do
+      expect(TopicUser.where(user: member, topic: unread).pluck(:last_read_post_number)).to all(
+        eq(2),
+      )
+    end
+    expect_no_theme_errors
+  end
+
   # The footer under search results ("No more results found.", and empty while
   # more can load) is an <h3> alone in its container, like the Users and
   # Categories & tags tabs' "No results", and came out as that big card
