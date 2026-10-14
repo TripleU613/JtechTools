@@ -2732,17 +2732,17 @@ RSpec.describe "JTech theme" do
   end
 
   # Who's Online's row of avatars sat over the topic list, in the tabs' way.
-  # It's a box beside the tabs' dropdown: faces stacked in grey and the count,
-  # opening to the right with everyone. Only where the plugin is installed
+  # It's a button beside the tabs' dropdown, "Online: 1", that pops out a box
+  # with everyone. Only where the plugin is installed
   # (CI doesn't have it).
-  it "shows who's online as a box beside the tabs that opens to the right" do
+  it "shows who's online as a button beside the tabs that pops out everyone" do
     skip("needs the Who's Online plugin") unless defined?(::DiscourseWhosOnline)
     SiteSetting.whos_online_enabled = true
     SiteSetting.whos_online_display_public = true
     SiteSetting.whos_online_minimum_display = 1
     sign_in(member)
     visit("/latest")
-    expect(page).to have_css(".jt-online-box__toggle", text: "1")
+    expect(page).to have_css(".jt-online-box__toggle", exact_text: "Online: 1")
     expect(page).to have_no_css(".online_users_widget", visible: true)
     expect(page).to have_no_css(".sidebar-section[data-section-name='jt-online']")
 
@@ -2751,7 +2751,7 @@ RSpec.describe "JTech theme" do
     expect(page).to have_css(
       ".jt-online-box__people a[href='/u/#{member.username}'] img.jt-online-box__face",
     )
-    find(".jt-online-box__label").click
+    find(".jt-online-box__toggle").click
     expect(page).to have_no_css(".jt-online-box.--open")
     expect_no_theme_errors
   end

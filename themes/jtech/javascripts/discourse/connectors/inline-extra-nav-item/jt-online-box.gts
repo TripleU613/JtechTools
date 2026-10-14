@@ -4,7 +4,6 @@ import { on } from "@ember/modifier";
 import { action } from "@ember/object";
 import { getOwner } from "@ember/owner";
 import { service } from "@ember/service";
-import { type TrustedHTML, trustHTML } from "@ember/template";
 import { settings, themePrefix } from "virtual:theme";
 import { avatarUrl } from "discourse/lib/avatar-utils";
 import getURL from "discourse/lib/get-url";
@@ -32,18 +31,15 @@ interface Face {
   user: OnlineUser;
   href: string;
   src: string;
-  style: TrustedHTML;
 }
 
-// Faces in the closed box; the open one shows up to MOST
-const STACKED = 3;
+// The most faces the open box shows; its button counts everyone online
 const MOST = 30;
 
 // Who's Online (the plugin) puts a row of avatars over the topic list, in the
-// way of the tabs. With setting online_box it's a box beside the tabs'
-// dropdown instead: a few faces stacked, in grey, and the count. Clicked, it
-// opens to the right with everyone online in full colour, one face after
-// another, each a link to their profile. It shows to the people the plugin
+// way of the tabs. With setting online_box it's a button beside the tabs'
+// dropdown instead, "Online: 3". Clicked, a box pops out under it with
+// everyone online, each face a link to their profile. It shows to the people the plugin
 // shows its row to, and only while as many people are online as the plugin's
 // own minimum.
 export default class JtOnlineBox extends Component {
@@ -77,16 +73,11 @@ export default class JtOnlineBox extends Component {
   }
 
   get faces(): Face[] {
-    return (this.whosOnline?.users ?? []).slice(0, MOST).map((user, i) => ({
+    return (this.whosOnline?.users ?? []).slice(0, MOST).map((user) => ({
       user,
       href: getURL(`/u/${user.username}`),
       src: avatarUrl(user.avatar_template, "medium"),
-      style: trustHTML(`--jt-i: ${i}`),
     }));
-  }
-
-  get stacked(): Face[] {
-    return this.faces.slice(0, STACKED);
   }
 
   @action
@@ -96,7 +87,7 @@ export default class JtOnlineBox extends Component {
       this.close();
       return;
     }
-    // The open box runs to the window's right edge at most
+    // The box stops short of the window's right edge
     const left = this.box?.getBoundingClientRect().left ?? 0;
     this.box?.style.setProperty(
       "--jt-online-room",
@@ -134,30 +125,16 @@ export default class JtOnlineBox extends Component {
         <button
           aria-expanded={{if this.open "true" "false"}}
           class="btn jt-online-box__toggle"
-          title={{i18n (themePrefix "jt.online.title") count=this.count}}
           type="button"
           {{on "click" this.toggle}}
         >
-          <span class="jt-online-box__stack">
-            {{#each this.stacked as |face|}}
-              <img alt="" class="jt-online-box__face" src={{face.src}} />
-            {{/each}}
-          </span>
-          <span class="jt-online-box__count">{{this.count}}</span>
+          {{i18n (themePrefix "jt.online.box") count=this.count}}
         </button>
         <span class="jt-online-box__people" inert={{if this.open false true}}>
-          <button
-            class="btn btn-transparent jt-online-box__label"
-            type="button"
-            {{on "click" this.close}}
-          >
-            {{i18n (themePrefix "jt.online.title") count=this.count}}
-          </button>
           {{#each this.faces as |face|}}
             <a
               class="jt-online-box__person"
               href={{face.href}}
-              style={{face.style}}
               title={{if face.user.name face.user.name face.user.username}}
             >
               <img
