@@ -8,7 +8,7 @@ A private one-room chat inside Discourse for staff, or any groups you allow, mir
 - Supports messages, replies, edits, deletes, reactions, images, files, video, voice notes (record in the composer) and polls from Telegram.
 - Right-click a message to react, reply, copy, link, quote into a new topic, edit or delete. Double-tap to react.
 - `@mentions` and `:emoji:` suggestions, pasting or dragging files in, drafts kept while you browse, search, link previews and typing indicators.
-- An unread badge on the header icon and in the browser tab. You're only notified when you're @mentioned.
+- A count on the header icon and in the browser tab of the messages that @mention you (or a group you're in), which are also the only ones that notify you. Reading them clears it.
 - Message text is encrypted in the database.
 
 ## In Telegram
