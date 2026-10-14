@@ -2774,6 +2774,39 @@ RSpec.describe "JTech theme" do
     expect_no_theme_errors
   end
 
+  # At the end of a topic the capsule came to rest above the buttons under the
+  # topic, a second row with a second admin wrench, and on a 390px phone
+  # Reply wrapped under the icons. While those buttons show the capsule steps
+  # aside, leaving no gap, and the buttons are one row with Reply.
+  it "keeps the end of a topic to one row of buttons on a phone", mobile: true do
+    6.times { |i| Fabricate(:post, topic: topic, raw: "Reply #{i}. " + "A line. " * 60) }
+    sign_in(admin)
+    resize_window(width: 390, height: 844) do
+      visit(topic.relative_url)
+      expect(page).to have_css("#topic-progress-wrapper")
+      page.execute_script(<<~JS)
+        const footer = document.getElementById("topic-footer-buttons");
+        window.scrollTo(0, footer.getBoundingClientRect().top + scrollY - 400);
+      JS
+      expect(page).to have_css("html.jt-topic-end")
+      capsule, icons, reply, gap = page.evaluate_script(<<~JS)
+        (() => {
+          const top = (s) => Math.round(document.querySelector(s).getBoundingClientRect().top);
+          return [
+            getComputedStyle(document.querySelector("#topic-progress-wrapper")).visibility,
+            top("#topic-footer-buttons .topic-footer-main-buttons__actions"),
+            top("#topic-footer-buttons .topic-footer-main-buttons > .create"),
+            document.documentElement.scrollWidth - window.innerWidth,
+          ];
+        })()
+      JS
+      expect(capsule).to eq("hidden")
+      expect(reply).to be_within(4).of(icons)
+      expect(gap).to eq(0)
+      expect_no_theme_errors
+    end
+  end
+
   # On a phone the timeline opens as a sheet, where core's own rule makes its
   # controls a wrapping row: at 320px the last-post arrow wrapped alone, under
   # Jump to… and the first-post arrow
@@ -4114,9 +4147,12 @@ RSpec.describe "JTech theme" do
 
     visit("/latest")
     expect(page).to have_css("html.jt-vanilla")
-    # stock Discourse's topic list: its rows, not the theme's cards
+    # stock Discourse's topic list: its rows, not the theme's cards, under
+    # its row of tabs, not the dropdown
     expect(page).to have_css(".topic-list .topic-list-item")
     expect(page).to have_no_css(".topic-list.jt-cards")
+    expect(page).to have_css("#navigation-bar > li > a.active")
+    expect(page).to have_no_css(".list-control-toggle-link-trigger")
     background, header, sprite = page.evaluate_script(<<~JS)
       [
         getComputedStyle(document.body).backgroundColor,

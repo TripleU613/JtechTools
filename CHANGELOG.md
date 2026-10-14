@@ -6,7 +6,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **New**
 
-- JTech theme: the Discourse palette is stock Discourse, not only its colours. Picked, the forum takes Discourse's look: its topic lists (rows, not the theme's cards), its shades instead of the flattened black and white (solid lines, its hover and selection tints), colour where Discourse has it (category icons and badges, letter avatars, the timeline, the online ring), 4px corners, round avatars, a solid header, uppercase sidebar headings, and Font Awesome icons instead of Lucide. Its dark version is on JTech Dim's soft greys, with Discourse's blue and a top bar darker than the page; JTech Dim itself goes, and whoever had picked it moves to Discourse Dark.
+- JTech theme: the Discourse palette is stock Discourse, not only its colours. Picked, the forum takes Discourse's look: its topic lists (rows, not the theme's cards) under its row of tabs and Who's Online's own row, its shades instead of the flattened black and white (solid lines, its hover and selection tints), colour where Discourse has it (category icons and badges, letter avatars, the timeline, the online ring), 4px corners, round avatars, a solid header, uppercase sidebar headings, and Font Awesome icons instead of Lucide. Its dark version is on JTech Dim's soft greys, with Discourse's blue and a top bar darker than the page; JTech Dim itself goes, and whoever had picked it moves to Discourse Dark.
 - JTech theme: a Dismiss all button under a topic's New & Unread Topics, beside "There are 37 unread topics remaining". It marks every new and unread topic read in one go (after asking), as Dismiss does on /unread and /new; before, each one had to be opened to go away.
 - JTech theme: list density, like Gmail's. A density button in the sidebar footer, beside the palette button (in the ☰ menu on a phone): Default, Comfortable (cards without the excerpt and picture) or Compact (one row a topic). Kept in your browser. Setting: `density_menu`.
 - JTech theme: with the Who's Online plugin, a button beside the topic list's tabs, Online: 3, instead of the plugin's row of avatars over the list. Click it and a box pops out with everyone online, each a link to their profile. Setting: `online_box`.
@@ -150,6 +150,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Fixed**
 
+- JTech theme: the end of a topic on a phone was two rows, the progress capsule resting above the buttons with a second admin wrench, and on a 390px phone Reply wrapped under the icons. The capsule steps aside while the buttons show, with no gap left, and the buttons are one row with Reply down to a 360px phone.
 - Dumbcourse: on a computer the selected post had a thick, glaring rim (a ring outside its border as well as the bar); it keeps the border and a slimmer bar now. The top bar's buttons and title line up with the content's column instead of the window's edges.
 - JTech theme: smoother scrolling on a computer. The overlay scrollbar rewrote its class on every scroll event, and the posts' width was written on the page each time the column grew as posts loaded; each write made the browser restyle. They're written only when they change now.
 - JTech theme: on a topic list the tabs' dropdown floated in the middle of the row; it sits beside the filters now.

@@ -69,6 +69,16 @@ html.jt-vanilla {
     color: var(--primary-high-or-secondary-low);
   }
 
+  // The selected tab: core's plain bar, without the theme's glow
+  .nav-pills > li > :is(a, button).active,
+  .d-tabs__nav-item.--active {
+    background-image: none;
+
+    &::after {
+      box-shadow: none;
+    }
+  }
+
   // Sections as in stock: an uppercase heading, a line under each
   .sidebar-wrapper {
     border-image: none;

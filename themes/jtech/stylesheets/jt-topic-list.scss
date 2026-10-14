@@ -189,7 +189,12 @@ html.desktop-view .list-controls .navigation-container {
 // tabs' dropdown: "Online: 3", a field like it. Clicked, a box pops out under
 // it with everyone's faces. The plugin's own row of avatars over the list
 // goes.
-body:has(.jt-online-box) .online_users_widget {
+html:not(.jt-vanilla) body:has(.jt-online-box) .online_users_widget {
+  display: none;
+}
+
+// Under a Discourse palette, the plugin's own row (jt-vanilla.scss)
+html.jt-vanilla .jt-online-box {
   display: none;
 }
 

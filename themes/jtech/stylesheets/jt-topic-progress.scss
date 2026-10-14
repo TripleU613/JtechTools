@@ -106,3 +106,34 @@
     }
   }
 }
+
+// At the end of a topic the capsule comes to rest above the buttons under
+// the topic: a second row, with a second admin wrench. While those buttons
+// are on screen (html.jt-topic-end, api-initializers/jt-topic-end) the
+// capsule steps aside, so the buttons are the one row there; its counter and
+// arrows say nothing at the end. Scrolled back up it shows again.
+// Core's sticky container keeps the capsule's height in the page, which
+// left an empty band above the buttons once it stepped aside. With no
+// height of its own the capsule hangs up out of it: the same place while it
+// floats, no room taken at the end.
+.topic-navigation.with-topic-progress {
+  height: 0;
+
+  > #topic-progress-wrapper {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+  }
+}
+
+html.jt-topic-end #topic-progress-wrapper {
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    opacity var(--jt-motion),
+    visibility 0s linear 0.18s;
+}
+
+#topic-progress-wrapper {
+  transition: opacity var(--jt-motion);
+}
