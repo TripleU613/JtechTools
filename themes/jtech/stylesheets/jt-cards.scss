@@ -505,7 +505,10 @@
 // theme's own phone-wide ring for the plugin (jt-extras.scss).
 html.whos-online-glow,
 html.whos-online-ring {
-  .topic-list-item.last-poster-online .jt-card .jt-card__people img.avatar.avatar {
+  .topic-list-item.last-poster-online
+    .jt-card
+    .jt-card__people
+    img.avatar.avatar {
     box-shadow: none;
   }
 
