@@ -4,7 +4,8 @@
 // jt-mono and the timeline leave them alone under this class) and the theme's
 // tokens take stock Discourse's: solid lines in the palette's greys, its
 // hover and selection tints, 4px corners, round avatars, a solid header.
-// Layout (cards, spacing, the header's search) stays the theme's.
+// Topic lists are stock rows too (api-initializers/jt-topic-cards); spacing
+// and the header's search stay the theme's.
 html.jt-vanilla {
   --jt-border: var(--primary-low);
   --jt-border-strong: var(--primary-low-mid);

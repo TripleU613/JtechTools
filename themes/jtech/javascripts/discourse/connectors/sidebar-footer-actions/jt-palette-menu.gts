@@ -37,7 +37,7 @@ type PaletteSite = Site & {
   user_themes?: SiteTheme[] | null;
 };
 
-type PaletteUser = User & { username: string; jtech_icon_style?: string };
+type PaletteUser = User & { username: string };
 
 // A palette pair: "Ocean Light" and "Ocean Dark" are one row. A palette
 // without a partner takes the theme's default for the other mode.
@@ -112,12 +112,6 @@ export default class JtPaletteMenu extends Component {
     return settings.palette_menu && this.readFamilies().length > 1;
   }
 
-  get iconsFollowPalette(): boolean {
-    return (
-      settings.lucide_icons && this.currentUser?.jtech_icon_style !== "classic"
-    );
-  }
-
   readFamilies(): Family[] {
     const theme = this.theme;
     const schemes = (this.site.user_color_schemes ?? [])
@@ -186,9 +180,10 @@ export default class JtPaletteMenu extends Component {
         this.interfaceColor.forceLightMode();
       }
       await this.remember(family);
-      // Into or out of a Discourse palette the icons change too (Font
-      // Awesome there, Lucide elsewhere), and those are set as the page loads
-      if (vanillaShown(this.site) !== wasVanilla && this.iconsFollowPalette) {
+      // Into or out of a Discourse palette the icons and the topic lists
+      // change too (Font Awesome and stock rows there, Lucide and cards
+      // elsewhere), and those are set as the page renders
+      if (vanillaShown(this.site) !== wasVanilla) {
         window.location.reload();
       }
     } catch (error) {

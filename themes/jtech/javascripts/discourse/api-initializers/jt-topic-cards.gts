@@ -9,6 +9,7 @@ import type Topic from "discourse/models/topic";
 import JtTopicCard, {
   type JtTopicCardSignature,
 } from "../components/jt-topic-card";
+import { VANILLA_CLASS } from "../lib/jt-vanilla";
 
 // What core's topic list passes the topic-list-* transformers, as far as
 // this file reads it.
@@ -48,7 +49,8 @@ interface TopicListItemClickContext {
 
 // Discovery lists (latest/new/top/category/tag, group + user activity) and
 // the messages inbox become cards. Suggested/related lists at the foot of a
-// topic stay compact rows.
+// topic stay compact rows, and under a Discourse palette (lib/jt-vanilla)
+// every list is stock Discourse's rows.
 const CARD_CONTEXTS = [
   "discovery",
   "group-activity",
@@ -59,7 +61,8 @@ const CARD_CONTEXTS = [
 const isCardContext = ({ listContext, category }: TopicListContext): boolean =>
   settings.topic_cards &&
   CARD_CONTEXTS.includes(listContext) &&
-  !category?.doc_index_topic_id;
+  !category?.doc_index_topic_id &&
+  !document.documentElement.classList.contains(VANILLA_CLASS);
 
 const CardCell: TemplateOnlyComponent<JtTopicCardSignature> = <template>
   <JtTopicCard

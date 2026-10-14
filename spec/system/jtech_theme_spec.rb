@@ -4113,8 +4113,10 @@ RSpec.describe "JTech theme" do
     preferences.save_changes
 
     visit("/latest")
-    expect(page).to have_css(".jt-card")
     expect(page).to have_css("html.jt-vanilla")
+    # stock Discourse's topic list: its rows, not the theme's cards
+    expect(page).to have_css(".topic-list .topic-list-item")
+    expect(page).to have_no_css(".topic-list.jt-cards")
     background, header, sprite = page.evaluate_script(<<~JS)
       [
         getComputedStyle(document.body).backgroundColor,
