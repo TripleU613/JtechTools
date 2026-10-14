@@ -219,6 +219,7 @@ module DiscourseDisteleplus
           success: true,
           last_read_message_id: state&.last_read_message_id,
           unread_count: unread_count(state&.last_read_message_id),
+          unread_mention_count: Notifier.unread(current_user).count,
         },
       )
     end
@@ -290,8 +291,12 @@ module DiscourseDisteleplus
         latest_message_id: latest_id,
         last_read_message_id: state&.last_read_message_id,
         unread_count: unread_count(state&.last_read_message_id),
+        # The header badge counts only these: messages that mention the user
+        unread_mention_count: Notifier.unread(current_user).count,
         has_more: messages.any? && Message.where("id < ?", messages.first.id).exists?,
         message_bus_channel: Publisher::CHANNEL,
+        # The page listens from here, so a message sent while it loads isn't lost
+        message_bus_last_id: MessageBus.last_id(Publisher::CHANNEL),
         can_upload: true,
         voice_notes_enabled: SiteSetting.disteleplus_voice_notes_enabled,
         read_receipts_enabled: SiteSetting.disteleplus_read_receipts_enabled,

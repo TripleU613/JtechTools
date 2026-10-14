@@ -28,11 +28,11 @@ export default {
         after: "search",
         before: "hamburger",
       });
-      // Unread conversation messages count in the browser tab title, like Chat.
+      // Unread mentions count in the browser tab title, as on the header badge.
       const disteleplus = container.lookup(
         "service:disteleplus"
       ) as DisteleplusService;
-      api.addDocumentTitleCounter(() => disteleplus.unreadCount || 0);
+      api.addDocumentTitleCounter(() => disteleplus.unreadMentionCount || 0);
     });
   },
 };
