@@ -176,6 +176,54 @@ RSpec.describe "Dumbcourse" do
     end
   end
 
+  # With Discourse's Unified New on, /new.json also lists topics with unread
+  # replies, and Dumbcourse's New showed what its Unread tab shows
+  describe "New and Unread with Discourse's Unified New on" do
+    fab!(:fresh) do
+      Fabricate(:topic, user: alice, category: category, title: "Is the Qin F25 worth it?")
+    end
+
+    before do
+      SiteSetting.enable_unified_new = true
+      bob.user_option.update!(new_topic_duration_minutes: User::NewTopicDuration::ALWAYS)
+      Fabricate(:post, topic: fresh, user: alice, raw: "Thinking of getting one for my son.")
+      # bob read the first post of the flip phone topic and tracks it
+      topic.update!(highest_post_number: 2, posts_count: 2)
+      TopicUser.change(
+        bob.id,
+        topic.id,
+        last_read_post_number: 1,
+        notification_level: TopicUser.notification_levels[:tracking],
+      )
+      sign_in(bob)
+    end
+
+    it "lists only new topics under New, and topics with unread replies under Unread" do
+      phone do
+        visit "/dumb/new"
+        expect(page).to have_css(".row.topic", text: fresh.title)
+        expect(page).to have_no_css(".row.topic", text: topic.title)
+
+        visit "/dumb/unread"
+        expect(page).to have_css(".row.topic", text: topic.title)
+        expect(page).to have_no_css(".row.topic", text: fresh.title)
+      end
+    end
+
+    it "dismisses the new topics from New, and leaves the unread ones" do
+      phone do
+        visit "/dumb/new"
+        expect(page).to have_css(".row.topic", text: fresh.title)
+        press("9")
+        find(".sheet-item", text: "Dismiss all new").click
+        find(".dialog [data-ok]").click
+        expect(page).to have_no_css(".row.topic", text: fresh.title)
+      end
+      expect(DismissedTopicUser.exists?(user: bob, topic: fresh)).to eq(true)
+      expect(TopicUser.get(topic, bob).last_read_post_number).to eq(1)
+    end
+  end
+
   describe "reading and writing with the D-pad" do
     before { sign_in(bob) }
 

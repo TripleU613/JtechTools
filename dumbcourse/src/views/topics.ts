@@ -118,6 +118,10 @@ export function renderTopicList(
   const params = (p: number): string => {
     const q: Record<string, string | number | null> = { page: p || null };
     if (spec.view === "top") q.period = period;
+    // With Discourse's Unified New on, New also lists unread topics; here
+    // Unread has its own tab, so New asks for new topics only (ignored
+    // while it's off).
+    if (spec.view === "new") q.subset = "topics";
     if (settings.paginationEnabled) q.per_page = settings.topicsPerPage;
     return buildQuery(q);
   };
@@ -292,7 +296,9 @@ export function renderTopicList(
     confirmDialog("Mark every new topic here as seen?", { ok: "Dismiss" }).then(
       (ok) => {
         if (!ok) return;
-        const body: Record<string, unknown> = {};
+        // Unified New dismisses nothing unless told what (and ignores this
+        // while it's off)
+        const body: Record<string, unknown> = { dismiss_topics: true };
         if (spec.categoryId) body.category_id = spec.categoryId;
         if (spec.tag) body.tag_name = spec.tag;
         put("/topics/reset-new.json", body).then(
