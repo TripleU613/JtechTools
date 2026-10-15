@@ -6,21 +6,15 @@ require_relative "../../db/migrate/20261015000001_keep_features_on_for_existing_
 # the forum does (db/migrate/20261015000001 keeps them on there). Specs about
 # a feature being off switch it off themselves.
 #
-# Registered from before(:suite) so it runs after core's per-example
-# TestSetup (which resets site settings) rather than before it.
+# On is made their default for the run, as core does for Gravatar downloads
+# (spec/support/site_settings_provider.rb): each example's reset lands on it,
+# and fab! blocks see it. A per-example hook can't do it: one registered late
+# runs after a spec's own before, one registered early before core's reset.
 RSpec.configure do |config|
   config.before(:suite) do
-    switch_on = -> do
-      KeepFeaturesOnForExistingInstalls::SETTINGS.each do |name|
-        SiteSetting.set(name, true) if SiteSetting.respond_to?(name)
-      end
+    KeepFeaturesOnForExistingInstalls::SETTINGS.each do |name|
+      SiteSetting.defaults.set_regardless_of_locale(name.to_sym, true)
     end
-
-    RSpec.configure do |late|
-      # first, so a spec's own before can switch one off, and before each
-      # group too, for what its fab! blocks create
-      late.prepend_before(:context) { switch_on.call }
-      late.prepend_before(:each) { switch_on.call }
-    end
+    SiteSetting.refresh!
   end
 end

@@ -76,9 +76,13 @@ RSpec.describe "DiscourseModCategories plugin.rb" do
   describe "settings registration" do
     # A new install starts with everything off (forums that already ran the
     # plugin keep them on: db/migrate/20261015000001)
+    # read from settings.yml: the specs run with these on as their default
+    # (spec/support/jtech_features_on.rb)
     it "starts every feature, the master switch and the theme off" do
+      settings =
+        YAML.load_file(File.expand_path("../config/settings.yml", __dir__)).values.reduce(:merge)
       KeepFeaturesOnForExistingInstalls::SETTINGS.each do |setting|
-        expect(SiteSetting.defaults[setting.to_sym]).to eq(false), setting
+        expect(settings.dig(setting, "default")).to eq(false), setting
       end
     end
 
