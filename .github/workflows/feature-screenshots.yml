@@ -137,7 +137,7 @@ jobs:
             plugins/${{ env.PLUGIN_NAME }}/spec/system/popup_notifications_screenshots_spec.rb \
             plugins/${{ env.PLUGIN_NAME }}/spec/system/popup_notifications_stacking_screenshots_spec.rb \
             plugins/${{ env.PLUGIN_NAME }}/spec/system/popup_notifications_click_through_spec.rb \
-            plugins/${{ env.PLUGIN_NAME }}/spec/system/jtech_theme_spec.rb
+            plugins/${{ env.PLUGIN_NAME }}/spec/system/jtech_theme_part*_spec.rb
         continue-on-error: true
 
       - name: Upload feature screenshots (always)

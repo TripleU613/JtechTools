@@ -31,6 +31,7 @@ RSpec/ContextWording:
 Lint/Debugger:
   Exclude:
     - "spec/system/**/*.rb"
+    - "spec/support/jtech_theme_context.rb" # the theme system specs' setup
 
 # Existing pattern in moderator_messages_spec.rb (inherited).
 # (Renamed in rubocop-capybara >= 2.23: Capybara/CurrentPathExpectation moved
