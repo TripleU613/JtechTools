@@ -126,13 +126,16 @@ RSpec.describe "Moderator-note notifications" do
       expect(notification.post_number).to eq(topic.reload.highest_post_number)
     end
 
-    it "notifies admins the same way when an admin sets the note" do
+    # an admin's note is the admins' (spec/requests/notes_admins_only_spec.rb)
+    it "notifies the other admins, and no moderators, when an admin sets the note" do
+      other_admin = Fabricate(:admin)
       sign_in(admin)
 
       set_note
 
-      expect(custom_notifications(moderator).count).to eq(1)
-      expect(custom_notifications(other_moderator).count).to eq(1)
+      expect(custom_notifications(other_admin).count).to eq(1)
+      expect(custom_notifications(moderator).count).to eq(0)
+      expect(custom_notifications(other_moderator).count).to eq(0)
       expect(custom_notifications(admin).count).to eq(0)
     end
 
