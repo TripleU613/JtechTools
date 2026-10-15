@@ -1,9 +1,7 @@
 import Component from "@glimmer/component";
-import { tracked } from "@glimmer/tracking";
-import { on } from "@ember/modifier";
-import { action } from "@ember/object";
 import { getOwner } from "@ember/owner";
 import { service } from "@ember/service";
+import { type TrustedHTML, trustHTML } from "@ember/template";
 import { settings, themePrefix } from "virtual:theme";
 import { avatarUrl } from "discourse/lib/avatar-utils";
 import getURL from "discourse/lib/get-url";
@@ -31,32 +29,25 @@ interface Face {
   user: OnlineUser;
   href: string;
   src: string;
+  style: TrustedHTML;
 }
 
-// The most faces the open box shows; its button counts everyone online
-const MOST = 30;
+// The most faces the row shows; "Online: 3" counts everyone
+const MOST = 40;
 
 // Who's Online (the plugin) puts a row of avatars over the topic list, in the
-// way of the tabs. With setting online_box it's a button beside the tabs'
-// dropdown instead, "Online: 3". Clicked, a box pops out under it with
-// everyone online, each face a link to their profile. It shows to the people the plugin
-// shows its row to, and only while as many people are online as the plugin's
-// own minimum.
+// way of the tabs. With setting online_box it's beside the tabs' dropdown
+// instead: "Online: 3" and the faces of the people online, spread out in a
+// row into the room up to New Topic, each a link to their profile. More than
+// fit fade out at the row's end. It shows to the people the plugin shows its
+// row to, and only while as many people are online as the plugin's own
+// minimum.
 export default class JtOnlineBox extends Component {
   @service declare siteSettings: OnlineSiteSettings;
-
-  @tracked open = false;
-  box: HTMLElement | null = null;
 
   whosOnline = getOwner(this)?.lookup("service:whos-online") as
     | WhosOnline
     | undefined;
-
-  willDestroy() {
-    super.willDestroy();
-    document.removeEventListener("click", this.outside, true);
-    document.removeEventListener("keydown", this.escape);
-  }
 
   get shown(): boolean {
     const online = this.whosOnline;
@@ -73,68 +64,26 @@ export default class JtOnlineBox extends Component {
   }
 
   get faces(): Face[] {
-    return (this.whosOnline?.users ?? []).slice(0, MOST).map((user) => ({
+    return (this.whosOnline?.users ?? []).slice(0, MOST).map((user, i) => ({
       user,
       href: getURL(`/u/${user.username}`),
       src: avatarUrl(user.avatar_template, "medium"),
+      style: trustHTML(`--jt-i: ${i}`),
     }));
-  }
-
-  @action
-  toggle(event: Event) {
-    this.box = (event.currentTarget as HTMLElement).closest(".jt-online-box");
-    if (this.open) {
-      this.close();
-      return;
-    }
-    // The box stops short of the window's right edge
-    const left = this.box?.getBoundingClientRect().left ?? 0;
-    this.box?.style.setProperty(
-      "--jt-online-room",
-      `${window.innerWidth - left - 12}px`
-    );
-    this.open = true;
-    document.addEventListener("click", this.outside, true);
-    document.addEventListener("keydown", this.escape);
-  }
-
-  @action
-  close() {
-    this.open = false;
-    document.removeEventListener("click", this.outside, true);
-    document.removeEventListener("keydown", this.escape);
-  }
-
-  @action
-  outside(event: MouseEvent) {
-    if (!this.box?.contains(event.target as Node)) {
-      this.close();
-    }
-  }
-
-  @action
-  escape(event: KeyboardEvent) {
-    if (event.key === "Escape") {
-      this.close();
-    }
   }
 
   <template>
     {{#if this.shown}}
-      <span class="jt-online-box {{if this.open '--open'}}">
-        <button
-          aria-expanded={{if this.open "true" "false"}}
-          class="btn jt-online-box__toggle"
-          type="button"
-          {{on "click" this.toggle}}
-        >
+      <span class="jt-online-box">
+        <span class="jt-online-box__label">
           {{i18n (themePrefix "jt.online.box") count=this.count}}
-        </button>
-        <span class="jt-online-box__people" inert={{if this.open false true}}>
+        </span>
+        <span class="jt-online-box__people">
           {{#each this.faces as |face|}}
             <a
               class="jt-online-box__person"
               href={{face.href}}
+              style={{face.style}}
               title={{if face.user.name face.user.name face.user.username}}
             >
               <img

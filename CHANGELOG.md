@@ -152,6 +152,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Fixed**
 
+- JTech theme: Who's Online beside the topic list's tabs is Online: 3 and the faces of the people online in a row at all times, spread out into the room up to New Topic (fading at its end when more are online than fit), instead of a box that popped out on a click.
 - JTech theme: reader mode centres the reading column itself, the timeline hanging to its right (centring the two together left the text off to the left), with the title over the column; and its switch and Aa button are the same bordered squares as the admin wrench beside them.
 - JTech theme: reader mode reworked. The topic stands in the middle of the window instead of at its left edge; the width setting changes the column again (it did nothing); its settings are one Aa button beside the switch, with labelled Text size, Width and Font rows, instead of five bare icons under it that stretched the admin wrench into a tall bar; and the header and the posts' buttons ease back to 60% (they faded to a third), the timeline staying as it is.
 - JTech theme: a topic opens from anywhere on its row in every list (New & Unread under a topic, the Discourse palette's rows, Compact density), not only from its title, as the cards already did.

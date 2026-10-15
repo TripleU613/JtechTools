@@ -2732,27 +2732,31 @@ RSpec.describe "JTech theme" do
   end
 
   # Who's Online's row of avatars sat over the topic list, in the tabs' way.
-  # It's a button beside the tabs' dropdown, "Online: 1", that pops out a box
-  # with everyone. Only where the plugin is installed
-  # (CI doesn't have it).
-  it "shows who's online as a button beside the tabs that pops out everyone" do
+  # Beside the tabs' dropdown, "Online: 1" and the faces of the people online
+  # in a row, shown at all times, the row taking the room up to New Topic.
+  # Only where the plugin is installed (CI doesn't have it).
+  it "shows who's online beside the tabs as a row of faces" do
     skip("needs the Who's Online plugin") unless defined?(::DiscourseWhosOnline)
     SiteSetting.whos_online_enabled = true
     SiteSetting.whos_online_display_public = true
     SiteSetting.whos_online_minimum_display = 1
     sign_in(member)
     visit("/latest")
-    expect(page).to have_css(".jt-online-box__toggle", exact_text: "Online: 1")
-    expect(page).to have_no_css(".online_users_widget", visible: true)
-    expect(page).to have_no_css(".sidebar-section[data-section-name='jt-online']")
-
-    find(".jt-online-box__toggle").click
-    expect(page).to have_css(".jt-online-box.--open")
+    expect(page).to have_css(".jt-online-box__label", exact_text: "Online: 1")
     expect(page).to have_css(
       ".jt-online-box__people a[href='/u/#{member.username}'] img.jt-online-box__face",
     )
-    find(".jt-online-box__toggle").click
-    expect(page).to have_no_css(".jt-online-box.--open")
+    expect(page).to have_no_css(".online_users_widget", visible: true)
+    tops, overflow = page.evaluate_script(<<~JS)
+      [
+        [".category-breadcrumb", "#navigation-bar", "#create-topic"].map((s) =>
+          Math.round(document.querySelector(`.list-controls ${s}`).getBoundingClientRect().top)
+        ),
+        document.documentElement.scrollWidth - window.innerWidth,
+      ]
+    JS
+    expect(tops.uniq.size).to eq(1)
+    expect(overflow).to eq(0)
     expect_no_theme_errors
   end
 

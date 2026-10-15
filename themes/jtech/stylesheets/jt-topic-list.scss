@@ -192,9 +192,9 @@ html.desktop-view .list-controls .navigation-container {
 }
 
 // Who's Online (connectors/inline-extra-nav-item/jt-online-box), beside the
-// tabs' dropdown: "Online: 3", a field like it. Clicked, a box pops out under
-// it with everyone's faces. The plugin's own row of avatars over the list
-// goes.
+// tabs' dropdown: "Online: 3" and the people's faces in a row, spread out
+// into the room up to New Topic. The plugin's own row of avatars over the
+// list goes.
 html:not(.jt-vanilla) body:has(.jt-online-box) .online_users_widget {
   display: none;
 }
@@ -208,71 +208,66 @@ html.jt-vanilla .jt-online-box {
   align-items: center;
 }
 
+// The row takes the room that's left, and only that: its own width is
+// nothing (the faces would otherwise ask for all of theirs and push the
+// filters onto a line of their own), so it grows into the free space and
+// no further
+.list-controls #navigation-bar:has(.jt-online-box) {
+  flex: 1 1 auto;
+  min-width: 0;
+
+  > li:has(.jt-online-box) {
+    display: flex;
+    flex: 1 1 0;
+    min-width: 0;
+
+    > * {
+      display: flex;
+      flex: 1 1 0;
+      min-width: 0;
+    }
+  }
+}
+
 // spaced on itself: a gap on the tabs' row would also space the outlet's
 // empty item where there's no box, and the row is tight at 900px
 .jt-online-box {
-  position: relative;
-  display: inline-flex;
-  margin-left: var(--space-2);
-}
-
-.jt-online-box__toggle.btn {
-  height: 100%;
-  min-height: 2.4rem;
-  padding: 0 0.75rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--jt-text-muted);
-  background: var(--jt-surface);
-  border: 1px solid var(--jt-border-strong);
-  border-radius: var(--jt-radius-field);
-
-  &:hover,
-  &[aria-expanded="true"] {
-    color: var(--jt-text);
-    background: var(--jt-surface);
-    border-color: var(--jt-text-subtle);
-  }
-}
-
-.jt-online-box__people {
-  position: absolute;
-  top: calc(100% + 0.375rem);
-  left: 0;
-  z-index: z("dropdown");
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.375rem;
-  box-sizing: border-box;
-  width: max-content;
-  max-width: min(18rem, var(--jt-online-room, 18rem));
-  padding: 0.5rem;
-  background: var(--jt-surface-raised);
-  border: 1px solid var(--jt-border-strong);
-  border-radius: var(--jt-radius-md);
-  box-shadow: var(--shadow-dropdown);
-  visibility: hidden;
-  opacity: 0;
-  transform: translateY(-0.25rem);
-  transform-origin: top left;
-  transition:
-    opacity 0.15s ease-out,
-    transform 0.15s ease-out,
-    visibility 0s linear 0.15s;
+  flex: 1 1 0;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  margin-left: var(--space-3);
+}
 
-  .--open > & {
-    visibility: visible;
-    opacity: 1;
-    transform: none;
-    transition:
-      opacity 0.15s ease-out,
-      transform 0.15s ease-out,
-      visibility 0s;
-  }
+.jt-online-box__label {
+  flex: none;
+  font-size: var(--jt-text-sm);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--jt-text-muted);
+}
+
+// More faces than fit fade out at the row's end rather than wrap
+.jt-online-box__people {
+  display: flex;
+  flex: 1 1 0;
+  align-items: center;
+  gap: 0.375rem;
+  width: 0;
+  min-width: 0;
+  overflow: hidden;
+  mask-image: linear-gradient(to right, #000 calc(100% - 2.5rem), transparent);
 }
 
 .jt-online-box__person {
   display: flex;
+  flex: none;
   border-radius: var(--jt-radius-avatar);
+
+  // in one after another, sideways, as the list comes in
+  animation: jt-online-in 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+  animation-delay: calc(min(var(--jt-i, 0), 16) * 35ms);
 
   &:hover,
   &:focus-visible {
@@ -280,15 +275,22 @@ html.jt-vanilla .jt-online-box {
   }
 }
 
+@keyframes jt-online-in {
+  from {
+    opacity: 0;
+    transform: translateX(-0.5rem);
+  }
+}
+
 .jt-online-box__face {
-  width: 2rem;
-  height: 2rem;
+  width: 1.75rem;
+  height: 1.75rem;
   border-radius: var(--jt-radius-avatar);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .jt-online-box__people {
-    transition: none !important;
+  .jt-online-box__person {
+    animation: none;
   }
 }
 
