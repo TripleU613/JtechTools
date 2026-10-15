@@ -28,7 +28,7 @@ Admin → Plugins → Jtech Tools → **Listing format**. The full text of each 
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `listing_format_enabled` | `true` | Makes posts in the topics below follow a set format, for sale threads where every post is a listing. |
+| `listing_format_enabled` | `false` | Makes posts in the topics below follow a set format, for sale threads where every post is a listing. |
 | `listing_format_topics` | (none) | Topics where the format applies. |
 | `listing_format_fields` | `ITEM\|QUANTITY\|CONDITION\|SPECS\|IMAGES\|PICKUP LOCATION OR SHIPPING AVAILABLE` | Sections each listing needs. |
 | `listing_format_single_choice` | `CONDITION: New, Like new, Used, For parts` | Sections where the reply form offers options to pick one of. |

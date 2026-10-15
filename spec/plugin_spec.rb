@@ -74,10 +74,12 @@ RSpec.describe "DiscourseModCategories plugin.rb" do
   end
 
   describe "settings registration" do
-    it "registers mod_categories_enabled with the correct default" do
-      # Defaulted ON in 2026-08 — the dark master toggle was silently hiding
-      # pinned posts and the shield feed on deployed sites.
-      expect(SiteSetting.defaults[:mod_categories_enabled]).to eq(true)
+    # A new install starts with everything off (forums that already ran the
+    # plugin keep them on: db/migrate/20261015000001)
+    it "starts every feature, the master switch and the theme off" do
+      KeepFeaturesOnForExistingInstalls::SETTINGS.each do |setting|
+        expect(SiteSetting.defaults[setting.to_sym]).to eq(false), setting
+      end
     end
 
     it "registers precheck_new_topic_enabled defaulting to true" do
@@ -110,8 +112,6 @@ RSpec.describe "DiscourseModCategories plugin.rb" do
         mod_note_view_tracking_enabled
         mod_notes_feed_enabled
         mod_notify_staff_on_topic_notes
-        mod_auto_mark_notifications_seen
-        mod_notification_type_filter_enabled
         mod_pin_post_enabled
         mod_topic_require_reply_approval_enabled
         mod_pm_badge_group_enabled
@@ -140,10 +140,6 @@ RSpec.describe "DiscourseModCategories plugin.rb" do
   end
 
   describe "translator-tweaks settings registration" do
-    it "registers the module master switch, on by default (preserves shipped behavior)" do
-      expect(SiteSetting.defaults[:translator_tweaks_enabled]).to eq(true)
-    end
-
     it "defaults the worker URL to the proxy the module used to hard-code" do
       expect(SiteSetting.defaults[:translator_tweaks_worker_url]).to eq(
         "https://google-translate-worker.abesternheim.workers.dev/language/translate/v2",

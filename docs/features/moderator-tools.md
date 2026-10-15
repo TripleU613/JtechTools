@@ -57,7 +57,7 @@ Admin → Plugins → Jtech Tools → **Mod**. The full text of each setting is 
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `mod_categories_enabled` | `true` | Master switch for the moderator tools in this module — topic tools, checklists, private staff notes and staff event notifications. |
+| `mod_categories_enabled` | `false` | Master switch for the moderator tools in this module — topic tools, checklists, private staff notes and staff event notifications. |
 | `precheck_new_topic_enabled` | `true` | Shows a "before you post" prompt when a user starts a topic in a category that has one set. |
 | `topic_footer_message_enabled` | `true` | Lets moderators pin a message below the last reply of a topic. |
 | `mod_pin_post_enabled` | `true` | Lets moderators pin any post in a topic to the bottom of that topic. |
@@ -77,9 +77,9 @@ Admin → Plugins → Jtech Tools → **Mod**. The full text of each setting is 
 | `mod_notify_staff_on_user_notes` | `true` | Notifies every other staff member when a moderator adds a note to a user's profile. |
 | `mod_notify_staff_on_flag_notes` | `true` | Notifies every other staff member when a moderator adds a note to a flag or other reviewable in the review queue. |
 | `mod_notify_whisper_targets` | `true` | Sends a bell notification to a whisper's audience when one is posted, and to a user when staff add them to a whisper. |
-| `mod_auto_mark_notifications_seen` | `true` | Opening a topic, or the review queue, marks THIS plugin's own note and whisper notifications for it as read. |
-| `mod_notification_type_filter_enabled` | `true` | Adds a type filter to the user notifications page, plus a staff-only mod-notes stream. |
-| `mod_whisper_enabled` | `true` | Master switch for creating whispers — independent of Enable Mod, so whispers keep working when the rest of the module is off. |
+| `mod_auto_mark_notifications_seen` | `false` | Opening a topic, or the review queue, marks THIS plugin's own note and whisper notifications for it as read. |
+| `mod_notification_type_filter_enabled` | `false` | Adds a type filter to the user notifications page, plus a staff-only mod-notes stream. |
+| `mod_whisper_enabled` | `false` | Master switch for creating whispers — independent of Enable Mod, so whispers keep working when the rest of the module is off. |
 | `mod_whisper_add_participant_enabled` | `true` | Lets staff add users to an existing whisper. |
 | `mod_whisper_convert_enabled` | `true` | Lets staff turn an existing post into a whisper and back, and retarget its audience. |
 | `mod_whisper_badge_targeting_enabled` | `true` | Lets staff target whispers at badge holders as well as users and groups. |

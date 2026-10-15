@@ -34,7 +34,7 @@ Admin → Plugins → Jtech Tools → **Dumbcourse**. The full text of each sett
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `dumbcourse_enabled` | `true` | Serve the Dumbcourse single-page app at the base path below. |
+| `dumbcourse_enabled` | `false` | Serve the Dumbcourse single-page app at the base path below. |
 | `dumbcourse_base_path` | `dumb` | First URL segment the app is served from, without slashes — "dumb" serves it at /dumb. |
 | `dumbcourse_default_theme` | `auto` | Colour scheme applied the first time someone opens the app. |
 | `dumbcourse_default_view` | `latest` | Topic list shown when someone opens the app at its root URL. |

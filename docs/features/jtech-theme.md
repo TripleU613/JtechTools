@@ -88,7 +88,7 @@ JTech replaces the forum's theme components: each one it covers has a JTech sett
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `jtech_theme_install` | on | Install the bundled theme and update it when the plugin updates. Never made the default. Turning it on installs now and brings back a deleted theme. |
+| `jtech_theme_install` | off | Install the bundled theme and update it when the plugin updates. Never made the default. Turning it on installs now and brings back a deleted theme. |
 
 The look itself is configured in the theme's own settings (corner style, cards, hero text, footer links, header home link and the other switches).
 

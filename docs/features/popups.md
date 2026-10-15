@@ -15,7 +15,7 @@ Admin → Plugins → Jtech Tools → **Pop-ups**. The full text of each setting
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `popup_notifications_enabled` | `true` | Show a small pop-up card in the top-right corner when a notification arrives. |
+| `popup_notifications_enabled` | `false` | Show a small pop-up card in the top-right corner when a notification arrives. |
 | `popup_notifications_default_enabled` | `false` | What "Desktop Pop Up Notifications" starts out as for users who have never touched it on their account page. |
 | `popup_notifications_timeout_seconds` | `20` | How long a card stays on screen before it disappears on its own. |
 | `popup_notifications_max_stack` | `3` | How many cards may be stacked at once. |

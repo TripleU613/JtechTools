@@ -40,7 +40,7 @@ Admin → Plugins → Jtech Tools → **REQ-PM**. The full text of each setting 
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `reqpm_enabled` | `true` | REQ-PM lets members exchange contact details (phone, text, WhatsApp, email, website, or their own custom ones) instead of private messages. |
+| `reqpm_enabled` | `false` | REQ-PM lets members exchange contact details (phone, text, WhatsApp, email, website, or their own custom ones) instead of private messages. |
 | `reqpm_allowed_groups` | `10` | Groups that can use REQ-PM (send, request and receive). |
 | `reqpm_setup_prompt` | `gentle` | How strongly members without any contact details are asked to add some — new signups and existing members alike. |
 | `reqpm_setup_snooze_days` | `7` | How long "Remind me later" hides the setup window for. |

@@ -148,6 +148,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Changed**
 
+- A new install starts with everything off: the master switch `jtech_enabled`, every feature, the JTech theme (`jtech_theme_install`) and its app icon (`jtech_app_icon`). Turn on what you want under Admin → Plugins → Jtech Tools. Forums that already ran the plugin keep everything as it was.
 - JTech theme: the topic list's tabs (Latest, New, Unread, Top…) are one dropdown on a computer too, as on a phone and as Discourse's Compact Nav component does. As a row they ran out of room beside the filters and New Topic and scrolled sideways.
 
 **Fixed**

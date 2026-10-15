@@ -15,7 +15,7 @@
 # ───────────────────────────────────────────────────────────────────────────
 jtech:
   jtech_enabled:
-    default: true
+    default: false
     client: true
   # Themes (by id) whose topic list rows open from anywhere on the row and
   # bounce when pressed. 1 is this forum's "Default" theme. Leave JTech out: its
@@ -28,12 +28,12 @@ jtech:
   # The bundled JTech theme (themes/jtech): installed and kept up to date on
   # rebuilds, never made the default.
   jtech_theme_install:
-    default: true
+    default: false
     client: false
   # The installed app's icon (web manifest): the JTech mark on a solid square
   # instead of the uploaded manifest_icon, which is see-through.
   jtech_app_icon:
-    default: true
+    default: false
     client: false
   # Members without a flair of their own show their trust level group's
   # (lib/discourse_trust_level_flair.rb). Off by default: it sets users' flair.
@@ -48,7 +48,7 @@ jtech_dislike:
   # Master switch (kept under its historical name; renaming a setting
   # orphans its stored value).
   discourse_no_likes_enabled:
-    default: true
+    default: false
     client: false
 
   # Scope — which categories trigger phantom-reaction behavior. Empty means
@@ -315,7 +315,7 @@ jtech_mini_mod:
 # ───────────────────────────────────────────────────────────────────────────
 jtech_mod:
   mod_categories_enabled:
-    default: true
+    default: false
     client: true
 
 # ───────────────────────────────────────────────────────────────────────────
@@ -449,10 +449,10 @@ jtech_mod_notifications:
 
   # Plumbing — both run independently of the module master.
   mod_auto_mark_notifications_seen:
-    default: true
+    default: false
     client: true
   mod_notification_type_filter_enabled:
-    default: true
+    default: false
     client: true
 
 # ───────────────────────────────────────────────────────────────────────────
@@ -460,7 +460,7 @@ jtech_mod_notifications:
 # ───────────────────────────────────────────────────────────────────────────
 jtech_mod_whispers:
   mod_whisper_enabled:
-    default: true
+    default: false
     client: true
   mod_whisper_add_participant_enabled:
     default: true
@@ -495,7 +495,7 @@ jtech_translator:
   # Master switch. Default true preserves the behavior this module has
   # shipped with since it was written (it had no off switch at all).
   translator_tweaks_enabled:
-    default: true
+    default: false
     client: false
 
   # The value the module used to hard-code. Blank means "leave upstream
@@ -560,7 +560,7 @@ jtech_popup_notifications:
   # preference on the account page is hidden. Read at page boot, hence
   # refresh: true — open tabs need a reload to pick the change up.
   popup_notifications_enabled:
-    default: true
+    default: false
     client: true
     refresh: true
 
@@ -634,7 +634,7 @@ jtech_popup_notifications:
 jtech_dumbcourse:
   # Master switch.
   dumbcourse_enabled:
-    default: true
+    default: false
     client: true
 
   # Where the SPA mounts. Validated: must be a single URL segment and not a
@@ -1248,7 +1248,7 @@ jtech_reqpm:
   # Master switch. Read at page boot (button, header icon, prompt), hence
   # refresh: true.
   reqpm_enabled:
-    default: true
+    default: false
     client: true
     refresh: true
 
@@ -1337,7 +1337,7 @@ jtech_reqpm:
 # ───────────────────────────────────────────────────────────────────────────
 jtech_listing_format:
   listing_format_enabled:
-    default: true
+    default: false
     client: false
   # Topic numbers or addresses. Empty = the module does nothing.
   listing_format_topics:

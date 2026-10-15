@@ -18,7 +18,7 @@ Admin → Plugins → Jtech Tools → **Dislike**. The full text of each setting
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| `discourse_no_likes_enabled` | `true` | Turn on phantom reactions. |
+| `discourse_no_likes_enabled` | `false` | Turn on phantom reactions. |
 | `no_reactions_category_ids` | `(blank)` | Categories in which likes and reactions are treated as "phantom". |
 | `dislike_hide_like_button` | `false` | Hide the like and reaction buttons in these categories, and reject like requests that reach the API anyway. |
 | `dislike_allowed_like_groups` | `(blank)` | Restrict liking in these categories to members of these groups; everyone else gets no like button. |
