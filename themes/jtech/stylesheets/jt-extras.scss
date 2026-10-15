@@ -89,9 +89,10 @@
   width: max-content;
   margin-left: auto;
 
-  // the buttons at the same edge (core places them absolutely, at the left)
+  // the buttons flush with the column's left edge, under reader mode's
+  // buttons at the top (core places them absolutely, 10px in)
   .timeline-footer-controls {
-    right: 0;
+    left: 0;
   }
 }
 
