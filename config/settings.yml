@@ -18,12 +18,11 @@ jtech:
     default: false
     client: true
   # Themes (by id) whose topic list rows open from anywhere on the row and
-  # bounce when pressed. 1 is this forum's "Default" theme. Leave JTech out: its
-  # cards already do this.
+  # bounce when pressed. Leave JTech out: its cards already do this.
   jtech_row_click_theme_ids:
     type: list
     list_type: simple
-    default: "1"
+    default: ""
     client: true
   # The bundled JTech theme (themes/jtech): installed and kept up to date on
   # rebuilds, never made the default.
@@ -503,7 +502,7 @@ jtech_translator:
   # are Ruby constants, so a change needs an app restart. The confirmation
   # dialog says so at the moment of editing.
   translator_tweaks_worker_url:
-    default: https://google-translate-worker.abesternheim.workers.dev/language/translate/v2
+    default: ""
     client: false
     regex: '\Ahttps://[^\s/]+(/[^\s]*)?\z'
     regex_error: "site_settings.errors.translator_tweaks_invalid_worker_url"

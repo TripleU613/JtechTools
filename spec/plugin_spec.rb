@@ -144,10 +144,8 @@ RSpec.describe "DiscourseModCategories plugin.rb" do
   end
 
   describe "translator-tweaks settings registration" do
-    it "defaults the worker URL to the proxy the module used to hard-code" do
-      expect(SiteSetting.defaults[:translator_tweaks_worker_url]).to eq(
-        "https://google-translate-worker.abesternheim.workers.dev/language/translate/v2",
-      )
+    it "calls Google directly unless a proxy is set" do
+      expect(SiteSetting.defaults[:translator_tweaks_worker_url]).to eq("")
     end
 
     it "keeps the translator settings off the client payload" do

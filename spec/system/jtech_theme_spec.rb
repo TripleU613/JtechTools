@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "rails_helper"
+require_relative "../../db/migrate/20261015000002_keep_jtech_words_for_existing_installs"
 
 # Installs the bundled JTech theme, makes it the default and walks the main
 # pages on desktop and mobile. Fails when the theme throws, logs a theme error,
@@ -11,9 +12,16 @@ require "rails_helper"
 # Screenshots land in tmp/capybara/jtech_theme/ (uploaded by the Feature
 # Screenshots workflow).
 RSpec.describe "JTech theme" do
+  # with JTech's own words, which a new install doesn't get (their defaults
+  # are neutral): the hero's subtitle, the footer's notice, the home icon
   fab!(:jtech_theme) do
     DiscourseJtechTheme::Installer.sync_now
-    DiscourseJtechTheme::Installer.theme
+    theme = DiscourseJtechTheme::Installer.theme
+    KeepJtechWordsForExistingInstalls::THEME_SETTINGS.each do |name, (_, value)|
+      theme.update_setting(name.to_sym, value)
+    end
+    theme.save!
+    theme
   end
   fab!(:admin) { Fabricate(:admin, username: "jt_admin", name: "Jay Admin") }
   fab!(:member) do
@@ -52,9 +60,6 @@ RSpec.describe "JTech theme" do
 
   before do
     SiteSetting.jtech_enabled = true
-    # The row bounce is for the Default theme; here the JTech theme can be
-    # theme 1, the setting's default, and its cards press on their own.
-    SiteSetting.jtech_row_click_theme_ids = ""
     jtech_theme.set_default!
     DirectoryItem.refresh!
   end

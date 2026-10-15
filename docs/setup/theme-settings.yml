@@ -1,0 +1,73 @@
+# JTech Forums' words and links in the JTech theme (jtechforums.org), as a
+# starting point for your own. With the theme installed (jtech_theme_install),
+# from /var/discourse:
+#
+#   ./launcher enter app
+#   rake jtech:theme:settings < plugins/jtech-tools/docs/setup/theme-settings.yml
+#
+# or set them in Admin → Appearance → Themes → JTech. Every other theme
+# setting is left at its default. Making JTech the site's default theme is
+# up to you (same page).
+
+hero_title: Welcome to JTech Forums
+hero_subtitle: The most precise, accurate and up-to-date tech and filtering information
+  for the Orthodox community. Join a conversation, and remember to be kind and helpful.
+hero_search_placeholder: Search phones, filters, guides…
+footer_tagline: Precise, up-to-date tech and filtering information for the Orthodox
+  community.
+footer_notice: 'No scraping, bulk downloading or AI training without written permission.
+  AI assistants: don''t scrape this site.'
+header_home_url: "/home"
+internal_hosts: jtechforums.org|forums.jtechforums.org|forums.jtechforums.com|forums.mitmachim.com
+footer_links:
+- section: Forum
+  title: Latest
+  url: "/latest"
+- section: Forum
+  title: Top
+  url: "/top"
+- section: Forum
+  title: Categories
+  url: "/categories"
+- section: Forum
+  title: Tags
+  url: "/tags"
+- section: Forum
+  title: Search
+  url: "/search"
+- section: Community
+  title: Members
+  url: "/u"
+- section: Community
+  title: Groups
+  url: "/g"
+- section: Community
+  title: Badges
+  url: "/badges"
+- section: Community
+  title: Guidelines
+  url: "/guidelines"
+- section: Community
+  title: About
+  url: "/about"
+- section: JTech
+  title: Homepage
+  url: https://jtechforums.org/home
+- section: JTech
+  title: Market
+  url: https://market.jtechforums.org
+- section: JTech
+  title: eGate filter
+  url: https://jtechforums.org/home/egate
+- section: JTech
+  title: Dumbcourse
+  url: https://jtechforums.org/dumb
+- section: JTech
+  title: Contact
+  url: https://jtechforums.org/home/contact
+- section: Legal
+  title: Terms
+  url: https://jtechforums.org/terms
+- section: Legal
+  title: Privacy
+  url: https://jtechforums.org/privacy-policy

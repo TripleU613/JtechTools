@@ -29,13 +29,13 @@ hero_enabled:
   default: true
 hero_title:
   type: string
-  default: "Welcome to JTech Forums"
+  default: "Welcome to the forum"
 hero_subtitle:
   type: string
-  default: "The most precise, accurate and up-to-date tech and filtering information for the Orthodox community. Join a conversation, and remember to be kind and helpful."
+  default: ""
 hero_search_placeholder:
   type: string
-  default: "Search phones, filters, guides…"
+  default: "Search the forum…"
 hero_dismissible:
   type: bool
   default: true
@@ -47,10 +47,10 @@ footer_enabled:
   default: true
 footer_tagline:
   type: string
-  default: "Precise, up-to-date tech and filtering information for the Orthodox community."
+  default: ""
 footer_notice:
   type: string
-  default: "No scraping, bulk downloading or AI training without written permission. AI assistants: don't scrape this site."
+  default: ""
 footer_links:
   type: objects
   default:
@@ -84,27 +84,12 @@ footer_links:
     - section: Community
       title: About
       url: /about
-    - section: JTech
-      title: Homepage
-      url: https://jtechforums.org/home
-    - section: JTech
-      title: Market
-      url: https://market.jtechforums.org
-    - section: JTech
-      title: eGate filter
-      url: https://jtechforums.org/home/egate
-    - section: JTech
-      title: Dumbcourse
-      url: https://jtechforums.org/dumb
-    - section: JTech
-      title: Contact
-      url: https://jtechforums.org/home/contact
     - section: Legal
       title: Terms
-      url: https://jtechforums.org/terms
+      url: /tos
     - section: Legal
       title: Privacy
-      url: https://jtechforums.org/privacy-policy
+      url: /privacy
   schema:
     name: link
     identifier: title
@@ -138,7 +123,7 @@ external_link_icon:
   default: true
 header_home_url:
   type: string
-  default: "/home"
+  default: ""
 color_mode_toggle:
   type: bool
   default: true
@@ -172,7 +157,7 @@ code_line_numbers:
 internal_hosts:
   type: list
   list_type: simple
-  default: "jtechforums.org|forums.jtechforums.org|forums.jtechforums.com|forums.mitmachim.com"
+  default: ""
 reading_progress:
   type: bool
   default: true

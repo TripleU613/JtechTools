@@ -1,0 +1,78 @@
+# JTech Forums' plugin settings (jtechforums.org), as a starting point for your
+# own forum. Apply with core's importer, from /var/discourse:
+#
+#   ./launcher enter app
+#   rake site_settings:import < plugins/jtech-tools/docs/setup/site-settings.yml
+#
+# Leave out what you don't want; every feature is off until it's set here or
+# in Admin → Plugins → Jtech Tools. Secrets (passwords, tokens, keys) are never
+# in this file: set them in the admin pages. Lines marked "JTech's own" point
+# at our servers, topics or chats: change or drop them.
+
+# The master switch, then each feature
+jtech_enabled: true
+jtech_theme_install: true
+jtech_app_icon: true # the JTech mark as the installed app's icon: drop it for your own
+discourse_no_likes_enabled: true
+dislike_hide_like_button: true
+mod_categories_enabled: true
+mod_whisper_enabled: true
+mod_notification_type_filter_enabled: true
+mod_auto_mark_notifications_seen: true
+translator_tweaks_enabled: true
+smart_search_enabled: true
+popup_notifications_enabled: true
+popup_notifications_default_enabled: true
+dumbcourse_enabled: true
+reqpm_enabled: true
+listing_format_enabled: true
+
+# Moderator tools: JTech keeps some of them off
+mini_mod_can_create_categories: false
+mini_mod_can_edit_categories: false
+mini_mod_can_edit_topics: false
+mini_mod_can_move_topics: false
+mod_topic_require_reply_approval_enabled: false
+mod_topic_private_notes_enabled: false
+mod_note_view_tracking_enabled: false
+mod_notify_staff_on_topic_notes: false
+mod_notify_staff_on_post_actions: false
+mod_notify_staff_on_user_notes: false
+mod_notify_staff_on_flag_notes: false
+
+# Topic lists of these themes (by id) open from anywhere on a row
+jtech_row_click_theme_ids: "1" # JTech's own: our Default theme's id
+
+# Translations through a proxy of our own instead of Google directly
+translator_tweaks_worker_url: https://google-translate-worker.abesternheim.workers.dev/language/translate/v2 # JTech's own
+
+# Dumbcourse
+dumbcourse_topics_per_page: 15
+dumbcourse_push_enabled: true
+dumbcourse_languagetool_enabled: true
+dumbcourse_languagetool_mode: official_api
+dumbcourse_languagetool_api_url: https://lt.tripleu.org # JTech's own LanguageTool server
+
+# Another SMTP (its password goes in the admin page)
+discourse_another_email_smtp_address: smtp.example.com # yours
+discourse_another_email_smtp_port: 2525
+discourse_another_email_smtp_username: forum@example.com # yours
+discourse_another_email_force_from_domain: example.com # yours
+
+# Disteleplus, the Telegram bridge (bot token and webhook secret go in the
+# admin page; so does the map of Telegram people to forum accounts)
+disteleplus_enabled: true
+disteleplus_telegram_chat_id: "-1003961687207" # JTech's own group
+disteleplus_chat_channel_id: 1
+disteleplus_bridge_bot_username: JtechBridgeBot # JTech's own bot
+disteleplus_max_upload_mb: 20
+disteleplus_forum_post_link_preview: true
+disteleplus_reports_enabled: true
+disteleplus_reports_topic_id: 9809 # JTech's own topic
+disteleplus_forum_uploads_enabled: true
+disteleplus_forum_upload_topic_id: 514 # JTech's own topic
+disteleplus_forum_upload_include_restricted_categories: true
+
+# Listing format: our two for-sale threads
+listing_format_topics: "https://jtechforums.org/t/hardware-phones-computers-for-sale-thread/32|https://jtechforums.org/t/hardware-phones-computers-for-sale-thread/10276" # JTech's own
+listing_format_exempt_groups: "1"

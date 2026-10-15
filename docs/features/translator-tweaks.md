@@ -13,6 +13,6 @@ Admin → Plugins → Jtech Tools → **Translator**. The full text of each sett
 | Setting | Default | What it does |
 | --- | --- | --- |
 | `translator_tweaks_enabled` | `false` | Master switch for the Jtech tweak to the upstream discourse-translator plugin. |
-| `translator_tweaks_worker_url` | `https://google-translate-worker.abest…` | Base URL the bundled Google translate provider is pointed at instead of translation.googleapis.com — include the full /language/translate/v2 path; /detect and /languages are appended to it. |
+| `translator_tweaks_worker_url` | (blank: Google directly) | Base URL the bundled Google translate provider is pointed at instead of translation.googleapis.com — include the full /language/translate/v2 path; /detect and /languages are appended to it. |
 
 [← All features](../README.md#features)
