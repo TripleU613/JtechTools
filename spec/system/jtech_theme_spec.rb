@@ -2877,6 +2877,18 @@ RSpec.describe "JTech theme" do
     end
   end
 
+  # Only the title opened a topic in a row list (New & Unread under a topic,
+  # stock rows, compact density): the rest of the row did nothing
+  it "opens a topic from anywhere on its row, not only its title" do
+    sign_in(member)
+    visit(topic.relative_url)
+    row = find("#suggested-topics .topic-list-item", match: :first)
+    id = row["data-topic-id"]
+    row.find("td.num.views").click
+    expect(page).to have_current_path(%r{/t/[^/]+/#{id}})
+    expect_no_theme_errors
+  end
+
   # "New & Unread Topics" under a topic had no way to clear them: each one had
   # to be opened to go away
   it "dismisses the new and unread topics under a topic in one go" do
