@@ -19,7 +19,7 @@ Reply inside a topic to specific people: users, groups or everyone holding a bad
 
 ## Private notes
 
-A staff-only note on a topic, with a reply thread and a "seen by" list. New notes and replies show up in the bell and in a shield tab in the user menu, but only for staff who can see the topic.
+A staff-only note on a topic, with a reply thread and a "seen by" list. New notes and replies show up in the bell and in a shield tab in the user menu, but only for staff who can see the topic. A note an admin writes is for admins only, replies and all: moderators don't see it anywhere and can't reply to it, change it or delete it. An admin's note on a user's profile or on a flag alerts other admins only (the note itself is shown by Discourse and the user notes plugin as before).
 
 ## Staff alerts
 

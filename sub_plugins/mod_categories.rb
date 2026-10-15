@@ -495,13 +495,14 @@ after_initialize do
   end
 
   # The private moderator note is only ever serialized to staff, so a
-  # regular user's topic JSON never contains it.
+  # regular user's topic JSON never contains it; an admin's, to admins.
   add_to_serializer(
     :topic_view,
     :mod_topic_private_note,
     include_condition: -> do
       scope.is_staff? && DiscourseModCategories.enabled? &&
-        SiteSetting.mod_topic_private_notes_enabled
+        SiteSetting.mod_topic_private_notes_enabled &&
+        !DiscourseModCategories::NoteThread.hidden_from?(object.topic, scope.user)
     end,
   ) { object.topic.custom_fields[DiscourseModCategories::TOPIC_PRIVATE_NOTE_FIELD] }
   add_to_serializer(
@@ -509,7 +510,8 @@ after_initialize do
     :mod_topic_private_note_position,
     include_condition: -> do
       scope.is_staff? && DiscourseModCategories.enabled? &&
-        SiteSetting.mod_topic_private_notes_enabled
+        SiteSetting.mod_topic_private_notes_enabled &&
+        !DiscourseModCategories::NoteThread.hidden_from?(object.topic, scope.user)
     end,
   ) { object.topic.custom_fields[DiscourseModCategories::TOPIC_PRIVATE_NOTE_POSITION_FIELD] }
   # Who set the note — staff only, so the note can be shown like a post.
@@ -518,7 +520,8 @@ after_initialize do
     :mod_topic_private_note_author,
     include_condition: -> do
       scope.is_staff? && DiscourseModCategories.enabled? &&
-        SiteSetting.mod_topic_private_notes_enabled
+        SiteSetting.mod_topic_private_notes_enabled &&
+        !DiscourseModCategories::NoteThread.hidden_from?(object.topic, scope.user)
     end,
   ) { DiscourseModCategories::NoteThread.author(object.topic) }
   add_to_serializer(
@@ -526,7 +529,8 @@ after_initialize do
     :mod_topic_private_note_created_at,
     include_condition: -> do
       scope.is_staff? && DiscourseModCategories.enabled? &&
-        SiteSetting.mod_topic_private_notes_enabled
+        SiteSetting.mod_topic_private_notes_enabled &&
+        !DiscourseModCategories::NoteThread.hidden_from?(object.topic, scope.user)
     end,
   ) { object.topic.custom_fields[DiscourseModCategories::TOPIC_PRIVATE_NOTE_CREATED_AT_FIELD] }
   # The thread of staff replies to the note.
@@ -535,7 +539,8 @@ after_initialize do
     :mod_topic_private_note_replies,
     include_condition: -> do
       scope.is_staff? && DiscourseModCategories.enabled? &&
-        SiteSetting.mod_topic_private_notes_enabled
+        SiteSetting.mod_topic_private_notes_enabled &&
+        !DiscourseModCategories::NoteThread.hidden_from?(object.topic, scope.user)
     end,
   ) { DiscourseModCategories::NoteThread.replies(object.topic) }
 
@@ -547,7 +552,8 @@ after_initialize do
     :mod_topic_note_viewers,
     include_condition: -> do
       scope.is_staff? && DiscourseModCategories.enabled? &&
-        SiteSetting.mod_note_view_tracking_enabled
+        SiteSetting.mod_note_view_tracking_enabled &&
+        !DiscourseModCategories::NoteThread.hidden_from?(object.topic, scope.user)
     end,
   ) do
     DiscourseModCategories::NoteThread.viewers(

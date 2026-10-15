@@ -5,6 +5,18 @@ module DiscourseModCategories
   # every note action, so the frontend can swap one for the other without a
   # topic reload. Reply authors are loaded in one query.
   module NoteThread
+    # A note an admin wrote is the admins', replies and all: to a moderator
+    # it isn't there, as an admin's whisper isn't.
+    def self.admins_only?(topic)
+      return false if topic.custom_fields[TOPIC_PRIVATE_NOTE_FIELD].to_s.strip.empty?
+      user_id = topic.custom_fields[TOPIC_PRIVATE_NOTE_USER_FIELD]
+      user_id.present? && User.where(id: user_id.to_i, admin: true).exists?
+    end
+
+    def self.hidden_from?(topic, user)
+      !user&.admin? && admins_only?(topic)
+    end
+
     def self.author(topic)
       user_id = topic.custom_fields[TOPIC_PRIVATE_NOTE_USER_FIELD]
       user_json(user_id && User.find_by(id: user_id))

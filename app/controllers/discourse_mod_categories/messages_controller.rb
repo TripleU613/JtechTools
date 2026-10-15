@@ -51,6 +51,7 @@ module ::DiscourseModCategories
       end
       if params.key?(:private_note) || params.key?(:private_note_position)
         ensure_feature!(:mod_topic_private_notes_enabled)
+        ensure_note_visible!(topic)
       end
 
       if params.key?(:footer_message)
@@ -157,6 +158,7 @@ module ::DiscourseModCategories
 
       guardian.ensure_can_manage_mod_messages!
       ensure_feature!(:mod_topic_private_notes_enabled)
+      ensure_note_visible!(topic)
 
       raw = params[:raw].to_s.strip
       raise Discourse::InvalidParameters.new(:raw) if raw.empty?
@@ -185,6 +187,7 @@ module ::DiscourseModCategories
 
       guardian.ensure_can_manage_mod_messages!
       ensure_feature!(:mod_topic_private_notes_enabled)
+      ensure_note_visible!(topic)
 
       raw = params[:raw].to_s.strip
       raise Discourse::InvalidParameters.new(:raw) if raw.empty?
@@ -211,6 +214,7 @@ module ::DiscourseModCategories
 
       guardian.ensure_can_manage_mod_messages!
       ensure_feature!(:mod_topic_private_notes_enabled)
+      ensure_note_visible!(topic)
 
       reply_id = params[:reply_id].to_s
       with_note_lock(topic) do
@@ -234,6 +238,7 @@ module ::DiscourseModCategories
 
       guardian.ensure_can_manage_mod_messages!
       ensure_feature!(:mod_topic_private_notes_enabled)
+      ensure_note_visible!(topic)
       ensure_can_touch_note_entry!(topic.custom_fields[TOPIC_PRIVATE_NOTE_USER_FIELD])
 
       topic.custom_fields[TOPIC_PRIVATE_NOTE_FIELD] = ""
@@ -356,6 +361,7 @@ module ::DiscourseModCategories
 
       guardian.ensure_can_manage_mod_messages!
       ensure_feature!(:mod_note_view_tracking_enabled)
+      ensure_note_visible!(topic)
 
       # No-op if there's no note to view — keeps stray refresh-on-mount
       # pings from creating viewer rows on topics that never had a note.
@@ -552,7 +558,10 @@ module ::DiscourseModCategories
         Topic
           .includes(:category)
           .where(id: topic_ids)
-          .select { |topic| guardian.can_see_topic?(topic) }
+          .select do |topic|
+            guardian.can_see_topic?(topic) &&
+              !DiscourseModCategories::NoteThread.hidden_from?(topic, current_user)
+          end
           .index_by(&:id)
       # The note fields of all of them in one query, not one per topic.
       Topic.preload_custom_fields(
@@ -786,6 +795,14 @@ module ::DiscourseModCategories
     # admins; other moderators only when the site explicitly opts in via
     # mod_moderators_can_edit_others_notes (default off — previously any
     # moderator could silently rewrite a colleague's note).
+    # An admin's note thread doesn't exist for a moderator: not to read, reply
+    # to, edit, delete or write over
+    def ensure_note_visible!(topic)
+      if DiscourseModCategories::NoteThread.hidden_from?(topic, current_user)
+        raise Discourse::NotFound
+      end
+    end
+
     def ensure_can_touch_note_entry!(author_id)
       return if current_user.admin?
       return if author_id.to_i == current_user.id
@@ -872,7 +889,11 @@ module ::DiscourseModCategories
       excerpt = text.truncate(300)
 
       DiscourseModCategories::StaffNotifier
-        .staff_recipients(except: current_user, topic: topic)
+        .staff_recipients(
+          except: current_user,
+          topic: topic,
+          admins_only: DiscourseModCategories::NoteThread.admins_only?(topic),
+        )
         .each do |staff_user|
           data = {
             topic_title: topic.title,
