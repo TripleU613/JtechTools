@@ -27,6 +27,7 @@ declare module "virtual:theme" {
     hero_planet: boolean;
     footer_enabled: boolean;
     footer_tagline: string;
+    footer_notice: string;
     footer_links: JtechThemeFooterLink[];
     category_banners: boolean;
     tag_banners: boolean;

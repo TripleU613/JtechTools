@@ -2986,8 +2986,9 @@ RSpec.describe "JTech theme" do
   end
 
   # The footer had no way to log in, or to one's own profile, messages,
-  # bookmarks and preferences, and none back to the top
-  it "gives the footer an Account column and a way back to the top" do
+  # bookmarks and preferences, and none back to the top; the AI and scraping
+  # notice sat in a band of its own above it
+  it "gives the footer an Account column, its small print and a way back to the top" do
     visit("/latest")
     account = find(".jt-footer__column", text: "Account")
     expect(account).to have_link("Log in", href: "/login")
@@ -3003,6 +3004,10 @@ RSpec.describe "JTech theme" do
     expect(account).to have_link("Messages", href: "/u/#{member.username}/messages")
     expect(account).to have_link("Bookmarks", href: "/u/#{member.username}/activity/bookmarks")
     expect(account).to have_no_link("Log in")
+
+    # the small print on the last line, with its Terms link
+    expect(page).to have_css(".jt-footer__base .jt-footer__notice", text: "AI training")
+    expect(page).to have_css(".jt-footer__notice a[href='/tos']", text: "Terms")
 
     page.execute_script("window.scrollTo(0, document.body.scrollHeight)")
     find(".jt-footer__top").click

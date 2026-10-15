@@ -116,5 +116,31 @@
     > * {
       font-size: var(--jt-text-xs);
     }
+
+    // The small print (footer_notice) between the copyright and Back to
+    // top: smaller still, and it wraps there rather than pushing them off
+    > .jt-footer__notice {
+      flex: 1 1 0;
+      min-width: 0;
+      margin: 0;
+      font-size: var(--jt-text-2xs);
+      line-height: 1.5;
+      text-align: center;
+
+      a {
+        font-size: inherit;
+        text-decoration: underline;
+      }
+    }
+
+    @include viewport.until(md) {
+      flex-wrap: wrap;
+
+      > .jt-footer__notice {
+        flex-basis: 100%;
+        order: 3;
+        text-align: left;
+      }
+    }
   }
 }

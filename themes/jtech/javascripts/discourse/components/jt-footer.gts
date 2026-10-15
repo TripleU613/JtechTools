@@ -93,6 +93,10 @@ export default class JtFooter extends Component<JtFooterSignature> {
     };
   }
 
+  get termsUrl(): string {
+    return getURL("/tos");
+  }
+
   get year(): number {
     return new Date().getFullYear();
   }
@@ -139,6 +143,14 @@ export default class JtFooter extends Component<JtFooterSignature> {
 
       <div class="jt-footer__base">
         <span>© {{this.year}} JTech Forums</span>
+        {{#if settings.footer_notice}}
+          <p class="jt-footer__notice" dir="auto">
+            {{settings.footer_notice}}
+            <a href={{this.termsUrl}}>{{i18n
+                (themePrefix "jt.footer.terms")
+              }}</a>
+          </p>
+        {{/if}}
         <a class="jt-footer__top" href="#" {{on "click" this.toTop}}>
           {{i18n (themePrefix "jt.footer.back_to_top")}}
           ↑

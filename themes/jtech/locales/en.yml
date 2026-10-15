@@ -110,6 +110,7 @@ en:
       bookmarks: "Bookmarks"
       preferences: "Preferences"
       back_to_top: "Back to top"
+      terms: "Terms"
     header:
       search: "Search…"
       home: "JTech homepage"
@@ -176,6 +177,7 @@ en:
       tag_banners: "Show a header with the tag's name and description on tag pages."
       footer_enabled: "Show the JTech footer once a page has fully loaded."
       footer_tagline: "Line under the footer logo. Leave blank to hide."
+      footer_notice: "Small print on the footer's last line, between the copyright and Back to top, followed by a link to the Terms of Service. Leave blank to hide."
       footer_links: "Footer links. Links sharing a section form one column, in the order sections first appear. An Account column of the footer's own (log in and sign up, or the member's profile, messages, bookmarks and preferences) comes before a section called Legal, or last."
       hero_enabled: "Show the front-page hero (headline, search, and Sign Up / Log In for visitors) on the homepage, Latest and Categories."
       hero_title: "Hero headline."
