@@ -95,7 +95,7 @@ Keep the folder name `jtech-tools` (lowercase). Discourse builds the plugin's st
 
 ## Turning things on
 
-Everything is under **Admin → Plugins → Jtech Tools**, one tab per feature. Installing it changes nothing: every feature starts switched off, the JTech theme isn't installed, and nothing is on until you turn on `jtech_enabled` and then each feature you want. Each feature's page says what to set first.
+Everything is under **Admin → Plugins → Jtech Tools**, one tab per feature. Installing it changes nothing: every feature starts switched off and the JTech theme isn't installed. First switch Jtech Tools on in the list under **Admin → Plugins** (that's `jtech_enabled`), then turn on each feature you want. Each feature's page says what to set first.
 
 `jtech_enabled` is the master switch. Turning it off stops everything at once, including the permission changes and background jobs. Private things stay private either way: switching whispers off never makes an existing whisper public.
 

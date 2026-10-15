@@ -17,9 +17,10 @@ RSpec.configure do |config|
     end
 
     RSpec.configure do |late|
-      # also before each group, for what its fab! blocks create
-      late.before(:context) { switch_on.call }
-      late.before(:each) { switch_on.call }
+      # first, so a spec's own before can switch one off, and before each
+      # group too, for what its fab! blocks create
+      late.prepend_before(:context) { switch_on.call }
+      late.prepend_before(:each) { switch_on.call }
     end
   end
 end

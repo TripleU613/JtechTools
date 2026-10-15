@@ -24,7 +24,7 @@ class KeepFeaturesOnForExistingInstalls < ActiveRecord::Migration[7.2]
     dumbcourse_enabled
     reqpm_enabled
     listing_format_enabled
-  ]
+  ].freeze
 
   def up
     installed_before = DB.query_single(<<~SQL).first
