@@ -284,6 +284,7 @@ module ::DiscourseModCategories
       targets_field = DiscourseModCategories::POST_WHISPER_TARGETS_FIELD
       groups_field = DiscourseModCategories::POST_WHISPER_TARGET_GROUPS_FIELD
       badges_field = DiscourseModCategories::POST_WHISPER_TARGET_BADGES_FIELD
+      admins_only_field = DiscourseModCategories::POST_WHISPER_ADMINS_ONLY_FIELD
 
       if armed
         cap = DiscourseModCategories::MAX_WHISPER_TARGETS
@@ -301,7 +302,12 @@ module ::DiscourseModCategories
         post.custom_fields[targets_field] = user_ids
         post.custom_fields[groups_field] = group_ids
         post.custom_fields[badges_field] = badge_ids
+        # an admin's whisper is the admins' (moderators only as targets)
+        post.custom_fields[admins_only_field] = true if current_user.admin?
         post.save_custom_fields(true)
+        if !current_user.admin?
+          ::PostCustomField.where(post_id: post.id, name: admins_only_field).destroy_all
+        end
 
         # Explicitly targeted non-staff users may whisper back to staff in
         # this topic. Being a participant grants no visibility at all.
@@ -317,7 +323,7 @@ module ::DiscourseModCategories
         # enough — the rows have to be physically removed.
         ::PostCustomField.where(
           post_id: post.id,
-          name: [targets_field, groups_field, badges_field],
+          name: [targets_field, groups_field, badges_field, admins_only_field],
         ).destroy_all
         post.reload
       end
@@ -721,6 +727,8 @@ module ::DiscourseModCategories
       raise Discourse::InvalidAccess unless current_user&.staff?
 
       post = topic.posts.find_by(id: params[:post_id])
+      # not a whisper they can't see (an admin's, for a moderator)
+      post = nil if post && !DiscourseModCategories::Whisper.visible_to?(post, current_user)
       unless post && DiscourseModCategories::Whisper.whisper?(post)
         raise Discourse::InvalidParameters.new(
                 I18n.t("discourse_mod_categories.whisper.add_participant_needs_whisper"),

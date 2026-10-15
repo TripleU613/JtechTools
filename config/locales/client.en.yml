@@ -550,9 +550,11 @@ en:
         clear: Clear
         armed_pill_prefix: Whispering to
         armed_pill_staff_only: Whispering to staff
+        armed_pill_admins_only: Whispering to admins (add the moderators group to include them)
         clear_armed: Clear whisper
         banner_to: Whisper to
         banner_to_staff: Whisper to staff
+        banner_to_admins: Whisper to admins
         whisper_notification: whispered to you
         notification_title: Whisper
         convert_to_public:

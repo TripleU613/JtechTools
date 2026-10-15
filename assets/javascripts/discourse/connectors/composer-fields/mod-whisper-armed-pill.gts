@@ -1,5 +1,6 @@
 import Component from "@glimmer/component";
 import { action, get } from "@ember/object";
+import { service } from "@ember/service";
 import DButton from "discourse/components/d-button";
 import { i18n } from "discourse-i18n";
 import type { WhisperTargetComposer } from "../../components/mod-whisper-target-modal";
@@ -17,6 +18,9 @@ interface ModWhisperArmedPillSignature {
 // An armed whisper with zero targets is a staff-only whisper-back; the pill
 // still shows (it is the signal a whisper is armed at all).
 export default class ModWhisperArmedPill extends Component<ModWhisperArmedPillSignature> {
+  // an admin's whisper with no targets reaches admins only
+  @service declare currentUser: { admin?: boolean } | null;
+
   get composer(): WhisperTargetComposer | null | undefined {
     return this.args.outletArgs?.model;
   }
@@ -111,7 +115,11 @@ export default class ModWhisperArmedPill extends Component<ModWhisperArmedPillSi
       <div class="mod-whisper-armed-pill" role="status">
         {{#if this.staffOnly}}
           <span class="mod-whisper-armed-pill__label">
-            {{i18n "discourse_mod_categories.whisper.armed_pill_staff_only"}}
+            {{#if this.currentUser.admin}}
+              {{i18n "discourse_mod_categories.whisper.armed_pill_admins_only"}}
+            {{else}}
+              {{i18n "discourse_mod_categories.whisper.armed_pill_staff_only"}}
+            {{/if}}
           </span>
         {{else}}
           <span class="mod-whisper-armed-pill__label">

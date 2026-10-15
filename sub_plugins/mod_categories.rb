@@ -304,6 +304,10 @@ module ::DiscourseModCategories
   # gains visibility and a user who loses it loses visibility — same shape
   # as group targets.
   POST_WHISPER_TARGET_BADGES_FIELD = "mod_whisper_target_badge_ids"
+  # Marks a whisper an admin wrote (and anything answering one): moderators
+  # see it only when its targets include them, like anybody else. Presence
+  # is the mark.
+  POST_WHISPER_ADMINS_ONLY_FIELD = "mod_whisper_admins_only"
   TOPIC_WHISPER_PARTICIPANTS_FIELD = "mod_whisper_participant_ids"
   # JSON array of `{user_id, username, name, avatar_template, viewed_at}`
   # entries — staff who have rendered the mod-note panel on the topic.
@@ -654,6 +658,7 @@ after_initialize do
   register_post_custom_field_type(DiscourseModCategories::POST_WHISPER_TARGETS_FIELD, :json)
   register_post_custom_field_type(DiscourseModCategories::POST_WHISPER_TARGET_GROUPS_FIELD, :json)
   register_post_custom_field_type(DiscourseModCategories::POST_WHISPER_TARGET_BADGES_FIELD, :json)
+  register_post_custom_field_type(DiscourseModCategories::POST_WHISPER_ADMINS_ONLY_FIELD, :boolean)
   register_topic_custom_field_type(DiscourseModCategories::TOPIC_WHISPER_PARTICIPANTS_FIELD, :json)
   add_permitted_post_create_param(DiscourseModCategories::POST_WHISPER_TARGETS_FIELD, :array)
   add_permitted_post_create_param(DiscourseModCategories::POST_WHISPER_TARGET_GROUPS_FIELD, :array)
@@ -835,6 +840,11 @@ after_initialize do
 
   add_to_serializer(:post, :mod_whisper_author_is_staff, include_condition: whisper_only) do
     !!object.user&.staff?
+  end
+
+  # Moderators outside its targets don't see it: its banner says admins
+  add_to_serializer(:post, :mod_whisper_admins_only, include_condition: whisper_only) do
+    DiscourseModCategories::Whisper.admins_only?(object)
   end
 
   add_to_serializer(

@@ -35,7 +35,7 @@ module DiscourseModCategories
     # neither 500 the /u/{user}/activity page nor leak through it.
     def apply(rows, viewer)
       return rows if rows.blank?
-      return rows if viewer&.staff?
+      return rows if viewer&.admin?
 
       post_ids = rows.map { |r| r.respond_to?(:post_id) ? r.post_id : nil }.compact.uniq
       return rows if post_ids.empty?

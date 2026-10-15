@@ -200,17 +200,14 @@ module DiscourseModCategories
     def apply_common_filters(builder, user_id, guardian, ignore_private_messages = false)
       super
       viewer = guardian&.user
-      return if viewer&.staff?
+      viewer = nil unless viewer.is_a?(::User) && viewer.id
+      sql = DiscourseModCategories::WhisperQueryFilter.predicate(viewer, "p")
+      return if sql.nil?
 
       if viewer
-        builder.where(
-          "p.id IS NULL OR #{DiscourseModCategories::WhisperQueryFilter.visible_sql("p")}",
-          mw_uid: viewer.id,
-        )
+        builder.where("p.id IS NULL OR #{sql}", mw_uid: viewer.id)
       else
-        builder.where(
-          "p.id IS NULL OR NOT #{DiscourseModCategories::WhisperQueryFilter.is_whisper_sql("p")}",
-        )
+        builder.where("p.id IS NULL OR #{sql}")
       end
     end
   end

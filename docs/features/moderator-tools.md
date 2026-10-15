@@ -8,7 +8,7 @@ Everything here works only on topics the moderator can see, and alerts only go t
 
 ## Whispers
 
-Reply inside a topic to specific people: users, groups or everyone holding a badge. A whisper is visible only to staff, its author and the people it names. It doesn't show up anywhere else: not in the topic, search, activity streams, emails, notifications, link previews, RSS, Dumbcourse or the Telegram bridge.
+Reply inside a topic to specific people: users, groups or everyone holding a badge. A whisper is visible only to staff, its author and the people it names. An admin's whisper, and anything answering it, reaches moderators only when it names them (by user, the moderators group or a badge they hold); with nobody named it's for admins only. It doesn't show up anywhere else: not in the topic, search, activity streams, emails, notifications, link previews, RSS, Dumbcourse or the Telegram bridge.
 
 - Replies to a whisper, and quotes of one, stay private to the same people automatically.
 - A whisper never bumps its topic or counts as new for people outside its audience. For the people it's addressed to it counts as unread, and they get one notification. A whisper to an automatic group (a trust level, everyone, staff) is read by its members but notifies none of them: a whisper to trust level 2 would ring hundreds of bells.

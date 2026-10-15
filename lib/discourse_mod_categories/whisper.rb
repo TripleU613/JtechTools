@@ -7,7 +7,8 @@ module DiscourseModCategories
   # custom-field row (KEY PRESENCE marks it, even an empty `[]`). Its
   # audience is exactly:
   #
-  #   * every staff member (admins + moderators), for oversight
+  #   * every admin, and every moderator unless an admin wrote it (or it
+  #     answers one an admin wrote): then moderators only as targets
   #   * the post's author
   #   * the post's explicit target users
   #   * current members of the post's target groups
@@ -40,8 +41,17 @@ module DiscourseModCategories
       DiscourseModCategories::POST_WHISPER_TARGET_BADGES_FIELD
     end
 
+    def admins_only_field
+      DiscourseModCategories::POST_WHISPER_ADMINS_ONLY_FIELD
+    end
+
     def whisper_fields
-      [targets_field, groups_field, badges_field]
+      [targets_field, groups_field, badges_field, admins_only_field]
+    end
+
+    # An admin's whisper: moderators see it only as its targets
+    def admins_only?(post)
+      post.is_a?(::Post) && post_fields(post).key?(admins_only_field)
     end
 
     # Whisper audience definition for `post`, or nil when the post is not a
@@ -77,7 +87,8 @@ module DiscourseModCategories
 
     def audience_member?(post, d, user)
       return false unless user.is_a?(::User) && user.id
-      return true if user.staff?
+      return true if user.admin?
+      return true if user.moderator? && !admins_only?(post)
       return true if post.user_id.present? && post.user_id == user.id
       return true if d[:user_ids].include?(user.id)
       # Core memoizes the user's group ids, so the many Guardian checks a
@@ -97,7 +108,7 @@ module DiscourseModCategories
       return nil if d.nil?
 
       ids = []
-      ids.concat(staff_user_ids) if include_staff
+      ids.concat(admins_only?(post) ? admin_user_ids : staff_user_ids) if include_staff
       ids << post.user_id if post.user_id
       ids.concat(::User.where(id: d[:user_ids]).pluck(:id)) if d[:user_ids].any?
       ids.concat(::GroupUser.where(group_id: d[:group_ids]).pluck(:user_id)) if d[:group_ids].any?
@@ -109,13 +120,17 @@ module DiscourseModCategories
       ::User.where("admin OR moderator").pluck(:id)
     end
 
+    def admin_user_ids
+      ::User.where(admin: true).pluck(:id)
+    end
+
     # Of `post_ids`, the subset that are whispers `user` may NOT see. One
     # query to find the whispers, one to narrow them with the SQL filter.
     def hidden_post_ids(post_ids, user)
       user = nil unless user.is_a?(::User)
       post_ids = Array(post_ids).compact.uniq
       return [] if post_ids.empty?
-      return [] if user&.staff?
+      return [] if user&.admin?
 
       whisper_ids = whisper_post_ids(post_ids)
       return [] if whisper_ids.empty?
@@ -134,7 +149,7 @@ module DiscourseModCategories
     def reject_hidden(records, user, id_method: :id)
       user = nil unless user.is_a?(::User)
       records = Array(records)
-      return records if records.empty? || user&.staff?
+      return records if records.empty? || user&.admin?
       ids = records.map { |r| r.respond_to?(id_method) ? r.public_send(id_method) : nil }.compact
       hidden = hidden_post_ids(ids, user).to_set
       return records if hidden.empty?
@@ -253,6 +268,10 @@ module DiscourseModCategories
       post.custom_fields[DiscourseModCategories::POST_WHISPER_TARGETS_FIELD] = user_ids
       post.custom_fields[DiscourseModCategories::POST_WHISPER_TARGET_GROUPS_FIELD] = group_ids
       post.custom_fields[DiscourseModCategories::POST_WHISPER_TARGET_BADGES_FIELD] = badge_ids
+      # An admin's own whisper, or one answering an admin's, is the admins'
+      if (author.admin? && explicitly_armed) || answered.any? { |w| admins_only?(w) }
+        post.custom_fields[DiscourseModCategories::POST_WHISPER_ADMINS_ONLY_FIELD] = true
+      end
 
       # Non-staff who arm a whisper out of nowhere (no whisper to answer, not
       # a participant) still get a private post — never a public one — but
@@ -300,7 +319,7 @@ module DiscourseModCategories
       return [] if d.nil?
 
       ids = []
-      ids.concat(staff_user_ids) unless post.user&.staff?
+      ids.concat(admins_only?(post) ? admin_user_ids : staff_user_ids) unless post.user&.staff?
       ids.concat(::User.where(id: d[:user_ids]).pluck(:id)) if d[:user_ids].any?
       # Not the automatic groups (trust levels, everyone, staff): their
       # members still see the whisper, but a whisper to trust_level_2 rang

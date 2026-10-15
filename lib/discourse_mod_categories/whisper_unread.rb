@@ -26,6 +26,16 @@ module DiscourseModCategories
       def highest_post_number
         value = super
         return value unless SiteSetting.mod_whisper_audience_aware_topic_list
+        user = scope.user
+        if user&.moderator? && !user.admin?
+          # A moderator is a whisperer, so core gave them the staff number,
+          # which counts admins' whispers they can't open: they'd show as new
+          # for good. ponytail: the sidebar's New/Unread counts (core's
+          # tracking-state SQL) still count them; per-moderator SQL there if
+          # it matters.
+          visible = DiscourseModCategories::WhisperUnread.visible_max_post_number(object, user)
+          return visible && visible < value ? visible : value
+        end
         return value if scope.is_whisperer?
 
         visible = DiscourseModCategories::WhisperUnread.visible_max_post_number(object, scope.user)

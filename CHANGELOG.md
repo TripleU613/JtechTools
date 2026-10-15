@@ -144,6 +144,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Permissions**
 
+- Whispers: an admin's whisper reaches moderators only when it names them, by user, the moderators group or a badge they hold; replies to it stay as private. With nobody named it's for admins only, and the composer and the post say so. Whispers written before this, and moderators' own, are unchanged.
 - Mini-mod: a category moderator could still make their private category public, hand its moderation to any group, or move it under a category they don't moderate, by sending the change to the category's slug instead of its id (`/categories/<slug>.json`). Closed: the staff-only fields are stripped and the move is checked however the category is addressed. Reported by the-curious-2025.
 
 **Changed**

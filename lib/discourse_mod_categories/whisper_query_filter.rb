@@ -8,7 +8,8 @@ module DiscourseModCategories
   #
   # Audience = all staff + post author + the post's explicit user targets +
   # current members of the post's target groups + current holders of the
-  # post's target badges. Staff bypass the filter entirely. Anonymous viewers
+  # post's target badges. Admins bypass the filter entirely; moderators bypass
+  # it except for admins' whispers (see `predicate`). Anonymous viewers
   # see no whispers at all. Enforced regardless of any site setting.
   #
   # The same visibility rules as DiscourseModCategories::Whisper.visible_to?
@@ -81,15 +82,32 @@ module DiscourseModCategories
       SQL
     end
 
-    def apply(scope, user, posts_table: "posts")
-      user = nil unless user.is_a?(::User)
-      return scope if user&.staff?
+    def admins_only_sql(posts_table = "posts")
+      <<~SQL
+        EXISTS (
+          SELECT 1 FROM post_custom_fields mw_a
+          WHERE mw_a.post_id = #{posts_table}.id AND mw_a.name = '#{DiscourseModCategories::POST_WHISPER_ADMINS_ONLY_FIELD}'
+        )
+      SQL
+    end
 
-      if user&.id
-        scope.where(visible_sql(posts_table), mw_uid: user.id)
-      else
-        scope.where("NOT #{is_whisper_sql(posts_table)}")
+    # The predicate for `user` (binds :mw_uid), or nil for an admin, who sees
+    # every whisper. A moderator sees every whisper but an admin's, and those
+    # only as a target.
+    def predicate(user, posts_table = "posts")
+      user = nil unless user.is_a?(::User)
+      return nil if user&.admin?
+      return "NOT #{is_whisper_sql(posts_table)}" unless user&.id
+      if user.moderator?
+        return "(NOT #{admins_only_sql(posts_table)} OR #{visible_sql(posts_table)})"
       end
+      visible_sql(posts_table)
+    end
+
+    def apply(scope, user, posts_table: "posts")
+      sql = predicate(user, posts_table)
+      return scope if sql.nil?
+      user.is_a?(::User) && user.id ? scope.where(sql, mw_uid: user.id) : scope.where(sql)
     end
   end
 end

@@ -144,7 +144,11 @@ function whisperNote(p: Post): SafeHtml {
   );
   return html`<div class="whisper">
     ${icon("lock")}<span
-      >${to.length ? "Whisper to " + to.join(", ") : "Whisper to staff"}</span
+      >${to.length
+        ? "Whisper to " + to.join(", ")
+        : p.mod_whisper_admins_only
+          ? "Whisper to admins"
+          : "Whisper to staff"}</span
     >
   </div>`;
 }

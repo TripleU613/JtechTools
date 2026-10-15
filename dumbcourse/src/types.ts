@@ -141,6 +141,7 @@ export interface Post {
   mod_whisper_target_groups?: Array<{ name: string }>;
   mod_whisper_target_badges?: Array<{ name: string }>;
   mod_whisper_is_staff_only?: boolean;
+  mod_whisper_admins_only?: boolean;
   user_status?: { emoji?: string; description?: string } | null;
 }
 

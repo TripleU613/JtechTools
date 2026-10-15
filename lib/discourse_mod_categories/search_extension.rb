@@ -54,7 +54,7 @@ module DiscourseModCategories
       return if posts.empty?
 
       viewer = @guardian.respond_to?(:user) ? @guardian.user : nil
-      return if viewer&.staff? && !drop_all
+      return if viewer&.admin? && !drop_all
 
       post_ids = posts.map(&:id).compact
       return if post_ids.empty?

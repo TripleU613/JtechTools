@@ -30,6 +30,7 @@ export interface WhisperPostFields {
   mod_whisper_target_badge_ids?: number[];
   mod_whisper_target_badges?: WhisperTargetBadge[];
   mod_whisper_is_staff_only?: boolean;
+  mod_whisper_admins_only?: boolean;
   mod_whisper_author_is_staff?: boolean;
 }
 
