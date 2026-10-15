@@ -42,6 +42,7 @@ interface ModNoteNotificationData {
   mod_election_kind?: string;
   url?: string;
   title?: string;
+  mod_whisper?: boolean;
   message?: string;
   excerpt?: string;
   topic_title?: string;
@@ -133,11 +134,16 @@ export default function modNoteNotificationRenderer(
       if (this.isModNote) {
         return i18n(`discourse_mod_categories.${this.modNoteKey}_title`);
       }
-      // Core `custom.js` behavior.
+      if (this.notification.data?.mod_whisper) {
+        return i18n("discourse_mod_categories.whisper.notification_title");
+      }
+      // Core `custom.js` behavior: no title of its own, none at all. The
+      // base class's would look up notifications.titles.custom, which core
+      // doesn't have, and show the missing key on hover.
       if (this.notification.data?.title) {
         return i18n(this.notification.data.title);
       }
-      return super.linkTitle;
+      return "";
     }
 
     // The plugin's registered shield icon, so the notification reads

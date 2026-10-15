@@ -554,6 +554,7 @@ en:
         banner_to: Whisper to
         banner_to_staff: Whisper to staff
         whisper_notification: whispered to you
+        notification_title: Whisper
         convert_to_public:
           label: Convert to public post
           title: Remove the whisper status from this post so everyone can see it
