@@ -290,6 +290,10 @@ module DiscourseModCategories
   module ReviewableClassWhisperPatch
     def viewable_by(user, order: nil, preload: true)
       result = super
+      # ponytail: moderators included, so a non-staff reply to an admin's
+      # whisper that waits for approval shows in their queue until approved
+      # (the queued post can't carry the admins-only mark yet); check the
+      # payload's reply target here if that matters.
       return result if user.nil? || user.staff?
 
       result.where(<<~SQL)
