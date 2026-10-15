@@ -2774,6 +2774,37 @@ RSpec.describe "JTech theme" do
     expect_no_theme_errors
   end
 
+  # Core shows the keyboard-shortcuts button whenever it takes the page for a
+  # desktop one, by width: a big phone or a phone turned sideways got it
+  it "leaves the keyboard-shortcuts button out of the sidebar on a touch screen" do
+    sign_in(member)
+    visit("/latest")
+    expect(page).to have_css(".sidebar-footer-actions-keyboard-shortcuts")
+    # The test browser can't take a touch screen's pointer, so this reads the
+    # rule the page applies under one
+    hidden_on_touch = page.evaluate_script(<<~'JS')
+      [...document.styleSheets].some((sheet) => {
+        let rules;
+        try { rules = [...sheet.cssRules]; } catch { return false; }
+        const walk = (list, touch) =>
+          list.some((rule) => {
+            const media = rule instanceof CSSMediaRule ? rule.conditionText : "";
+            const inTouch = touch || (/hover:\s*none/.test(media) && /pointer:\s*coarse/.test(media));
+            // style rules have a (nesting) list of their own too, mostly empty
+            if (rule.cssRules?.length) return walk([...rule.cssRules], inTouch);
+            return (
+              inTouch &&
+              rule.selectorText?.includes(".sidebar-footer-actions-keyboard-shortcuts") &&
+              rule.style.display === "none"
+            );
+          });
+        return walk(rules, false);
+      })
+    JS
+    expect(hidden_on_touch).to eq(true)
+    expect_no_theme_errors
+  end
+
   # At the end of a topic the capsule came to rest above the buttons under the
   # topic, a second row with a second admin wrench, and on a 390px phone
   # Reply wrapped under the icons. While those buttons show the capsule steps

@@ -298,6 +298,16 @@ html:not(.jt-vanilla) body {
     gap: 2px;
   }
 
+  // Core shows its keyboard-shortcuts button whenever it takes the page for
+  // a desktop one, which it decides by width: a big phone, a phone turned
+  // sideways or the browser's "desktop site" got it, with no keyboard to use
+  // the shortcuts on. A touch screen without a mouse doesn't show it.
+  @media (hover: none) and (pointer: coarse) {
+    .sidebar-footer-actions-keyboard-shortcuts {
+      display: none;
+    }
+  }
+
   // Interface-theme picker takes the free space so its name never clips
   .sidebar-theme-toggle__wrapper {
     flex: 1 1 auto;
