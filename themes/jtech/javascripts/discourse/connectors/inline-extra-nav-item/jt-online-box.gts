@@ -96,19 +96,19 @@ export default class JtOnlineBox extends Component {
         {{#if this.open}}
           <span class="jt-online-box__people">
             {{#each this.faces as |face|}}
-            <a
-              class="jt-online-box__person"
-              href={{face.href}}
-              style={{face.style}}
-              title={{if face.user.name face.user.name face.user.username}}
-            >
-              <img
-                alt={{face.user.username}}
-                class="jt-online-box__face"
-                src={{face.src}}
-              />
-            </a>
-          {{/each}}
+              <a
+                class="jt-online-box__person"
+                href={{face.href}}
+                style={{face.style}}
+                title={{if face.user.name face.user.name face.user.username}}
+              >
+                <img
+                  alt={{face.user.username}}
+                  class="jt-online-box__face"
+                  src={{face.src}}
+                />
+              </a>
+            {{/each}}
           </span>
         {{/if}}
       </span>
