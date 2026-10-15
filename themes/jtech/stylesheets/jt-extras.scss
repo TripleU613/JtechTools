@@ -89,10 +89,12 @@
   width: max-content;
   margin-left: auto;
 
-  // the buttons flush with the column's left edge, under reader mode's
-  // buttons at the top (core places them absolutely, 10px in)
+  // the buttons as wide as the timeline: flush with its left edge, under
+  // reader mode's buttons at the top (core places them absolutely, 10px
+  // in), and with the page's right edge
   .timeline-footer-controls {
     left: 0;
+    right: 0;
   }
 }
 
@@ -140,7 +142,7 @@ html.desktop-view #topic-footer-buttons {
 // outranks its flex row.
 .timeline-container .topic-timeline .timeline-footer-controls:has(.jt-jump) {
   display: grid;
-  grid-template-columns: repeat(2, max-content);
+  grid-template-columns: 1fr 1fr;
 
   // equal rows, so the arrows get the same height as reply and notifications
   grid-auto-rows: 1fr;

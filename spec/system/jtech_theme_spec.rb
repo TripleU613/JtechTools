@@ -3358,9 +3358,10 @@ RSpec.describe "JTech theme" do
       expect([top[0], top[1] > reply[1]]).to eq([reply[0], true])
       expect([bottom[0], bottom[1]]).to eq([bell[0], top[1]])
       # flush with the timeline's left edge, under the buttons at its top
-      timeline_left = page.evaluate_script(
-        "Math.round(document.querySelector('.topic-timeline').getBoundingClientRect().left)",
-      )
+      timeline_left =
+        page.evaluate_script(
+          "Math.round(document.querySelector('.topic-timeline').getBoundingClientRect().left)",
+        )
       expect(reply[0]).to eq(timeline_left)
       expect_no_theme_errors
     end
