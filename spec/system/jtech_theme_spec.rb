@@ -2774,6 +2774,26 @@ RSpec.describe "JTech theme" do
     expect_no_theme_errors
   end
 
+  # Core's status bubble sits off the avatar's top corner; with the theme's
+  # avatar inside the card it covered the name row, leaving only the staff
+  # shield showing
+  it "keeps a status bubble off the name on a user card" do
+    SiteSetting.enable_user_status = true
+    admin.set_status!("Nothing but popcorn at a zoo.", "popcorn")
+    sign_in(member)
+    visit(topic.relative_url)
+    find("#post_2 .topic-avatar a").click
+    expect(page).to have_css("#user-card .user-status")
+    bubble_bottom, name_top = page.evaluate_script(<<~JS)
+      [
+        document.querySelector("#user-card .user-status").getBoundingClientRect().bottom,
+        document.querySelector("#user-card .names__primary").getBoundingClientRect().top,
+      ]
+    JS
+    expect(name_top).to be >= bubble_bottom - 1
+    expect_no_theme_errors
+  end
+
   # Core shows the keyboard-shortcuts button whenever it takes the page for a
   # desktop one, by width: a big phone or a phone turned sideways got it
   it "leaves the keyboard-shortcuts button out of the sidebar on a touch screen" do

@@ -27,6 +27,14 @@
   --avatar-margin: 0;
 }
 
+// Core's status is a bubble off the avatar's top corner, which on core's
+// lifted avatar floats above the name. With the avatar inside the card it
+// landed on the name row: the name hidden under it, only the staff shield
+// showing through. Under a status the names start below the bubble.
+.user-card:has(.user-card-avatar-wrapper .user-status) .names {
+  padding-top: 2.75rem;
+}
+
 // jtech-tools' REQ-PM is a btn-small; on the card it sits under Message and
 // Follow, which core sizes from 1rem, so it came out a size smaller and 8px
 // shorter. It takes their text size and padding.
