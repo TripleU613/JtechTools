@@ -192,8 +192,8 @@ html.desktop-view .list-controls .navigation-container {
 }
 
 // Who's Online (connectors/inline-extra-nav-item/jt-online-box), beside the
-// tabs' dropdown: "Online: 3" and the people's faces in a row, spread out
-// into the room up to New Topic. The plugin's own row of avatars over the
+// tabs' dropdown: "Online: 3", which opens out into the people's faces in a
+// row, spread out into the room up to New Topic. The plugin's own row of avatars over the
 // list goes.
 html:not(.jt-vanilla) body:has(.jt-online-box) .online_users_widget {
   display: none;
@@ -240,12 +240,29 @@ html.jt-vanilla .jt-online-box {
   margin-left: var(--space-3);
 }
 
+// a button: the faces open out beside it on a click, and fold away on the next
 .jt-online-box__label {
   flex: none;
+  padding: 0.25rem 0.5rem;
+  font: inherit;
   font-size: var(--jt-text-sm);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   color: var(--jt-text-muted);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: var(--jt-radius-control);
+
+  &:hover,
+  &[aria-expanded="true"] {
+    color: var(--jt-text);
+    background: var(--jt-hover);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--jt-focus);
+  }
 }
 
 // More faces than fit fade out at the row's end rather than wrap

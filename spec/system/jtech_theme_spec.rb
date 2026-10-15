@@ -2743,6 +2743,9 @@ RSpec.describe "JTech theme" do
     sign_in(member)
     visit("/latest")
     expect(page).to have_css(".jt-online-box__label", exact_text: "Online: 1")
+    # folded until the count is clicked
+    expect(page).to have_no_css(".jt-online-box__people")
+    find(".jt-online-box__label").click
     expect(page).to have_css(
       ".jt-online-box__people a[href='/u/#{member.username}'] img.jt-online-box__face",
     )

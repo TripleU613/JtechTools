@@ -1,4 +1,7 @@
 import Component from "@glimmer/component";
+import { tracked } from "@glimmer/tracking";
+import { on } from "@ember/modifier";
+import { action } from "@ember/object";
 import { getOwner } from "@ember/owner";
 import { service } from "@ember/service";
 import { type TrustedHTML, trustHTML } from "@ember/template";
@@ -37,13 +40,15 @@ const MOST = 40;
 
 // Who's Online (the plugin) puts a row of avatars over the topic list, in the
 // way of the tabs. With setting online_box it's beside the tabs' dropdown
-// instead: "Online: 3" and the faces of the people online, spread out in a
-// row into the room up to New Topic, each a link to their profile. More than
-// fit fade out at the row's end. It shows to the people the plugin shows its
+// instead: "Online: 3", which opens out sideways into the faces of the
+// people online, in a row into the room up to New Topic, each a link to their
+// profile. More than fit fade out at the row's end. It shows to the people the plugin shows its
 // row to, and only while as many people are online as the plugin's own
 // minimum.
 export default class JtOnlineBox extends Component {
   @service declare siteSettings: OnlineSiteSettings;
+
+  @tracked open = false;
 
   whosOnline = getOwner(this)?.lookup("service:whos-online") as
     | WhosOnline
@@ -72,14 +77,25 @@ export default class JtOnlineBox extends Component {
     }));
   }
 
+  @action
+  toggle() {
+    this.open = !this.open;
+  }
+
   <template>
     {{#if this.shown}}
       <span class="jt-online-box">
-        <span class="jt-online-box__label">
+        <button
+          aria-expanded={{if this.open "true" "false"}}
+          class="jt-online-box__label"
+          type="button"
+          {{on "click" this.toggle}}
+        >
           {{i18n (themePrefix "jt.online.box") count=this.count}}
-        </span>
-        <span class="jt-online-box__people">
-          {{#each this.faces as |face|}}
+        </button>
+        {{#if this.open}}
+          <span class="jt-online-box__people">
+            {{#each this.faces as |face|}}
             <a
               class="jt-online-box__person"
               href={{face.href}}
@@ -93,7 +109,8 @@ export default class JtOnlineBox extends Component {
               />
             </a>
           {{/each}}
-        </span>
+          </span>
+        {{/if}}
       </span>
     {{/if}}
   </template>
