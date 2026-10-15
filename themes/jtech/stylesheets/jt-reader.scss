@@ -1,7 +1,8 @@
 // Reader mode (setting reader_mode, lib/jt-reader): on a topic page, the
-// sidebar goes, the header and the posts' chrome fade back until pointed at,
-// and the posts' text takes the chosen size, width and type. Topic pages
-// only: the class stays on <html> while browsing elsewhere.
+// sidebar goes, the topic stands in the middle of the window at the chosen
+// width with the timeline beside it, the header and the posts' buttons ease
+// back until pointed at, and the posts' text takes the chosen size and type.
+// Topic pages only: the class stays on <html> while browsing elsewhere.
 html.jt-reader body[class*="archetype-"] {
   .sidebar-wrapper {
     display: none;
@@ -12,34 +13,35 @@ html.jt-reader body[class*="archetype-"] {
     column-gap: 0;
   }
 
-  // the posts' column takes the chosen width, the timeline stays beside it
+  // The topic in the middle of the window: as wide as the chosen column plus
+  // the avatars' room and the timeline's. The posts fill their column
+  // (jt-extras, beside the timeline), so the column's width is the text's.
+  // It hugged the window's left edge once the sidebar went, and the width
+  // buttons did nothing.
   #main-outlet {
-    --topic-body-width: var(--jt-reader-width, 40rem);
+    max-width: calc(var(--jt-reader-width, 40rem) + 16rem);
+    margin-inline: auto;
   }
 
   .d-header-wrap,
-  .topic-avatar,
-  .post-controls,
-  .topic-map,
-  .post-links-container,
-  .timeline-container {
-    transition: opacity 0.2s ease;
-  }
-
-  .d-header-wrap,
-  .timeline-container {
-    opacity: 0.35;
-  }
-
   .topic-avatar,
   .post-controls,
   .topic-map,
   .post-links-container {
-    opacity: 0.4;
+    transition: opacity 0.2s ease;
+  }
+
+  // Eased back, not gone: at a third they read as broken. The timeline is
+  // how you move through the topic and stays as it is.
+  .d-header-wrap,
+  .topic-avatar,
+  .post-controls,
+  .topic-map,
+  .post-links-container {
+    opacity: 0.6;
   }
 
   .d-header-wrap:is(:hover, :focus-within),
-  .timeline-container:is(:hover, :focus-within),
   .topic-post:is(:hover, :focus-within)
     :is(.topic-avatar, .post-controls, .topic-map, .post-links-container) {
     opacity: 1;
@@ -60,24 +62,80 @@ html.jt-reader--serif body[class*="archetype-"] .topic-post .cooked {
   }
 }
 
-// the switch and its options, at the top of the timeline
-.jt-reader-controls {
-  display: flex;
-  flex-direction: column;
+// The switch and its "Aa" settings, side by side at the top of the timeline.
+// The timeline's controls row stretched its items to the tallest, which drew
+// the admin wrench beside them as a tall bar.
+.timeline-controls:has(.jt-reader-controls) {
   align-items: flex-start;
-  gap: 4px;
 }
 
-.jt-reader-options {
+.jt-reader-controls {
   display: flex;
-  flex-wrap: wrap;
+  align-items: center;
   gap: 2px;
 }
 
-.jt-reader-toggle.--on,
-.jt-reader-serif.--on {
-  color: var(--primary);
-  background: var(--jt-surface-sunken, var(--primary-very-low));
+.jt-reader-toggle.--on {
+  color: var(--jt-text);
+  background: var(--jt-active);
+}
+
+.jt-reader-settings__aa {
+  font-size: var(--jt-text-sm);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.jt-reader-menu {
+  display: grid;
+  gap: 0.25rem;
+  min-width: 15rem;
+  padding: 0.5rem;
+}
+
+.jt-reader-menu__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 2.25rem;
+}
+
+.jt-reader-menu__label {
+  font-size: var(--jt-text-sm);
+  color: var(--jt-text-muted);
+}
+
+.jt-reader-menu__stepper,
+.jt-reader-menu__segments {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.jt-reader-menu__value {
+  min-width: 4.5rem;
+  font-size: var(--jt-text-sm);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.jt-reader-menu__segments .btn {
+  padding-inline: 0.75rem;
+  color: var(--jt-text-muted);
+
+  &.--on {
+    color: var(--jt-text);
+    background: var(--jt-active);
+  }
+}
+
+.jt-reader-sans {
+  font-family: var(--jt-font-sans);
+}
+
+.jt-reader-serif .d-button-label {
+  font-family: Charter, "Iowan Old Style", "Palatino Linotype", Georgia, serif;
 }
 
 @media (prefers-reduced-motion: reduce) {

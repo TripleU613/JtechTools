@@ -114,8 +114,9 @@ export default apiInitializer((api) => {
       isCardContext(context) ? false : value
   );
 
-  // Click anywhere on the card opens the topic; real links/buttons inside keep
-  // their own behaviour. Modifier keys and middle-click open a new tab.
+  // Click anywhere on a topic opens it, in every list (cards, rows, the New &
+  // Unread under a topic), not only on its title; real links/buttons inside
+  // keep their own behaviour. Modifier keys and middle-click open a new tab.
   api.registerBehaviorTransformer(
     "topic-list-item-click",
     ({
@@ -126,9 +127,7 @@ export default apiInitializer((api) => {
       next: () => void;
     }) => {
       const { event } = context;
-      // The list decided whether it's cards (topic-list-class above), so ask it
-      // rather than re-deriving that from the topic.
-      if (!event.target.closest(".jt-cards")) {
+      if (!event.target.closest(".topic-list-item")) {
         return next();
       }
       // Selecting text on a card (drag, then release) isn't a click to open it.

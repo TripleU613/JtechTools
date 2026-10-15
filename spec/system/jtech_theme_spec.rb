@@ -2877,6 +2877,18 @@ RSpec.describe "JTech theme" do
     end
   end
 
+  # Only the title opened a topic in a row list (New & Unread under a topic,
+  # stock rows, compact density): the rest of the row did nothing
+  it "opens a topic from anywhere on its row, not only its title" do
+    sign_in(member)
+    visit(topic.relative_url)
+    row = find("#suggested-topics .topic-list-item", match: :first)
+    id = row["data-topic-id"]
+    row.find("td.num.views").click
+    expect(page).to have_current_path(%r{/t/[^/]+/#{id}})
+    expect_no_theme_errors
+  end
+
   # "New & Unread Topics" under a topic had no way to clear them: each one had
   # to be opened to go away
   it "dismisses the new and unread topics under a topic in one go" do
@@ -3527,14 +3539,38 @@ RSpec.describe "JTech theme" do
       visit(topic.relative_url)
       size = "parseFloat(getComputedStyle(document.querySelector('#post_1 .cooked')).fontSize)"
       normal = page.evaluate_script(size)
+      body_width = "document.querySelector('#post_1 .topic-body').getBoundingClientRect().width"
       find(".jt-reader-toggle").click
       expect(page).to have_css("html.jt-reader")
       expect(page).to have_no_css(".sidebar-wrapper")
+
+      # the topic stands in the middle of the window, not at its left edge
+      left, right = page.evaluate_script(<<~JS)
+        (() => {
+          const box = document.querySelector("#main-outlet").getBoundingClientRect();
+          return [box.left, window.innerWidth - box.right];
+        })()
+      JS
+      expect(left).to be > 50
+      expect(left).to be_within(24).of(right)
+
+      # its settings, labelled, in the Aa menu
+      find(".jt-reader-settings__trigger").click
+      expect(page).to have_css(".jt-reader-menu__value", text: "100%")
       find(".jt-reader-larger").click
       try_until_success { expect(page.evaluate_script(size)).to be > normal }
+      expect(page).to have_css(".jt-reader-menu__value", text: "113%")
+
+      # and the width buttons change the column (they did nothing)
+      before = page.evaluate_script(body_width)
+      find(".jt-reader-narrower").click
+      try_until_success { expect(page.evaluate_script(body_width)).to be < before - 20 }
+
       find(".jt-reader-serif").click
       expect(page).to have_css("html.jt-reader--serif")
       shot("reader-mode")
+      find(".jt-reader-sans").click
+      expect(page).to have_no_css("html.jt-reader--serif")
       find(".jt-reader-toggle").click
       expect(page).to have_no_css("html.jt-reader")
       expect(page).to have_css(".sidebar-wrapper")
