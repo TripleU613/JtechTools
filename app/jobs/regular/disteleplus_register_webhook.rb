@@ -63,7 +63,7 @@ module Jobs
             "setMyCommands",
             scope: scope,
             commands: [
-              { command: "disteleplus_setup", description: "Guided JTech setup" },
+              { command: "disteleplus_setup", description: "Guided setup" },
               { command: "disteleplus_status", description: "Show saved destinations" },
               { command: "disteleplus_bind_general", description: "Bind this group and General" },
               { command: "disteleplus_bind_uploads", description: "Bind this topic for uploads" },

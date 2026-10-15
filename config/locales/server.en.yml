@@ -774,7 +774,7 @@ en:
 
     disteleplus_forum_upload_max_mb: Largest file copied into Telegram. The
       Bot API currently caps bot-sent files at 50 MB. Larger or unreadable
-      files produce a metadata message linking back to JTech instead.
+      files produce a metadata message linking back to the forum instead.
 
     disteleplus_forum_upload_backfill_batch_size: Number of historical upload
       references examined per backfill step. Smaller batches reduce load and
@@ -957,7 +957,7 @@ en:
       deleted.
     listing_format_topics: 'Topics where the format applies. Use the topic''s
       number or paste its address (like
-      https://jtechforums.org/t/hardware-phones-computers-for-sale-thread/32).
+      https://forum.example.com/t/phones-for-sale/32).
       New posts must have every field; edits to older posts only have to keep
       the fields they already had, and can''t add outside links.'
     listing_format_fields: 'Sections each listing needs. The reply form posts

@@ -32,7 +32,7 @@ module DiscourseDisteleplus
         return true
       end
       unless group_message?
-        reply("Run this command inside the JTech Telegram group.")
+        reply("Run this command inside the #{SiteSetting.title} Telegram group.")
         return true
       end
       unless telegram_admin?

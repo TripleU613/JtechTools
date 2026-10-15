@@ -49,7 +49,8 @@ module DiscourseDisteleplus
       url = UrlHelper.absolute(upload.url)
       payload = {
         chat_id: chat_id,
-        text: "#{caption}\n<a href=\"#{ForumUploadFormatter.escape(url)}\">Open file on JTech</a>",
+        text:
+          "#{caption}\n<a href=\"#{ForumUploadFormatter.escape(url)}\">Open file on #{ForumUploadFormatter.escape(SiteSetting.title)}</a>",
         parse_mode: "HTML",
       }
       thread_id = DiscourseDisteleplus.telegram_thread_id(topic_id)

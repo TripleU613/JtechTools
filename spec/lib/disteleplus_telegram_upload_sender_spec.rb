@@ -58,7 +58,10 @@ RSpec.describe DiscourseDisteleplus::TelegramUploadSender do
 
     expect(api).to have_received(:call).with(
       "sendMessage",
-      a_hash_including(message_thread_id: 77, text: a_string_including("Open file on JTech")),
+      a_hash_including(
+        message_thread_id: 77,
+        text: a_string_including("Open file on #{SiteSetting.title}"),
+      ),
     )
     expect(delivery.file_copied).to eq(false)
   end
