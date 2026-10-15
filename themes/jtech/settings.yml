@@ -55,26 +55,47 @@ footer_links:
       title: Latest
       url: /latest
     - section: Forum
+      title: Top
+      url: /top
+    - section: Forum
       title: Categories
       url: /categories
     - section: Forum
+      title: Tags
+      url: /tags
+    - section: Forum
+      title: Search
+      url: /search
+    - section: Community
+      title: Members
+      url: /u
+    - section: Community
+      title: Groups
+      url: /g
+    - section: Community
+      title: Badges
+      url: /badges
+    - section: Community
       title: Guidelines
       url: /guidelines
-    - section: Forum
+    - section: Community
       title: About
       url: /about
     - section: JTech
       title: Homepage
       url: https://jtechforums.org/home
     - section: JTech
-      title: Contact
-      url: https://jtechforums.org/home/contact
+      title: Market
+      url: https://market.jtechforums.org
     - section: JTech
       title: eGate filter
       url: https://jtechforums.org/home/egate
     - section: JTech
       title: Dumbcourse
       url: https://jtechforums.org/dumb
+    - section: JTech
+      title: Contact
+      url: https://jtechforums.org/home/contact
     - section: Legal
       title: Terms
       url: https://jtechforums.org/terms

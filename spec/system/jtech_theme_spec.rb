@@ -2985,6 +2985,31 @@ RSpec.describe "JTech theme" do
     expect(page).to have_css(".jt-footer a[href='/latest']:not([data-auto-route])")
   end
 
+  # The footer had no way to log in, or to one's own profile, messages,
+  # bookmarks and preferences, and none back to the top
+  it "gives the footer an Account column and a way back to the top" do
+    visit("/latest")
+    account = find(".jt-footer__column", text: "Account")
+    expect(account).to have_link("Log in", href: "/login")
+    expect(account).to have_link("Sign up", href: "/signup")
+    # before Legal
+    headings = all(".jt-footer__heading").map(&:text)
+    expect(headings.index("Account")).to eq(headings.index("Legal") - 1)
+
+    sign_in(member)
+    visit("/latest")
+    account = find(".jt-footer__column", text: "Account")
+    expect(account).to have_link("Profile", href: "/u/#{member.username}/summary")
+    expect(account).to have_link("Messages", href: "/u/#{member.username}/messages")
+    expect(account).to have_link("Bookmarks", href: "/u/#{member.username}/activity/bookmarks")
+    expect(account).to have_no_link("Log in")
+
+    page.execute_script("window.scrollTo(0, document.body.scrollHeight)")
+    find(".jt-footer__top").click
+    try_until_success { expect(page.evaluate_script("window.scrollY")).to be < 10 }
+    expect_no_theme_errors
+  end
+
   it "draws the theme's own shortcuts in the ? help like core's" do
     sign_in(member)
     visit("/latest")
