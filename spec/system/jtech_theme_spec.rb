@@ -3544,15 +3544,16 @@ RSpec.describe "JTech theme" do
       expect(page).to have_css("html.jt-reader")
       expect(page).to have_no_css(".sidebar-wrapper")
 
-      # the topic stands in the middle of the window, not at its left edge
-      left, right = page.evaluate_script(<<~JS)
+      # the reading column stands in the middle of the window (the timeline
+      # hanging to its right), not at the window's left edge
+      center, middle = page.evaluate_script(<<~JS)
         (() => {
-          const box = document.querySelector("#main-outlet").getBoundingClientRect();
-          return [box.left, window.innerWidth - box.right];
+          const avatar = document.querySelector("#post_1 .topic-avatar").getBoundingClientRect();
+          const body = document.querySelector("#post_1 .topic-body").getBoundingClientRect();
+          return [(avatar.left + body.right) / 2, window.innerWidth / 2];
         })()
       JS
-      expect(left).to be > 50
-      expect(left).to be_within(24).of(right)
+      expect(center).to be_within(16).of(middle)
 
       # its settings, labelled, in the Aa menu
       find(".jt-reader-settings__trigger").click

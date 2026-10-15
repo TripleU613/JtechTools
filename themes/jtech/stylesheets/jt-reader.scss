@@ -13,14 +13,38 @@ html.jt-reader body[class*="archetype-"] {
     column-gap: 0;
   }
 
-  // The topic in the middle of the window: as wide as the chosen column plus
-  // the avatars' room and the timeline's. The posts fill their column
-  // (jt-extras, beside the timeline), so the column's width is the text's.
-  // It hugged the window's left edge once the sidebar went, and the width
-  // buttons did nothing.
+  // The reading column in the middle of the window, the timeline hanging in
+  // the room to its right: three columns, the column between two equal
+  // rooms. Centring the column and the timeline together left the text
+  // off to the left of the middle. The column is the chosen width plus the
+  // avatars' room; the posts fill it (jt-extras), so its width is the text's.
+  --jt-reader-column: calc(
+    var(--jt-reader-width, 40rem) + var(--topic-avatar-width, 45px) +
+      var(--topic-body-width-padding, 0.75rem) * 2
+  );
+
   #main-outlet {
-    max-width: calc(var(--jt-reader-width, 40rem) + 16rem);
-    margin-inline: auto;
+    max-width: none;
+  }
+
+  @media screen and (width > 924px) {
+    .container.posts {
+      grid-template-areas: ". posts timeline";
+      grid-template-columns:
+        minmax(0, 1fr) minmax(0, var(--jt-reader-column))
+        minmax(0, 1fr);
+    }
+
+    .topic-navigation {
+      justify-self: start;
+    }
+
+    // the title over the column
+    #topic-title .container,
+    #topic-title .title-wrapper {
+      max-width: var(--jt-reader-column);
+      margin-inline: auto;
+    }
   }
 
   .d-header-wrap,
@@ -75,9 +99,18 @@ html.jt-reader--serif body[class*="archetype-"] .topic-post .cooked {
   gap: 2px;
 }
 
+// Like the admin wrench beside them: the same bordered square
+.jt-reader-controls .btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  justify-content: center;
+}
+
 .jt-reader-toggle.--on {
   color: var(--jt-text);
   background: var(--jt-active);
+  border-color: var(--jt-text-subtle);
 }
 
 .jt-reader-settings__aa {

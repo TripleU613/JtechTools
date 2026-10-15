@@ -89,7 +89,7 @@ export default class JtReaderMode extends Component {
       <div class="jt-reader-controls">
         <DButton
           aria-pressed={{if this.reader.on "true" "false"}}
-          class="btn-flat jt-reader-toggle {{if this.reader.on '--on'}}"
+          class="btn-default jt-reader-toggle {{if this.reader.on '--on'}}"
           @action={{this.toggle}}
           @icon="book-open"
           @title={{themePrefix "jt.reader.toggle"}}
@@ -101,7 +101,7 @@ export default class JtReaderMode extends Component {
             @identifier="jt-reader-settings"
             @placement="bottom-start"
             @title={{i18n (themePrefix "jt.reader.settings")}}
-            @triggerClass="btn-flat jt-reader-settings__trigger"
+            @triggerClass="btn-default jt-reader-settings__trigger"
           >
             <:trigger>
               <span aria-hidden="true" class="jt-reader-settings__aa">Aa</span>
