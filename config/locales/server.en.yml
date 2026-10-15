@@ -714,11 +714,20 @@ en:
       Discourse copy, because a bot cannot edit somebody else's Telegram
       message.
 
-    disteleplus_bridge_deletes: Deleting a bridged chat message also deletes
-      it in Telegram. The bot needs delete permission in the group, and
-      Telegram only allows a bot to delete messages under 48 hours old;
-      failures are logged to /logs. Deletions made in Telegram are never
-      reported to bots at all, so they can never be mirrored back.
+    disteleplus_bridge_deletes: Deleting a bridged chat message deletes it
+      on the other side too, whichever side it was written on. Here to
+      Telegram the bot needs delete permission in the group, and Telegram
+      only lets a bot delete messages under 48 hours old; failures are logged
+      to /logs. Telegram to here needs disteleplus_deletion_check_chat_id.
+
+    disteleplus_deletion_check_chat_id: Telegram never tells a bot that a
+      message was deleted, so to delete here what was deleted on Telegram the
+      bridge checks. Make a private channel, add the bot as an admin that can
+      post and delete messages, and put the channel's id here (it starts with
+      -100). Every five minutes the bot copies the bridged messages into it
+      and deletes the copies at once; one Telegram can't find was deleted
+      there, and is deleted here. The last hour's messages are checked each
+      time, a week's about hourly. Empty, nothing is checked.
 
     disteleplus_bridge_polls: Bridge Telegram polls into chat as a text
       snapshot of the question and options, rewritten as votes come in so the

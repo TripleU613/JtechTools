@@ -983,6 +983,11 @@ jtech_disteleplus:
     client: false
     depends_on:
       - "disteleplus_enabled"
+  disteleplus_deletion_check_chat_id:
+    default: ''
+    client: false
+    depends_on:
+      - "disteleplus_enabled"
   disteleplus_bridge_polls:
     default: true
     client: false

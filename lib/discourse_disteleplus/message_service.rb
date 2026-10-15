@@ -82,7 +82,9 @@ module DiscourseDisteleplus
       message.message_uploads.destroy_all
       message.reactions.destroy_all
       Publisher.publish(:deleted, message, actor: actor)
-      enqueue_bridge("delete", message) if bridge && message.source_discourse?
+      # Whichever side it was written on: a message deleted here goes on
+      # Telegram too, the humans' own messages included
+      enqueue_bridge("delete", message) if bridge
       message
     end
 

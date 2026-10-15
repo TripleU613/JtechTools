@@ -30,10 +30,12 @@ A private one-room chat inside Discourse for staff, or any groups you allow, mir
    - press **Register Telegram webhook**.
 4. In the Telegram group, send `/disteleplus_setup` and follow the checklist.
 5. Send a message from each side to check. **Send test message** and the admin dashboard help if something's off.
+6. So a message deleted on Telegram is deleted here too: make a private Telegram channel, add the bot as an admin that can post and delete messages, and put the channel's id (starting `-100`) in `disteleplus_deletion_check_chat_id`. Telegram never tells a bot about deletions, so every five minutes the bot copies the bridged messages into that channel and deletes the copies at once; whatever Telegram can't find was deleted there. The last hour's messages are checked every time, the past week's about hourly.
 
 Telegram's own limits apply:
 
-- the bot can't delete messages older than 48 hours;
+- the bot can't delete messages older than 48 hours, and can delete other people's messages only with the *Delete messages* admin right;
+- Telegram doesn't tell bots about deletions, so a deletion there shows up here within five minutes (an hour for messages over an hour old), and only with the check channel set up;
 - it can't see when Telegram users are typing;
 - it shows only one reaction per message;
 - converting the group to a supergroup changes its ID, so you have to bind it again.
@@ -68,7 +70,8 @@ Admin → Plugins → Jtech Tools → **Disteleplus**. The full text of each set
 | `disteleplus_bridge_uploads` | `true` | Copy photos, documents, video and audio across the bridge, in both directions, up to the size limit below. |
 | `disteleplus_max_upload_mb` | `10` | Files above this size are not copied — a Telegram file becomes a placeholder line in chat, and a Discourse upload becomes a link to the forum (which needs a login if secure uploads are on). |
 | `disteleplus_bridge_edits` | `true` | Editing a message updates the copy on the other side. |
-| `disteleplus_bridge_deletes` | `true` | Deleting a bridged chat message also deletes it in Telegram. |
+| `disteleplus_bridge_deletes` | `true` | Deleting a bridged chat message deletes it on the other side too, whichever side it was written on. |
+| `disteleplus_deletion_check_chat_id` | empty | The private check channel that lets deletions made on Telegram reach here (see setup step 6). Empty, they don't. |
 | `disteleplus_bridge_polls` | `true` | Bridge Telegram polls into chat as a text snapshot of the question and options, rewritten as votes come in so the counts stay roughly current. |
 | `disteleplus_bridge_reactions` | `true` | Telegram reactions appear as chat reactions — from the matching Discourse user when there is one, from the bridge bot otherwise. |
 | `disteleplus_bridge_reaction_notices` | `true` | When a Discourse member reacts to a bridged message, post a short "Name reacted 👍" reply under the Telegram copy (silently, no push). |

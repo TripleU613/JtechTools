@@ -107,9 +107,11 @@ module Jobs
       # Honor the toggle: with it off, the Discourse-side delete stands but
       # the Telegram copy is left alone (and stays linked for the record).
       return unless SiteSetting.disteleplus_bridge_deletes
+      # Both directions: the bot's copies of forum messages, and the
+      # originals of messages written on Telegram (which takes the bot's
+      # "Delete messages" admin right in the group)
       DiscourseDisteleplus::MessageLink
         .for_message(message_id)
-        .discourse_to_tg
         .find_each do |link|
           result =
             @api.call("deleteMessage", chat_id: @chat_id, message_id: link.telegram_message_id)

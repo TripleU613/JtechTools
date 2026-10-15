@@ -1019,9 +1019,8 @@ export default class DisteleplusService extends Service {
       can_edit:
         message.can_edit ||
         (!message.deleted && message.source === "discourse" && (mine || staff)),
-      can_delete:
-        message.can_delete ||
-        (!message.deleted && message.source === "discourse" && (mine || staff)),
+      // a Telegram message too: deleted here, the bot deletes it there
+      can_delete: message.can_delete || (!message.deleted && (mine || staff)),
       can_react: !message.deleted,
       createdDate: new Date(message.created_at),
       uploads: (message.uploads || []).map((upload) =>

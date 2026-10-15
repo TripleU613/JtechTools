@@ -69,7 +69,12 @@ RSpec.describe DiscourseDisteleplus::Access do
 
     it "never edits Telegram-origin messages from Discourse" do
       expect(described_class.can_edit?(admin, telegram)).to eq(false)
-      expect(described_class.can_delete?(admin, telegram)).to eq(false)
+    end
+
+    # deleted here, the bot deletes it on Telegram too
+    it "lets staff delete Telegram-origin messages, and nobody else" do
+      expect(described_class.can_delete?(admin, telegram)).to eq(true)
+      expect(described_class.can_delete?(member, telegram)).to eq(false)
     end
 
     it "refuses deleted messages" do

@@ -35,8 +35,12 @@ module DiscourseDisteleplus
       message.user_id == user.id || moderator?(user)
     end
 
+    # Unlike editing (a bot can't edit somebody else's Telegram message), a
+    # message written on Telegram can be deleted here: the bot deletes it
+    # there too. Its author, as matched to a forum account, or staff.
     def self.can_delete?(user, message)
-      can_edit?(user, message)
+      return false unless allowed?(user) && message && !message.deleted?
+      message.user_id == user.id || moderator?(user)
     end
   end
 end

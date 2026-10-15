@@ -284,10 +284,12 @@ RSpec.describe Jobs::DisteleplusSendToTelegram do
       expect(api).to have_received(:call).with("deleteMessage", a_hash_including(message_id: 322))
     end
 
-    it "never touches tg_to_discourse links (the humans' own messages)" do
-      link!(direction: :tg_to_discourse)
-      run("delete")
-      expect(api).not_to have_received(:call)
+    # Deleting one side only: a message written on Telegram and deleted here
+    # stayed on Telegram
+    it "deletes the Telegram original of a message written on Telegram" do
+      link!(direction: :tg_to_discourse, tg_id: 777)
+      expect { run("delete") }.to change { DiscourseDisteleplus::MessageLink.count }.by(-1)
+      expect(api).to have_received(:call).with("deleteMessage", a_hash_including(message_id: 777))
     end
 
     it "honors the disteleplus_bridge_deletes toggle" do

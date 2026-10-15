@@ -150,6 +150,18 @@ RSpec.describe DiscourseDisteleplus::MessageService do
     it "refuses other members" do
       expect { service(other).delete!(message) }.to raise_error(Discourse::InvalidAccess)
     end
+
+    # Deleting one side only left the message on the other: a message written
+    # on Telegram, deleted here, goes on Telegram too
+    it "bridges the delete of a message written on Telegram" do
+      from_telegram = service(admin).create!(raw: "from tg", source: :telegram, bridge: false)
+      outbound.clear
+      service(admin).delete!(from_telegram)
+      expect(outbound.last["args"].first).to include(
+        "action" => "delete",
+        "message_id" => from_telegram.id,
+      )
+    end
   end
 
   describe "#react!" do
