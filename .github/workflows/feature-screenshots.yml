@@ -15,10 +15,35 @@ on:
 
 jobs:
   screenshots:
-    name: feature_screenshots
+    # Two runs on the same setup: the screenshot gallery (allowed to fail),
+    # and the JTech theme's browser specs, which have a job of their own
+    # because they don't fit in the plugin workflow's 30-minute system-test
+    # job beside the rest (they skip themselves there, without
+    # JTECH_THEME_SPECS).
+    name: ${{ matrix.name }}
     runs-on: ubuntu-latest
     container: discourse/discourse_test:slim-browsers
-    timeout-minutes: 30
+    timeout-minutes: ${{ matrix.timeout }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: feature_screenshots
+            timeout: 30
+            theme_specs: ""
+            allow_failure: true
+            specs: >-
+              plugins/jtech-tools/spec/system/feature_screenshots_spec.rb
+              plugins/jtech-tools/spec/system/review_queue_click_through_spec.rb
+              plugins/jtech-tools/spec/system/notifications_type_filter_spec.rb
+              plugins/jtech-tools/spec/system/popup_notifications_screenshots_spec.rb
+              plugins/jtech-tools/spec/system/popup_notifications_stacking_screenshots_spec.rb
+              plugins/jtech-tools/spec/system/popup_notifications_click_through_spec.rb
+          - name: jtech_theme
+            timeout: 60
+            theme_specs: "1"
+            allow_failure: false
+            specs: plugins/jtech-tools/spec/system/jtech_theme_part*_spec.rb
 
     env:
       RUBY_GLOBAL_METHOD_CACHE_SIZE: 131072
@@ -43,6 +68,7 @@ jobs:
       # Opts the pop-up gallery specs in — they skip themselves in the main
       # parallel system_tests job (to keep it lean) and only run here.
       JTECH_SCREENSHOT_GALLERY: "1"
+      JTECH_THEME_SPECS: ${{ matrix.theme_specs }}
 
     steps:
       - name: Set working directory owner
@@ -127,24 +153,15 @@ jobs:
           echo "127.0.0.1 minio.local" | sudo tee -a /etc/hosts
           echo "127.0.0.1 discoursetest.minio.local" | sudo tee -a /etc/hosts
 
-      - name: Run feature-screenshot specs
-        run: |
-          bundle exec rspec \
-            --format documentation \
-            plugins/${{ env.PLUGIN_NAME }}/spec/system/feature_screenshots_spec.rb \
-            plugins/${{ env.PLUGIN_NAME }}/spec/system/review_queue_click_through_spec.rb \
-            plugins/${{ env.PLUGIN_NAME }}/spec/system/notifications_type_filter_spec.rb \
-            plugins/${{ env.PLUGIN_NAME }}/spec/system/popup_notifications_screenshots_spec.rb \
-            plugins/${{ env.PLUGIN_NAME }}/spec/system/popup_notifications_stacking_screenshots_spec.rb \
-            plugins/${{ env.PLUGIN_NAME }}/spec/system/popup_notifications_click_through_spec.rb \
-            plugins/${{ env.PLUGIN_NAME }}/spec/system/jtech_theme_part*_spec.rb
-        continue-on-error: true
+      - name: Run ${{ matrix.name }} specs
+        run: bundle exec rspec --format documentation ${{ matrix.specs }}
+        continue-on-error: ${{ matrix.allow_failure }}
 
       - name: Upload feature screenshots (always)
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: feature-screenshots
+          name: ${{ matrix.name }}-screenshots
           path: |
             tmp/capybara/feature_screenshots/*.png
             tmp/capybara/jtech_theme/*.png

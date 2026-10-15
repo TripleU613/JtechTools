@@ -11,9 +11,11 @@ require_relative "../../db/migrate/20261015000002_keep_jtech_words_for_existing_
 # Screenshots land in tmp/capybara/jtech_theme/ (uploaded by the Feature
 # Screenshots workflow).
 #
-# Shared by spec/system/jtech_theme_part*_spec.rb: the suite is split into
-# parts so CI's parallel processes share it (as one file it ran past the
-# job's 30 minutes on its own).
+# Shared by spec/system/jtech_theme_part*_spec.rb. They run only with
+# JTECH_THEME_SPECS=1, in a CI job of their own (the jtech_theme job in
+# .github/workflows/feature-screenshots.yml): some 200 examples at ~11 s,
+# they pushed the plugin's system-test job past its fixed 30 minutes. Locally:
+#   JTECH_THEME_SPECS=1 LOAD_PLUGINS=1 bin/rspec plugins/jtech-tools/spec/system/jtech_theme_part*_spec.rb
 RSpec.shared_context "jtech theme" do
   # with JTech's own words, which a new install doesn't get (their defaults
   # are neutral): the hero's subtitle, the footer's notice, the home icon

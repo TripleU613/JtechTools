@@ -4,7 +4,8 @@ require "rails_helper"
 
 # The JTech theme in a browser, part 3 of 4. Setup, and what the
 # suite covers: spec/support/jtech_theme_context.rb.
-RSpec.describe "JTech theme" do
+# Run in their own CI job (JTECH_THEME_SPECS=1): see the context.
+RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
   include_context "jtech theme"
 
   # Nine or more buttons (staff on jtechforums.org also get View translation
