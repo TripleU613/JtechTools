@@ -574,6 +574,24 @@ RSpec.describe "Dumbcourse" do
       end
     end
 
+    # On a computer the menu opened at the window's far edge, away from the
+    # column it belongs to
+    it "opens the menu at the content's column on a wide screen" do
+      resize_window(width: 1400, height: 900) do
+        visit "/dumb/"
+        expect(page).to have_css(".row.topic")
+        find("#tbMenu").click
+        expect(page).to have_css(".layer-drawer .menu-item", text: "Notifications")
+        drawer_left, column_left = page.evaluate_script(<<~JS)
+          [
+            document.querySelector(".layer-drawer .layer-panel").getBoundingClientRect().left,
+            document.querySelector("#app").getBoundingClientRect().left,
+          ]
+        JS
+        expect(drawer_left).to be_within(2).of(column_left)
+      end
+    end
+
     it "repeats the screen's soft-key actions in the menu" do
       phone do
         visit "/dumb/"

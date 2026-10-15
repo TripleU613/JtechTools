@@ -568,10 +568,11 @@ html.with-softkeys .layer {
   }
 }
 
-/* Drawer (menu). */
+/* Drawer (menu). On a wide screen it opens at the content's column (#app,
+   44rem), where the top bar's buttons are, not at the window's far edge. */
 .layer-drawer .layer-panel {
   top: 0;
-  left: 0;
+  left: max(0px, (100% - 44rem) / 2);
   bottom: 0;
   width: 86%;
   max-width: 20rem;

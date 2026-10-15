@@ -151,6 +151,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Fixed**
 
+- Dumbcourse: on a computer the menu opened at the window's far left edge, far from the content's column; it opens at the column now, under the top bar's buttons.
 - JTech theme: on a user card with a status ("Nothing but popcorn at a zoo."), the status bubble covered the name, leaving only the staff shield showing through. The name starts below the bubble now.
 - JTech theme: no keyboard-shortcuts button in the sidebar on a touch screen. Discourse shows it whenever it takes the page for a desktop one, which it decides by width, so a big phone, a phone turned sideways or the browser's "desktop site" got a button for a keyboard it doesn't have.
 - JTech theme: the end of a topic on a phone was two rows, the progress capsule resting above the buttons with a second admin wrench, and on a 390px phone Reply wrapped under the icons. The capsule steps aside while the buttons show, with no gap left, and the buttons are one row with Reply down to a 360px phone.
