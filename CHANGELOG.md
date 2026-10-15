@@ -151,6 +151,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Fixed**
 
+- JTech theme: a topic opens from anywhere on its row in every list (New & Unread under a topic, the Discourse palette's rows, Compact density), not only from its title, as the cards already did.
 - Dumbcourse: on a computer the menu opened at the window's far left edge, far from the content's column; it opens at the column now, under the top bar's buttons.
 - JTech theme: on a user card with a status ("Nothing but popcorn at a zoo."), the status bubble covered the name, leaving only the staff shield showing through. The name starts below the bubble now.
 - JTech theme: no keyboard-shortcuts button in the sidebar on a touch screen. Discourse shows it whenever it takes the page for a desktop one, which it decides by width, so a big phone, a phone turned sideways or the browser's "desktop site" got a button for a keyboard it doesn't have.

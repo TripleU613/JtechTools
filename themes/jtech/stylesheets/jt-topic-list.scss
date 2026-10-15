@@ -86,6 +86,12 @@
   }
 }
 
+// A topic opens from anywhere on its row, in every list, not only from its
+// title (api-initializers/jt-topic-cards)
+.topic-list-item {
+  cursor: pointer;
+}
+
 // ── Desktop list controls: filters · tabs · New Topic ──
 // Core wraps the row item by item when it runs out of room, which dropped
 // "New Topic" onto a line of its own. Here the tabs (one dropdown,
