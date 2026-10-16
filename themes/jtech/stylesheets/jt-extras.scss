@@ -118,9 +118,13 @@ html.desktop-view .container.posts:not(:has(.jt-toc-probe)) {
     max-width: none;
   }
 
-  // Set on the wrapper's children, so 100cqi is the wrapper's width
+  // Set on the wrapper's children, so 100cqi is the wrapper's width.
+  // Scroll anchoring off, as core has it on the cloaked post stream inside:
+  // with the wrapper a container, Safari anchored to it and leapt forward a
+  // post's height each time core cloaked a post above the screen (#309).
   .posts-wrapper {
     container-type: inline-size;
+    overflow-anchor: none;
 
     > * {
       --topic-body-width: calc(

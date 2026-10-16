@@ -205,15 +205,18 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
       sign_in(member)
       visit(topic.relative_url)
       expect(page).to have_css(".timeline-container .jt-jump__bottom")
-      gap, overflow = page.evaluate_script(<<~JS)
+      gap, overflow, anchor = page.evaluate_script(<<~JS)
         [
           document.querySelector(".topic-timeline").getBoundingClientRect().left -
             document.querySelector("#post_1 .topic-body").getBoundingClientRect().right,
           document.documentElement.scrollWidth - window.innerWidth,
+          getComputedStyle(document.querySelector(".posts-wrapper")).overflowAnchor,
         ]
       JS
       expect(gap).to be_between(16, 64)
       expect(overflow).to eq(0)
+      # the wrapper is a container: Safari leapt as posts were cloaked (#309)
+      expect(anchor).to eq("none")
       expect_no_theme_errors
     end
 
