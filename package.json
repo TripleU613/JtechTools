@@ -12,7 +12,7 @@
     "jiti": "^2.7.0",
     "lucide-static": "1.55.0",
     "playwright-core": "1.64.0",
-    "postcss": "8.5.29",
+    "postcss": "8.5.30",
     "prettier": "3.8.1",
     "sass": "1.105.1",
     "sharp": "0.35.5",
