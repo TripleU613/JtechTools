@@ -457,6 +457,48 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
     end
   end
 
+  # Core's presence plugin lifts "… replying" 3.2em, onto the line the
+  # progress capsule used to rest on at the end of a topic. The capsule takes
+  # no line there any more, so the lift laid it over the topic map at the foot
+  # of the posts: its avatar on "12 views". (A stand-in for the bar, as one
+  # needs someone else replying.)
+  it "puts \"replying\" under the topic map on a phone, not over it", mobile: true do
+    12.times { |i| Fabricate(:post, topic: topic, raw: "Reply #{i}, with a few words in it.") }
+    sign_in(admin)
+    resize_window(width: 390, height: 844) do
+      visit(topic.relative_url)
+      expect(page).to have_css(".topic-map.--bottom")
+      expect(page).to have_css(".topic-above-footer-buttons-outlet.presence", visible: :all)
+      measure = <<~JS
+        (() => {
+          const box = (s) => document.querySelector(s)?.getBoundingClientRect();
+          const map = box(".topic-map.--bottom");
+          const users = box(".topic-above-footer-buttons-outlet.presence .presence-users");
+          const buttons = box("#topic-footer-buttons");
+          return [map.bottom, users ? users.top : null, users ? users.bottom : null, buttons.top]
+            .map((n) => (n === null ? null : Math.round(n)));
+        })()
+      JS
+      map_bottom, _, _, buttons_top = page.evaluate_script(measure)
+      # nobody replying: core keeps the empty box lifted, no band under the map
+      expect(buttons_top - map_bottom).to be < 30
+
+      page.execute_script(<<~JS)
+        document.querySelector(".topic-above-footer-buttons-outlet.presence").insertAdjacentHTML(
+          "beforeend",
+          '<div class="presence-users"><div class="presence-avatars"><span class="avatar" ' +
+            'style="display:block;width:24px;height:24px"></span></div><span class="presence-text">' +
+            '<span class="description">replying</span></span></div>'
+        );
+      JS
+      expect(page).to have_css(".presence-users")
+      map_bottom, users_top, users_bottom, buttons_top = page.evaluate_script(measure)
+      expect(users_top).to be >= map_bottom
+      expect(users_bottom).to be <= buttons_top
+      expect_no_theme_errors
+    end
+  end
+
   # On a phone the timeline opens as a sheet, where core's own rule makes its
   # controls a wrapping row: at 320px the last-post arrow wrapped alone, under
   # Jump to… and the first-post arrow

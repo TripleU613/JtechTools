@@ -126,6 +126,20 @@
   }
 }
 
+// Core's presence plugin lifts "… replying" up onto the line the capsule
+// rests on at the end of a topic, to sit beside it (margin-top: -3.2em, room
+// on the right for the capsule, at core's 924px and under). Here the capsule
+// takes no line (above), so the lift put it over the topic map's stats: its
+// avatar on "12 views". While someone is replying it takes a line of its own
+// under the topic map, as on a computer. The rest of the time core keeps the
+// empty box lifted out of the way, so nothing moves.
+@media screen and (width <= 924px) {
+  .topic-above-footer-buttons-outlet.presence:has(.presence-users) {
+    margin-top: var(--below-topic-margin);
+    margin-right: 0;
+  }
+}
+
 html.jt-topic-end #topic-progress-wrapper {
   visibility: hidden;
   opacity: 0;
