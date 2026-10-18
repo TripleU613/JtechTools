@@ -193,6 +193,33 @@ RSpec.describe "Mod elections" do
     )
   end
 
+  it "says nominations stay open longer when nobody else runs, then that there's no Vote Week" do
+    election
+    DiscourseModElections::Lifecycle.advance!(election, election.voting_open_at)
+    sign_in(chaim)
+    visit "/elections"
+
+    expect(page).to have_css(".global-notice", text: "nominations stay open until")
+    expect(page).to have_css(".mod-elections-extended")
+    expect(page).to have_css(".mod-elections-run__start")
+
+    DiscourseModElections::Lifecycle.end_phase!(election, admin)
+
+    expect(page).to have_css(".mod-elections-status", text: "Unopposed")
+    expect(page).to have_css(".mod-elections-vote-skipped", text: "elected unopposed")
+    expect(page).to have_css(".mod-elections-steps__step", count: 2)
+    expect(page).to have_no_css(".mod-elections-steps__step[data-step='voting']")
+    expect(page).to have_css(".mod-elections-candidate", text: moderator.username)
+    shot("09_vote_skipped")
+
+    SiteSetting.dumbcourse_enabled = true
+    resize_window(width: 240, height: 320) do
+      visit "/dumb/elections"
+      expect(page).to have_text("Unopposed")
+      expect(page).to have_text("elected unopposed")
+    end
+  end
+
   it "doesn't offer a candidate their own name" do
     open_voting
     sign_in(chaim)

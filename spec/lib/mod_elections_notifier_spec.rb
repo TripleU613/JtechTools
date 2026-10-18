@@ -120,6 +120,7 @@ RSpec.describe DiscourseModElections::Disteleplus do
 
     described_class.results(election)
     described_class.closed(election)
+    described_class.vote_skipped(election)
   end
 
   it "says nothing about the count before it's published" do
@@ -135,6 +136,21 @@ RSpec.describe DiscourseModElections::Disteleplus do
       .once
 
     described_class.closed(election)
+  end
+
+  it "tells staff when there's no Vote Week, so they publish" do
+    election.update!(status: :closed, result: nil, vote_skipped_at: Time.zone.now)
+    described_class.stubs(:available?).returns(true)
+    described_class
+      .expects(:send_html)
+      .with do |html, dedupe_key:|
+        html.include?("no Vote Week") &&
+          html.include?("/admin/plugins/jtech-tools/mod-elections") &&
+          dedupe_key == "mod-election-#{election.id}-vote_skipped"
+      end
+      .once
+
+    described_class.vote_skipped(election)
   end
 
   it "names winners as their accounts are now" do

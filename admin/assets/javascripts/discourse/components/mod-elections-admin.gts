@@ -86,6 +86,10 @@ interface ModeratorAction {
 }
 
 interface AdminElection extends AdminElectionRow {
+  // No more candidates than seats when nominations closed: they stayed
+  // open longer, then there was no Vote Week.
+  nominations_extended: boolean;
+  vote_skipped: boolean;
   topic_id: number | null;
   // When the count was first previewed; ballots are fixed from then.
   previewed_at: string | null;
@@ -234,7 +238,13 @@ export default class ModElectionsAdmin extends Component {
         : e.status === "nominating"
           ? e.voting_open_at
           : e.voting_close_at;
-    return i18n(`admin.mod_elections.current.phase.${e.status}`, {
+    const phase =
+      e.status === "nominating" && e.nominations_extended
+        ? "nominating_extended"
+        : e.status === "closed" && e.vote_skipped
+          ? "vote_skipped"
+          : e.status;
+    return i18n(`admin.mod_elections.current.phase.${phase}`, {
       date: longDate(date),
     });
   }

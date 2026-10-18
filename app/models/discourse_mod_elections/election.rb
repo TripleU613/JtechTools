@@ -42,6 +42,21 @@ module DiscourseModElections
       BEFORE_CLOSE.include?(status.to_sym)
     end
 
+    # No more candidates than seats: the count elects them all whatever the
+    # ballots say, so there's nothing to vote on.
+    def uncontested?
+      candidates.running.count <= seats
+    end
+
+    # Nominations closed uncontested, so there was no Vote Week.
+    def vote_skipped?
+      vote_skipped_at.present?
+    end
+
+    def nominations_extended?
+      nominations_extended_at.present?
+    end
+
     # Raises the reason a change can't happen in this phase, if it can't:
     # :nominations and :votes go by the clock too; :closed is after Vote
     # Week and before publishing; :unfinished is anything not yet over.
@@ -104,22 +119,24 @@ end
 #
 # Table name: jtech_elections
 #
-#  id                  :bigint           not null, primary key
-#  nominations_open_at :datetime         not null
-#  previewed_at        :datetime
-#  published_at        :datetime
-#  reminder_sent_at    :datetime
-#  result              :jsonb
-#  seats               :integer          not null
-#  seed                :bigint
-#  status              :integer          default("scheduled"), not null
-#  voting_close_at     :datetime         not null
-#  voting_open_at      :datetime         not null
-#  created_at          :datetime         not null
-#  updated_at          :datetime         not null
-#  created_by_id       :bigint
-#  published_by_id     :bigint
-#  topic_id            :bigint
+#  id                      :bigint           not null, primary key
+#  nominations_extended_at :datetime
+#  nominations_open_at     :datetime         not null
+#  previewed_at            :datetime
+#  published_at            :datetime
+#  reminder_sent_at        :datetime
+#  result                  :jsonb
+#  seats                   :integer          not null
+#  seed                    :bigint
+#  status                  :integer          default("scheduled"), not null
+#  vote_skipped_at         :datetime
+#  voting_close_at         :datetime         not null
+#  voting_open_at          :datetime         not null
+#  created_at              :datetime         not null
+#  updated_at              :datetime         not null
+#  created_by_id           :bigint
+#  published_by_id         :bigint
+#  topic_id                :bigint
 #
 # Indexes
 #

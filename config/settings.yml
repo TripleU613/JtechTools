@@ -1452,6 +1452,13 @@ jtech_mod_elections:
     max: 30
     depends_on:
       - "mod_elections_enabled"
+  mod_elections_nomination_extension_days:
+    default: 3
+    client: false
+    min: 0
+    max: 30
+    depends_on:
+      - "mod_elections_enabled"
   mod_elections_voting_days:
     default: 7
     client: false
@@ -1520,6 +1527,11 @@ jtech_mod_elections:
     depends_on:
       - "mod_elections_enabled"
   mod_elections_notify_voters:
+    default: true
+    client: false
+    depends_on:
+      - "mod_elections_enabled"
+  mod_elections_invite_candidates:
     default: true
     client: false
     depends_on:

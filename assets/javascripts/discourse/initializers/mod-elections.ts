@@ -12,10 +12,12 @@ import type {
 } from "../services/mod-elections";
 
 // Whether the banner is for this person: during nominations everyone signed
-// in sees it; during Vote Week only voters who haven't voted.
+// in sees it; during Vote Week only voters who haven't voted. Nominations
+// kept open for want of candidates have a banner of their own, so it comes
+// back for those who dismissed the first.
 function noticeFor(summary: ModElectionSummary | undefined): string | null {
   if (summary?.status === "nominating") {
-    return "nominating";
+    return summary.extended ? "nominating_extended" : "nominating";
   }
   if (summary?.status === "voting" && summary.voter && !summary.voted) {
     return "voting";

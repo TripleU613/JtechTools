@@ -72,6 +72,10 @@ interface Election {
   seats: number;
   voting_open_at: string;
   voting_close_at: string;
+  // No more candidates than seats when nominations closed: they stayed
+  // open longer, then there was no Vote Week.
+  nominations_extended: boolean;
+  vote_skipped: boolean;
   candidates: Candidate[];
   result: Result | null;
 }
@@ -228,9 +232,11 @@ function show(s: Screen, page: Page): void {
       : e.status === "voting"
         ? e.voting_close_at
         : null;
+  const status =
+    e.status === "closed" && e.vote_skipped ? "Unopposed" : STATUS[e.status];
   s.title("Mod elections", {
     back: true,
-    sub: (STATUS[e.status] || "") + (ends ? " · until " + dateTime(ends) : ""),
+    sub: (status || "") + (ends ? " · until " + dateTime(ends) : ""),
   });
 
   if (e.status === "voting" && page.me && !page.me.vote_blocked) {
@@ -244,6 +250,13 @@ function show(s: Screen, page: Page): void {
     body = html`${page.me && page.me.vote_blocked
       ? html`<p class="hint pad">${blockedText(page.me.vote_blocked, page)}</p>`
       : ""}${candidateList(e)}`;
+  else if (e.status === "closed" && e.vote_skipped)
+    body = html`<p class="hint pad">
+        ${e.candidates.some((c) => c.status === "running")
+          ? "There are no more candidates than seats, so there's no Vote Week: everyone running is elected unopposed. They take their seats when an admin publishes the results."
+          : "Nobody ran, so there's no Vote Week."}
+      </p>
+      ${candidateList(e)}`;
   else if (e.status === "closed")
     body = html`<p class="hint pad">
         Voting has closed. The results come out when an admin publishes the
@@ -361,7 +374,13 @@ function nominations(s: Screen, page: Page, e: Election): SafeHtml {
       ${blockedText(me.run_blocked, page)}
     </p>`;
   }
-  return html`${mineBlock}${candidateList(e)}`;
+  const extended = e.nominations_extended
+    ? html`<p class="hint pad">
+        There are no more candidates than seats, so nominations stay open
+        longer.
+      </p>`
+    : "";
+  return html`${extended}${mineBlock}${candidateList(e)}`;
 }
 
 // ── Ballot ──────────────────────────────────────────────────────────────

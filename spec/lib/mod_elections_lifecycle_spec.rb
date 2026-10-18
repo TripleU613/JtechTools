@@ -23,6 +23,26 @@ RSpec.describe DiscourseModElections::Lifecycle do
     described_class.tick
   end
 
+  def member
+    Fabricate(:user, trust_level: TrustLevel[2], created_at: 1.year.ago)
+  end
+
+  # One seat and a second candidate beside the sitting moderator: with no
+  # more candidates than seats there's nothing to vote on, so no Vote Week.
+  def contest!
+    election.update!(seats: 1)
+    DiscourseModElections::Nominations.run!(member, election, "")
+  end
+
+  def election_notes(user)
+    Notification
+      .where(user_id: user.id, notification_type: Notification.types[:custom])
+      .order(:id)
+      .map { |n| JSON.parse(n.data) }
+      .select { |d| d["mod_election"] }
+      .map { |d| d["mod_election_kind"] }
+  end
+
   it "does nothing while switched off" do
     SiteSetting.mod_elections_enabled = false
     tick_at(2027, 1, 1, 0, 5)
@@ -118,30 +138,177 @@ RSpec.describe DiscourseModElections::Lifecycle do
     voted = Fabricate(:user, trust_level: TrustLevel[2], created_at: 1.year.ago)
 
     tick_at(2027, 1, 1, 0, 5)
+    contest!
     tick_at(2027, 1, 8, 0, 5)
     expect(election).to be_voting
 
-    election_notes = ->(user) do
-      Notification
-        .where(user_id: user.id, notification_type: Notification.types[:custom])
-        .order(:id)
-        .map { |n| JSON.parse(n.data) }
-        .select { |d| d["mod_election"] }
-        .map { |d| d["mod_election_kind"] }
-    end
-    expect(election_notes.call(voter)).to eq(%w[voting_open])
+    # Both could have run, so they were told when nominations opened.
+    expect(election_notes(voter)).to eq(%w[can_run voting_open])
 
     DiscourseModElections::Voting.cast!(voted, election, [election.candidates.first.id])
 
     tick_at(2027, 1, 14, 1)
     expect(election.reminder_sent_at).to be_present
-    expect(election_notes.call(voter)).to eq(%w[voting_open reminder])
-    expect(election_notes.call(voted)).to eq(%w[voting_open])
+    expect(election_notes(voter)).to eq(%w[can_run voting_open reminder])
+    expect(election_notes(voted)).to eq(%w[can_run voting_open])
 
     tick_at(2027, 1, 15, 0, 5)
     expect(election).to be_closed
+    expect(election).not_to be_vote_skipped
     expect(election.seed).to be_present
-    expect(election_notes.call(admin)).to eq(%w[closed])
+    expect(election_notes(admin)).to eq(%w[closed])
+  end
+
+  describe "with no more candidates than seats" do
+    before { Jobs.run_immediately! }
+
+    it "keeps nominations open longer, once, then has no Vote Week" do
+      voter = member
+      tick_at(2027, 1, 1, 0, 5)
+
+      messages =
+        MessageBus.track_publish(DiscourseModElections::State::CHANNEL) do
+          tick_at(2027, 1, 8, 0, 5)
+        end
+      expect(messages.size).to eq(1)
+      expect(election).to be_nominating
+      expect(election).to be_nominations_extended
+      expect(election.voting_open_at).to eq_time(zone.local(2027, 1, 11))
+      expect(election.voting_close_at).to eq_time(zone.local(2027, 1, 18))
+      expect(DiscourseModElections::State.active).to include(extended: true)
+      expect(election_notes(voter)).to eq(%w[can_run nominations_extended])
+
+      tick_at(2027, 1, 11, 0, 5)
+      expect(election).to be_closed
+      expect(election).to be_vote_skipped
+      expect(election.voting_close_at).to eq_time(zone.local(2027, 1, 11))
+      expect(election.seed).to be_present
+      # Nobody is told to vote when there's nothing to vote on.
+      expect(election_notes(voter)).to eq(%w[can_run nominations_extended])
+      expect(election_notes(admin)).to eq(%w[vote_skipped])
+
+      DiscourseModElections::Publisher.publish!(election, admin)
+      expect(election.reload.result["outcome"]).to eq("unopposed")
+      expect(election.candidates.find_by(user: moderator)).to be_elected
+      expect(moderator.reload).to be_moderator
+    end
+
+    it "opens Vote Week as usual when enough people run in the extra days" do
+      tick_at(2027, 1, 1, 0, 5)
+      tick_at(2027, 1, 8, 0, 5)
+      3.times { DiscourseModElections::Nominations.run!(member, election, "") }
+
+      tick_at(2027, 1, 11, 0, 5)
+      expect(election).to be_voting
+      expect(election).not_to be_vote_skipped
+      expect(election.voting_close_at).to eq_time(zone.local(2027, 1, 18))
+    end
+
+    it "has no Vote Week straight away when there are no extra days" do
+      SiteSetting.mod_elections_nomination_extension_days = 0
+      tick_at(2027, 1, 1, 0, 5)
+      tick_at(2027, 1, 8, 0, 5)
+
+      expect(election).to be_closed
+      expect(election).to be_vote_skipped
+      expect(election).not_to be_nominations_extended
+    end
+
+    it "doesn't keep nominations open when the extra days would be over already" do
+      tick_at(2027, 1, 1, 0, 5)
+      # Nothing moved it on in time (the module was off, say).
+      tick_at(2027, 1, 12)
+
+      expect(election).to be_vote_skipped
+      expect(election).not_to be_nominations_extended
+    end
+
+    it "never keeps open nominations an admin closed early" do
+      tick_at(2027, 1, 2)
+      described_class.end_phase!(election, admin)
+
+      expect(election).to be_closed
+      expect(election).to be_vote_skipped
+      expect(election).not_to be_nominations_extended
+    end
+
+    it "says so in the election's topic" do
+      SiteSetting.mod_elections_category = Fabricate(:category).id.to_s
+      tick_at(2027, 1, 1, 0, 5)
+      topic = election.topic
+
+      tick_at(2027, 1, 8, 0, 5)
+      expect(topic.posts.last.raw).to include("Nominations stay open until")
+
+      tick_at(2027, 1, 11, 0, 5)
+      raw = topic.posts.last.raw
+      expect(raw).to include("there's no Vote Week")
+      expect(raw).to include("/u/#{moderator.username}")
+      expect(raw).not_to include("@#{moderator.username}")
+    end
+  end
+
+  describe "inviting members to run" do
+    before { Jobs.run_immediately! }
+
+    def notified(kind)
+      Notification
+        .where(notification_type: Notification.types[:custom])
+        .map { |n| [n.user_id, JSON.parse(n.data)] }
+        .select { |_, data| data["mod_election_kind"] == kind }
+        .map(&:first)
+    end
+
+    it "tells everyone who can run, and only them, when nominations open and when they're kept open" do
+      freeze_time(zone.local(2027, 1, 1, 0, 5))
+      can = member
+      punished_by_mod = member
+      UserHistory.create!(
+        action: UserHistory.actions[:silence_user],
+        acting_user: moderator,
+        target_user: punished_by_mod,
+      )
+      tl1 = Fabricate(:user, trust_level: TrustLevel[1], created_at: 1.year.ago)
+      too_new = Fabricate(:user, trust_level: TrustLevel[2], created_at: 10.days.ago)
+      punished = member
+      UserHistory.create!(
+        action: UserHistory.actions[:suspend_user],
+        acting_user: admin,
+        target_user: punished,
+      )
+      suspended = member
+      suspended.update!(suspended_till: 1.month.from_now, suspended_at: Time.zone.now)
+      staged = Fabricate(:user, trust_level: TrustLevel[2], created_at: 1.year.ago, staged: true)
+
+      described_class.tick
+      expect(notified("can_run")).to contain_exactly(can.id, punished_by_mod.id)
+      # The sitting moderator is told they're on the ballot instead.
+      expect(notified("on_ballot")).to eq([moderator.id])
+
+      # The same rules as running.
+      [can, punished_by_mod, tl1, too_new, punished, suspended, staged, admin].each do |user|
+        blocked = DiscourseModElections::Eligibility.run_blocked_reason(user, election)
+        expect(notified("can_run").include?(user.id)).to eq(blocked.nil?)
+      end
+
+      # Someone who ran in the meantime isn't asked again.
+      DiscourseModElections::Nominations.run!(punished_by_mod, election, "")
+      DiscourseModElections::Nominations.withdraw!(punished_by_mod, election)
+      tick_at(2027, 1, 8, 0, 5)
+      expect(election).to be_nominations_extended
+      expect(notified("nominations_extended")).to eq([can.id])
+    end
+
+    it "tells nobody but the sitting moderators when switched off" do
+      SiteSetting.mod_elections_invite_candidates = false
+      member
+      tick_at(2027, 1, 1, 0, 5)
+      tick_at(2027, 1, 8, 0, 5)
+
+      expect(notified("can_run")).to be_empty
+      expect(notified("nominations_extended")).to be_empty
+      expect(notified("on_ballot")).to eq([moderator.id])
+    end
   end
 
   it "tells open elections pages when a step changes, and only signed-in members" do
@@ -172,6 +339,7 @@ RSpec.describe DiscourseModElections::Lifecycle do
     expect(topic.category_id).to eq(category.id)
     expect(topic.title).to include("January 2027")
 
+    contest!
     tick_at(2027, 1, 8, 0, 5)
     expect(topic.reload.posts_count).to eq(2)
     expect(topic.posts.last.raw).to include("/u/#{moderator.username}")
@@ -184,11 +352,7 @@ RSpec.describe DiscourseModElections::Lifecycle do
     before do
       voter
       tick_at(2027, 1, 1, 0, 5)
-      DiscourseModElections::Nominations.run!(
-        Fabricate(:user, trust_level: TrustLevel[2], created_at: 1.year.ago),
-        election,
-        "",
-      )
+      contest!
     end
 
     it "turns ballots away after Vote Week ends, even before the tick moves it on" do
@@ -220,6 +384,7 @@ RSpec.describe DiscourseModElections::Lifecycle do
     DiscourseModElections::Announcer.stubs(:voting_open).raises(ActiveRecord::StatementInvalid)
 
     tick_at(2027, 1, 1, 0, 5)
+    contest!
     tick_at(2027, 1, 8, 0, 5)
 
     expect(election).to be_voting
@@ -229,6 +394,7 @@ RSpec.describe DiscourseModElections::Lifecycle do
     it "never comes in Vote Week's first day" do
       SiteSetting.mod_elections_voting_days = 1
       tick_at(2027, 1, 1, 0, 5)
+      contest!
       tick_at(2027, 1, 8, 0, 5)
       tick_at(2027, 1, 8, 12)
 
@@ -239,6 +405,7 @@ RSpec.describe DiscourseModElections::Lifecycle do
     it "comes a day before the end of a longer Vote Week" do
       SiteSetting.mod_elections_voting_days = 2
       tick_at(2027, 1, 1, 0, 5)
+      contest!
       tick_at(2027, 1, 8, 0, 5)
       expect(election.reminder_sent_at).to be_nil
 
@@ -262,6 +429,7 @@ RSpec.describe DiscourseModElections::Lifecycle do
   it "tells admins once when an unfinished election keeps the next one from starting" do
     tick_at(2027, 1, 1, 0, 5)
     january = election
+    contest!
     described_class.end_phase!(january, admin)
     described_class.end_phase!(january, admin)
     expect(january.reload).to be_closed
@@ -286,6 +454,7 @@ RSpec.describe DiscourseModElections::Lifecycle do
   describe ".end_phase!" do
     it "lets an admin end nominations and Vote Week early" do
       tick_at(2027, 1, 2)
+      contest!
       described_class.end_phase!(election, admin)
       expect(election.reload).to be_voting
 

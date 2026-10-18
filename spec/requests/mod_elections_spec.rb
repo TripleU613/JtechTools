@@ -14,7 +14,9 @@ RSpec.describe "Mod elections endpoints" do
     SiteSetting.mod_elections_enabled = true
   end
 
-  def start_election(seats: 2)
+  # One seat, so the sitting moderator and one more candidate are a contest:
+  # with no more candidates than seats there's no Vote Week.
+  def start_election(seats: 1)
     DiscourseModElections::Lifecycle.create!(
       admin,
       seats: seats,
@@ -82,6 +84,38 @@ RSpec.describe "Mod elections endpoints" do
         MessageBus.last_id(DiscourseModElections::State::CHANNEL),
       )
       expect(response.parsed_body["message_bus_last_id"]).to be > 0
+    end
+
+    it "says when nominations stay open longer, and when there's no Vote Week" do
+      election = start_election
+      DiscourseModElections::Lifecycle.advance!(election, election.voting_open_at)
+
+      sign_in(other)
+      get "/jtech-elections/current.json"
+      expect(response.parsed_body["election"]).to include(
+        "status" => "nominating",
+        "nominations_extended" => true,
+        "vote_skipped" => false,
+      )
+      get "/session/current.json"
+      expect(response.parsed_body.dig("current_user", "mod_election")).to include(
+        "status" => "nominating",
+        "extended" => true,
+      )
+
+      DiscourseModElections::Lifecycle.advance!(election.reload, election.voting_open_at)
+      get "/jtech-elections/current.json"
+      expect(response.parsed_body["election"]).to include(
+        "status" => "closed",
+        "vote_skipped" => true,
+      )
+
+      sign_in(admin)
+      get "/jtech-elections/admin/elections/#{election.id}.json"
+      expect(response.parsed_body).to include(
+        "vote_skipped" => true,
+        "nominations_extended" => true,
+      )
     end
   end
 
@@ -429,6 +463,7 @@ RSpec.describe "Mod elections endpoints" do
     end
 
     it "deletes the ballots of a cancelled election" do
+      DiscourseModElections::Nominations.run!(member, election, "")
       open_voting(election)
       DiscourseModElections::Voting.cast!(other, election, [election.candidates.first.id])
 
@@ -504,6 +539,7 @@ RSpec.describe "Mod elections endpoints" do
     end
 
     it "ends a phase early and cancels" do
+      DiscourseModElections::Nominations.run!(member, election, "")
       sign_in(admin)
       post "/jtech-elections/admin/elections/#{election.id}/end-phase.json"
       expect(response.parsed_body["status"]).to eq("voting")
@@ -662,6 +698,7 @@ RSpec.describe "Mod elections endpoints" do
         "status" => "nominating",
       )
 
+      DiscourseModElections::Nominations.run!(member, election, "")
       open_voting(election)
       get "/session/current.json"
       expect(response.parsed_body.dig("current_user", "mod_election")).to include(

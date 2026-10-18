@@ -209,11 +209,15 @@ RSpec.describe "Dumbcourse app page" do
           voting_open_at: 3.days.from_now,
           voting_close_at: 6.days.from_now,
         )
-      DiscourseModElections::Nominations.run!(
-        Fabricate(:user, trust_level: TrustLevel[2], created_at: 1.year.ago),
-        election,
-        "",
-      )
+      # Two for the one seat: with no more candidates than seats there's no
+      # Vote Week.
+      2.times do
+        DiscourseModElections::Nominations.run!(
+          Fabricate(:user, trust_level: TrustLevel[2], created_at: 1.year.ago),
+          election,
+          "",
+        )
+      end
       DiscourseModElections::Lifecycle.end_phase!(election, admin)
 
       get "/dumb/"

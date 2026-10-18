@@ -587,7 +587,9 @@ en:
         title: Mod elections
       notice:
         nominating: "Mod elections: nominations are open until %{date}."
-        nominating_link: See who's running
+        nominating_link: Run, or see who's running
+        nominating_extended: "Mod elections: there are no more candidates than seats, so nominations stay open until %{date}."
+        nominating_extended_link: Run, or see who's running
         voting: "Vote Week is open until %{date}."
         voting_link: Vote
       status:
@@ -595,6 +597,7 @@ en:
         nominating: Nominations open
         voting: Vote Week
         closed: Counting
+        unopposed: Unopposed
         published: Results
         cancelled: Cancelled
       steps:
@@ -682,6 +685,11 @@ en:
       closed:
         title: Voting has closed
         body: The results come out when an admin publishes the count.
+      vote_skipped:
+        title: No Vote Week
+        body: There are no more candidates than seats, so everyone running is elected unopposed. They take their seats when an admin publishes the results.
+        nobody: Nobody ran, so there's no Vote Week.
+      nominations_extended: There are no more candidates than seats, so nominations stay open longer.
       results:
         title: Results
         none: Nobody was elected.
@@ -718,6 +726,9 @@ en:
         cancelled: Cancelled
       notifications:
         on_ballot: You're on the ballot. You can drop out until nominations close.
+        can_run: Nominations are open, and you can run for moderator.
+        nominations_extended: There are no more candidates than seats, so nominations stay open longer. You can still run.
+        vote_skipped: There are no more candidates than seats, so there's no Vote Week. Check the preview and publish the results.
         voting_open: Vote Week is open. Rank the candidates.
         reminder: Vote Week ends tomorrow, and you haven't voted.
         closed: Voting has closed. Check the ballots and publish the results.
@@ -773,8 +784,10 @@ en:
           phase:
             scheduled: "Nominations open %{date}."
             nominating: "Nominations close %{date}."
+            nominating_extended: "Nominations close %{date}, later than planned: there were no more candidates than seats."
             voting: "Vote Week ends %{date}."
             closed: Voting has closed. Check the ballots, then publish.
+            vote_skipped: There were no more candidates than seats, so there was no Vote Week. Check the preview, then publish.
           end_phase:
             scheduled: Open nominations now
             nominating: Close nominations now

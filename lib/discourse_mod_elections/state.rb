@@ -6,8 +6,9 @@ module DiscourseModElections
   module State
     CACHE_KEY = "jtech-mod-elections-active"
 
-    # { id:, status:, ends_at: } for an election people can see (nominations
-    # or later, not yet published or cancelled), or nil.
+    # { id:, status:, ends_at:, extended: } for an election people can see
+    # (nominations or later, not yet published or cancelled), or nil.
+    # extended: nominations stay open longer for want of candidates.
     def self.active
       Discourse.cache.fetch(CACHE_KEY, expires_in: 5.minutes) { compute || false } || nil
     end
@@ -15,7 +16,12 @@ module DiscourseModElections
     def self.compute
       election = Election.where(status: %i[nominating voting closed]).order(:id).last
       return if election.nil?
-      { id: election.id, status: election.status, ends_at: election.phase_ends_at&.iso8601 }
+      {
+        id: election.id,
+        status: election.status,
+        ends_at: election.phase_ends_at&.iso8601,
+        extended: election.nominations_extended?,
+      }
     end
 
     CHANNEL = "/jtech-elections/state"

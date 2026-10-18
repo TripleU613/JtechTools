@@ -1012,6 +1012,13 @@ en:
     mod_elections_nomination_days: How long nominations stay open. Sitting
       moderators are on the ballot automatically and can drop out until
       nominations close.
+    mod_elections_nomination_extension_days: When nominations close with no
+      more candidates than seats, there's nothing to vote on, so they stay
+      open this many more days, once, for others to run. Vote Week moves back
+      by the same. If there are still no more candidates than seats after
+      that, there's no Vote Week; they're elected unopposed when an admin
+      publishes the results. 0 skips the extra days. Closing nominations
+      early from the Mod elections tab never extends them.
     mod_elections_voting_days: How long Vote Week lasts, starting when
       nominations close. Voters can change their ballot until it ends.
     mod_elections_candidate_min_trust_level: Lowest trust level that can
@@ -1043,6 +1050,10 @@ en:
       blank for no topic.
     mod_elections_notify_voters: Sends voters a notification when Vote Week
       opens, and again a day before it ends to those who haven't voted.
+    mod_elections_invite_candidates: Sends a notification to every member who
+      can run when nominations open, and again if nominations stay open
+      longer because not enough people are running. Sitting moderators are
+      told they're on the ballot either way.
 
     placeholder:
       discourse_another_email_smtp_address: smtp.example.com
@@ -1154,6 +1165,9 @@ en:
     title: "Mod elections"
     notifications:
       on_ballot: "You're on the ballot. You can drop out until nominations close."
+      can_run: "Nominations are open, and you can run for moderator."
+      nominations_extended: "There are no more candidates than seats, so nominations stay open longer. You can still run."
+      vote_skipped: "There are no more candidates than seats, so there's no Vote Week. Check the preview and publish the results."
       voting_open: "Vote Week is open. Rank the candidates."
       reminder: "Vote Week ends tomorrow, and you haven't voted."
       closed: "Voting has closed. Check the ballots and publish the results."
@@ -1169,6 +1183,16 @@ en:
         Vote Week runs from %{voting_open} to %{voting_close}.
 
         [Run, or see who's running](%{url})
+      nominations_extended: |
+        There are no more candidates than seats, so there's nothing to vote on yet. Nominations stay open until %{voting_open}, and Vote Week runs from then to %{voting_close}.
+
+        [Run, or see who's running](%{url})
+      vote_skipped: |
+        There are no more candidates than seats, so there's no Vote Week. Elected unopposed:
+        %{candidates}
+
+        They take their seats when an admin publishes the results.
+      vote_skipped_nobody: "Nobody ran, so there's no Vote Week."
       voting_open: |
         Vote Week is open until %{voting_close}. Rank the candidates on the elections page: your vote counts as much as your trust level.
 
@@ -1221,4 +1245,5 @@ en:
       removed: "Removed as a moderator."
     telegram:
       closed: "Voting has closed. <a href=\"%{url}\">Check the ballots and publish the results</a>."
+      vote_skipped: "There are no more candidates than seats, so there's no Vote Week. <a href=\"%{url}\">Publish the results</a>."
       results: "The results are published. Elected: %{winners}. <a href=\"%{url}\">The count</a>"

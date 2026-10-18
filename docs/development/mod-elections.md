@@ -17,7 +17,7 @@ How the [mod elections](../features/mod-elections.md) module works inside, for p
 | `lib/discourse_mod_elections/notifier.rb`, `announcer.rb`, `disteleplus.rb` | Notifications, the election's topic, the staff Telegram notices |
 | `lib/discourse_mod_elections/presenter.rb`, `state.rb` | JSON for the page, the admin tab and the current user; the cached "election in progress" |
 | `app/controllers/discourse_mod_elections/` | `ElectionsController` (`/jtech-elections/…`), `AdminController` (`/jtech-elections/admin/…`) |
-| `app/jobs/` | `ModElectionsTick` (every minute), `ModElectionsNotifyVoters` |
+| `app/jobs/` | `ModElectionsTick` (every minute), `ModElectionsNotifyVoters`, `ModElectionsInviteCandidates` |
 | `assets/javascripts/discourse/components/mod-elections-*.gts` | The page, the ballot, running, a candidate, the results |
 | `admin/assets/javascripts/discourse/components/mod-elections-admin.gts` | The Mod elections admin tab |
 | `dumbcourse/src/views/elections.ts`, `dumbcourse/src/ballot.ts` | The Dumbcourse screen and its ranking helpers |
@@ -25,12 +25,12 @@ How the [mod elections](../features/mod-elections.md) module works inside, for p
 
 ## An election's life
 
-`scheduled → nominating → voting → closed → published`, or `cancelled` from any of the first four.
+`scheduled → nominating → voting → closed → published`, or `nominating → closed` when there's nothing to vote on, or `cancelled` from any of the first four.
 
 `Jobs::ModElectionsTick` runs `Lifecycle.tick` every minute. It creates the calendar's election when a scheduled month starts (once per month, a day's slack each side so a time zone change can't start a second one; never once nominations would already be over; never while another is unfinished, and then the admins get one `schedule_blocked` notification per election in the way), then calls `advance!` on each unfinished election. `advance!` moves it to wherever the clock says, all under `election.with_lock`:
 
-- **nominating:** fixes the voter list (`Roll.snapshot!`: account age, trust level 1+, not suspended, silenced, staged or admin; weight = trust level) and puts the sitting moderators on the ballot.
-- **voting:** nothing to compute.
+- **nominating:** fixes the voter list (`Roll.snapshot!`: account age, trust level 1+, not suspended, silenced, staged or admin; weight = trust level) and puts the sitting moderators on the ballot. After the lock, `Jobs::ModElectionsInviteCandidates` tells everyone `Eligibility.could_run` finds (the rules of `run_blocked_reason` in one query, minus anyone with a row on this ballot), when `mod_elections_invite_candidates` is on.
+- **nominations close** (`close_nominations!`): with more running than seats, **voting**, with nothing to compute. With no more (`Election#uncontested?`), the count would elect them all whatever the ballots said, so: once (`nominations_extended_at`), nominations move back `mod_elections_nomination_extension_days` whole days in the calendar's zone, and Vote Week with them, unless that's 0 or the new deadline has passed already; the invitation goes again (`nominations_extended`). Otherwise straight to **closed** with `vote_skipped_at` set, `voting_close_at` = `voting_open_at` and the seed drawn; no voter is notified, admins get `vote_skipped`. `end_phase!` on nominations passes `extend_nominations: false`: an admin closing them early has stopped waiting.
 - **reminder:** a day before Vote Week ends, never in its first day (`remind_now?`).
 - **closed:** draws the lot seed (`SecureRandom.random_number(2**52)`, under 2⁵³ so it survives JavaScript exactly).
 
@@ -113,7 +113,7 @@ Notifications carry only the election id, the step and a link. The MessageBus me
 | Spec | What it covers |
 | --- | --- |
 | `spec/lib/mod_elections_stv_spec.rb` | The count: textbook cases, weights, surpluses, ties of every kind, zero-vote exclusion, unopposed, countback; 300 random elections checked against invariants |
-| `spec/lib/mod_elections_lifecycle_spec.rb` | The calendar, time zones and clock changes, every step and its follow-ups, deadlines, reminders, MessageBus |
+| `spec/lib/mod_elections_lifecycle_spec.rb` | The calendar, time zones and clock changes, every step and its follow-ups, deadlines, reminders, MessageBus, nominations kept open and no Vote Week when uncontested, who's invited to run |
 | `spec/lib/mod_elections_seats_spec.rb` | Publishing, trust levels and strikes, winners who can't serve, seats left mid-term, deleted accounts |
 | `spec/lib/mod_elections_notifier_spec.rb` | Notifications (each once per step) and the Telegram notices |
 | `spec/requests/mod_elections_spec.rb` | Every endpoint as a visitor, a member, a moderator and an admin; what each sees; rate limits; the current user's summary |

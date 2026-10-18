@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
 module DiscourseModElections
-  # The two steps staff act on, in the Telegram reports topic too when
-  # Disteleplus is on and sends admin notices: voting has closed (check the
-  # ballots and publish) and the results are out. Nothing about the count
-  # before it's published (that chat can include moderators, who are
-  # candidates), and nothing about anyone's ballot.
+  # The steps staff act on, in the Telegram reports topic too when
+  # Disteleplus is on and sends admin notices: voting has closed, or there
+  # was nothing to vote on (either way, publish), and the results are out.
+  # Nothing about the count before it's published (that chat can include
+  # moderators, who are candidates), and nothing about anyone's ballot.
   module Disteleplus
     def self.available?
       ::DiscourseDisteleplus::Reports.admin_notices?
@@ -13,14 +13,20 @@ module DiscourseModElections
 
     def self.closed(election)
       return unless available?
+      notice(election, "closed", I18n.t("mod_elections.telegram.closed", url: admin_url))
+    end
+
+    def self.vote_skipped(election)
+      return unless available?
       notice(
         election,
-        "closed",
-        I18n.t(
-          "mod_elections.telegram.closed",
-          url: "#{Discourse.base_url}/admin/plugins/jtech-tools/mod-elections",
-        ),
+        "vote_skipped",
+        I18n.t("mod_elections.telegram.vote_skipped", url: admin_url),
       )
+    end
+
+    def self.admin_url
+      "#{Discourse.base_url}/admin/plugins/jtech-tools/mod-elections"
     end
 
     def self.results(election)

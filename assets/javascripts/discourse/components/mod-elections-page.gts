@@ -1,6 +1,6 @@
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
-import { concat, hash } from "@ember/helper";
+import { hash } from "@ember/helper";
 import { action } from "@ember/object";
 import type Owner from "@ember/owner";
 import didUpdate from "@ember/render-modifiers/modifiers/did-update";
@@ -101,6 +101,23 @@ export default class ModElectionsPage extends Component<ModElectionsPageSignatur
     return this.candidates.filter((c) => c.status === "running").length;
   }
 
+  // "Unopposed" rather than "Counting" when there was nothing to vote on.
+  get statusLabel(): string {
+    const status =
+      this.status === "closed" && this.election?.vote_skipped
+        ? "unopposed"
+        : this.status;
+    return i18n(`mod_elections.status.${status}`);
+  }
+
+  get voteSkippedBody(): string {
+    return i18n(
+      this.runningCount
+        ? "mod_elections.vote_skipped.body"
+        : "mod_elections.vote_skipped.nobody"
+    );
+  }
+
   // When the current step ends, beside its name at the top.
   get statusDetail(): string | null {
     const election = this.election;
@@ -130,7 +147,7 @@ export default class ModElectionsPage extends Component<ModElectionsPageSignatur
     const at = ORDER.indexOf(election.status);
     const state = (index: number): StepState =>
       at > index ? "done" : at === index ? "current" : "upcoming";
-    return [
+    const steps: Step[] = [
       {
         id: "nominations",
         label: i18n("mod_elections.steps.nominations"),
@@ -151,6 +168,10 @@ export default class ModElectionsPage extends Component<ModElectionsPageSignatur
         state: at >= 3 ? "done" : at === 2 ? "current" : "upcoming",
       },
     ];
+    // A Vote Week that never happened isn't a step.
+    return election.vote_skipped
+      ? steps.filter((step) => step.id !== "voting")
+      : steps;
   }
 
   // When the next one opens, once this one is over (or before the first).
@@ -257,7 +278,7 @@ export default class ModElectionsPage extends Component<ModElectionsPageSignatur
           <span
             class="mod-elections-status mod-elections-status--{{this.status}}"
           >
-            {{i18n (concat "mod_elections.status." this.status)}}
+            {{this.statusLabel}}
             {{#if this.statusDetail}}
               <span class="mod-elections-muted">{{this.statusDetail}}</span>
             {{/if}}
@@ -317,6 +338,11 @@ export default class ModElectionsPage extends Component<ModElectionsPageSignatur
             {{/if}}
           {{else}}
             {{#if (eq this.status "nominating")}}
+              {{#if this.election.nominations_extended}}
+                <p
+                  class="mod-elections-panel mod-elections-muted mod-elections-extended"
+                >{{i18n "mod_elections.nominations_extended"}}</p>
+              {{/if}}
               {{#if this.page.me}}
                 <ModElectionsRun
                   @election={{this.election}}
@@ -338,12 +364,19 @@ export default class ModElectionsPage extends Component<ModElectionsPageSignatur
                 </p>
               {{/if}}
             {{else if (eq this.status "closed")}}
-              <section class="mod-elections-panel">
-                <h2>{{i18n "mod_elections.closed.title"}}</h2>
-                <p class="mod-elections-muted">{{i18n
-                    "mod_elections.closed.body"
-                  }}</p>
-              </section>
+              {{#if this.election.vote_skipped}}
+                <section class="mod-elections-panel mod-elections-vote-skipped">
+                  <h2>{{i18n "mod_elections.vote_skipped.title"}}</h2>
+                  <p class="mod-elections-muted">{{this.voteSkippedBody}}</p>
+                </section>
+              {{else}}
+                <section class="mod-elections-panel">
+                  <h2>{{i18n "mod_elections.closed.title"}}</h2>
+                  <p class="mod-elections-muted">{{i18n
+                      "mod_elections.closed.body"
+                    }}</p>
+                </section>
+              {{/if}}
             {{/if}}
 
             {{#unless this.canVote}}

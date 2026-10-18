@@ -45,6 +45,36 @@ module DiscourseModElections
       nil
     end
 
+    # Everyone who could run now and has no place on this ballot yet (on it,
+    # dropped out or taken off), for the invitation to run: the rules of
+    # run_blocked_reason, in one query.
+    def self.could_run(election, now: Time.zone.now)
+      # Without the NULLs (deleted accounts), or NOT IN would match nobody.
+      on_ballot = election.candidates.where.not(user_id: nil).select(:user_id)
+      members =
+        User
+          .real
+          .activated
+          .not_staged
+          .where(admin: false)
+          .where("users.suspended_till IS NULL OR users.suspended_till <= ?", now)
+          .where("users.silenced_till IS NULL OR users.silenced_till <= ?", now)
+          .where.not(id: on_ballot)
+      min_age = SiteSetting.mod_elections_candidate_min_account_age_days.days
+      qualified =
+        members.where(
+          "users.trust_level >= ? AND users.created_at <= ?",
+          SiteSetting.mod_elections_candidate_min_trust_level.to_i,
+          now - min_age,
+        )
+      days = SiteSetting.mod_elections_candidate_clean_record_days
+      if days > 0
+        punished = recent_punishments(now, days).where.not(target_user_id: nil)
+        qualified = qualified.where.not(id: punished.select(:target_user_id))
+      end
+      qualified.or(members.where(moderator: true))
+    end
+
     # Suspensions and silences, from the staff log.
     def self.punishments
       UserHistory.where(
@@ -55,14 +85,15 @@ module DiscourseModElections
     # Only an admin's suspension or silence counts (the system's automatic
     # ones are an admin's too): sitting moderators are candidates, and a
     # minute's silence mustn't keep a rival off the ballot for months.
+    def self.recent_punishments(now, days)
+      by_admins = punishments.where(acting_user_id: User.where(admin: true).select(:id))
+      by_admins.where("user_histories.created_at >= ?", now - days.days)
+    end
+
     def self.recently_punished?(user, now)
       days = SiteSetting.mod_elections_candidate_clean_record_days
       return false if days.zero?
-      punishments
-        .where(target_user_id: user.id)
-        .where(acting_user_id: User.where(admin: true).select(:id))
-        .where("created_at >= ?", now - days.days)
-        .exists?
+      recent_punishments(now, days).where(target_user_id: user.id).exists?
     end
   end
 end

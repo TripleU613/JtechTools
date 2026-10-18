@@ -10,6 +10,9 @@ module DiscourseModElections
   module Notifier
     KINDS = %w[
       on_ballot
+      can_run
+      nominations_extended
+      vote_skipped
       voting_open
       reminder
       closed
@@ -19,7 +22,7 @@ module DiscourseModElections
       schedule_blocked
     ].freeze
     # For admins: they open the admin tab, not the elections page.
-    ADMIN_KINDS = %w[closed schedule_blocked].freeze
+    ADMIN_KINDS = %w[closed vote_skipped schedule_blocked].freeze
     # Being taken off the ballot can happen twice (taken off, put back,
     # taken off again); everything else happens once per election.
     REPEATABLE = %w[disqualified].freeze
@@ -40,7 +43,7 @@ module DiscourseModElections
             Notification.create!(
               notification_type: Notification.types[:custom],
               user_id: user.id,
-              high_priority: %w[voting_open reminder closed].include?(kind),
+              high_priority: %w[voting_open reminder closed vote_skipped].include?(kind),
               data: data,
             )
           end
@@ -68,6 +71,12 @@ module DiscourseModElections
     # voted. Can be thousands of people, so it runs in a job.
     def self.enqueue_voters(election, kind)
       Jobs.enqueue(:mod_elections_notify_voters, election_id: election.id, kind: kind)
+    end
+
+    # Everyone who could run and isn't on the ballot: as many as the voter
+    # list, so in a job too.
+    def self.enqueue_invites(election, kind)
+      Jobs.enqueue(:mod_elections_invite_candidates, election_id: election.id, kind: kind)
     end
 
     def self.voter_ids(election, kind)

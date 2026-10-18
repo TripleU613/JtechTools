@@ -6,15 +6,17 @@ Every few months the forum elects its moderators. Anyone in good standing can ru
 
 ## How an election runs
 
-1. **Nominations** open at midnight on the 1st of each scheduled month (January, April, July and October by default) and last a week. The sitting moderators are on the ballot already and can drop out. Anyone else who can run signs up on `/elections` and writes a few lines about themselves.
-2. **Vote Week** follows. Voters rank as many candidates as they like, best first, and can change or take back their ballot until it ends. Each voter sees the candidates in their own shuffled order, so nobody is always at the top.
+1. **Nominations** open at midnight on the 1st of each scheduled month (January, April, July and October by default) and last a week. The sitting moderators are on the ballot already and can drop out. Everyone else who can run gets a notification saying so, and signs up on `/elections` with a few lines about themselves. There's no limit on how many run: the seats are how many win.
+2. **Vote Week** follows, if there's something to vote on (see below). Voters rank as many candidates as they like, best first, and can change or take back their ballot until it ends. Each voter sees the candidates in their own shuffled order, so nobody is always at the top.
 3. **The count.** When Vote Week ends, admins get a notification. On the Mod elections tab they check for ballots cast from one address, set aside any that are alt accounts (with a reason the voter sees), preview the count and the moderator changes it makes, then publish. The first preview fixes the ballots: none can be set aside or counted again after it, so nobody can compare two previews to work out what was on one ballot.
 
 Publishing makes the winners moderators and takes moderator rights from the sitting moderators who weren't elected. All the seats are up every time. The preview marks any moderator who was never on this ballot (made a moderator after nominations opened), since publishing ends their seat too. If a winner can't take the seat any more (their account was deleted, suspended or silenced, or they became an admin), publishing waits: the preview says who and why, the admin takes them off the ballot with a reason, and the count gives the seat to the next in line.
 
 Deadlines are exact to the minute: a ballot or a candidacy sent a minute after the phase ended is turned away, even before the page moves on.
 
-There's a page at `/elections` (linked from the sidebar's *More* list), a banner while nominations are open and for voters who haven't voted yet, and notifications when Vote Week opens and a day before it ends (never on Vote Week's first day). The page moves on by itself when a step changes, shows each step's date as a day on the forum's calendar, counts down to the end of the current one, and says when the next election opens. After voting closes it tells each voter whether their ballot went into the count. On a computer candidates can be dragged into place as well as moved with the buttons; every button names its candidate for screen readers, and each change is read out. Dumbcourse has the same page: on a flip phone, pick a candidate and press 1–9 to put them in that place, or 0 to take them off.
+**When there's nothing to vote on.** If nominations close with no more candidates than seats, the count would elect every one of them whatever the ballots said, so a vote would change nothing. Nominations stay open three more days instead, once, and members who can run hear about it (a notification and a new banner); Vote Week moves back by the same. If there are more candidates than seats by then, Vote Week runs as usual. If not, there's no Vote Week: nobody is asked to vote, the page says the candidates are elected unopposed, and admins get a notification to check the preview and publish, which seats them. An admin closing nominations early from the tab never gets the extra days.
+
+There's a page at `/elections` (linked from the sidebar's *More* list), a banner while nominations are open and for voters who haven't voted yet, and notifications when nominations open (to members who can run), when Vote Week opens and a day before it ends (never on Vote Week's first day). The page moves on by itself when a step changes, shows each step's date as a day on the forum's calendar, counts down to the end of the current one, and says when the next election opens. After voting closes it tells each voter whether their ballot went into the count. On a computer candidates can be dragged into place as well as moved with the buttons; every button names its candidate for screen readers, and each change is read out. Dumbcourse has the same page: on a flip phone, pick a candidate and press 1–9 to put them in that place, or 0 to take them off.
 
 If Disteleplus sends admin notices to Telegram, the staff topic there hears when voting closes (with how many ballots came in) and who won when the results are published.
 
@@ -40,7 +42,7 @@ Ranking someone lower never hurts your higher choices: your next choice only cou
 
 The results show every stage, with a bar under each number for how close it was to the quota, the turnout and the quota. Who ranked whom is never shown to anyone. Ballots are tied to accounts only while the election runs, so nobody votes twice; admins see only who voted from which address, once voting has closed, never a ballot's contents. When the results are published every ballot loses its account and address: each voter can still see whether theirs was counted, but nothing links anyone to a ranking any more. A cancelled election's ballots are deleted. With very few voters, the published stages can still give away how individuals voted.
 
-If fewer people run than there are seats, they're elected unopposed and the rest stay empty until admins appoint someone. If nobody voted in a contested election, it can't be published: cancel it and the moderators stay as they are.
+If no more people run than there are seats, there's no Vote Week (see above): they're elected unopposed, and any seats left over stay empty until admins appoint someone. If nobody voted in a contested election, it can't be published: cancel it and the moderators stay as they are.
 
 A deleted account's ballot stays in the count, so a result can't change after the fact. A candidate whose account is deleted comes off the ballot while nominations or Vote Week are still open, and their voters' ballots move on to the next choice; after voting closes they stay in the count and the preview lists them for the admin.
 
@@ -71,6 +73,7 @@ Admin → Plugins → Jtech Tools → **Mod elections**. The full text of each s
 | `mod_elections_schedule_months` | `1\|4\|7\|10` | Months an election starts in. |
 | `mod_elections_timezone` | `America/New_York` | Time zone the calendar runs in. |
 | `mod_elections_nomination_days` | `7` | How long nominations stay open. |
+| `mod_elections_nomination_extension_days` | `3` | Extra days of nominations, once, when they close with no more candidates than seats. |
 | `mod_elections_voting_days` | `7` | How long Vote Week lasts, starting when nominations close. |
 | `mod_elections_candidate_min_trust_level` | `2` | Lowest trust level that can run. |
 | `mod_elections_candidate_min_account_age_days` | `90` | How old an account has to be to run. |
@@ -81,5 +84,6 @@ Admin → Plugins → Jtech Tools → **Mod elections**. The full text of each s
 | `mod_elections_strikes_before_tl3` | `2` | At this many strikes a former moderator goes back to trust level 3. |
 | `mod_elections_category` | (blank) | Category for each election's topic. |
 | `mod_elections_notify_voters` | `true` | Sends voters a notification when Vote Week opens, and a reminder a day before it ends. |
+| `mod_elections_invite_candidates` | `true` | Sends members who can run a notification when nominations open, and again if they stay open longer. |
 
 [← All features](../README.md#features)

@@ -65,6 +65,9 @@ module DiscourseModElections
         nominations_open_at: election.nominations_open_at,
         voting_open_at: election.voting_open_at,
         voting_close_at: election.voting_close_at,
+        # Kept open longer, and then no Vote Week, for want of candidates.
+        nominations_extended: election.nominations_extended?,
+        vote_skipped: election.vote_skipped?,
         # The step strip's dates, as days on the forum's calendar.
         days: {
           nominations: day_label(election.nominations_open_at, "%B %-d"),
@@ -258,6 +261,8 @@ module DiscourseModElections
         nominations_open_at: election.nominations_open_at,
         voting_open_at: election.voting_open_at,
         voting_close_at: election.voting_close_at,
+        nominations_extended: election.nominations_extended?,
+        vote_skipped: election.vote_skipped?,
         topic_id: election.topic_id,
         created_by: basic_user(election.created_by),
         published_at: election.published_at,

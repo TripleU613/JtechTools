@@ -56,7 +56,7 @@ module DiscourseModElections
     # status changes under the election's lock; what follows from them
     # (topic posts, notifications) runs after it, so a failed post can't
     # roll a phase back and leave the election stuck.
-    def self.advance!(election, now = Time.zone.now)
+    def self.advance!(election, now = Time.zone.now, extend_nominations: true)
       steps = []
       incumbents = []
       election.with_lock do
@@ -67,17 +67,14 @@ module DiscourseModElections
           steps << :nominations_open
         end
         if election.nominating? && now >= election.voting_open_at
-          election.update!(status: :voting)
-          steps << :voting_open
+          steps << close_nominations!(election, now, extend: extend_nominations)
         end
         if election.voting? && remind_now?(election, now)
           election.update!(reminder_sent_at: now)
           steps << :reminder
         end
         if election.voting? && now >= election.voting_close_at
-          # Under 2**53 so it survives a round trip through JavaScript
-          # exactly: the seed is published so anyone can check a drawn lot.
-          election.update!(status: :closed, seed: SecureRandom.random_number(2**52))
+          election.update!(status: :closed, seed: draw_seed)
           steps << :closed
         end
       end
@@ -85,6 +82,49 @@ module DiscourseModElections
       State.changed! if (steps - [:reminder]).any?
       steps.each { |step| follow_up(election, step, incumbents: incumbents) }
       election
+    end
+
+    # With more candidates than seats, Vote Week opens. With no more, the
+    # count elects them all whatever the ballots say: nominations stay open
+    # a few days longer, once, for others to run, and if it's still so
+    # there's no Vote Week. The admin publishes them as elected unopposed.
+    def self.close_nominations!(election, now, extend:)
+      if !election.uncontested?
+        election.update!(status: :voting)
+        :voting_open
+      elsif extend && extend_nominations!(election, now)
+        :nominations_extended
+      else
+        election.update!(
+          status: :closed,
+          voting_close_at: election.voting_open_at,
+          vote_skipped_at: now,
+          seed: draw_seed,
+        )
+        :vote_skipped
+      end
+    end
+
+    # Whole days in the calendar's zone, like the schedule, so a clock change
+    # doesn't move midnight. Not when the extra days would be over already
+    # (the module was off for a while, say): nobody would get the chance.
+    def self.extend_nominations!(election, now)
+      days = SiteSetting.mod_elections_nomination_extension_days
+      return false if days.zero? || election.nominations_extended?
+      voting_open_at = election.voting_open_at.in_time_zone(Schedule.zone) + days.days
+      return false if voting_open_at <= now
+      election.update!(
+        voting_open_at: voting_open_at,
+        voting_close_at: election.voting_close_at.in_time_zone(Schedule.zone) + days.days,
+        nominations_extended_at: now,
+      )
+      true
+    end
+
+    # Under 2**53 so it survives a round trip through JavaScript exactly: the
+    # seed is published so anyone can check a drawn lot.
+    def self.draw_seed
+      SecureRandom.random_number(2**52)
     end
 
     # A day before Vote Week ends, but never in its first day: a short Vote
@@ -96,10 +136,19 @@ module DiscourseModElections
 
     def self.follow_up(election, step, incumbents: [])
       notify_voters = SiteSetting.mod_elections_notify_voters
+      invite = SiteSetting.mod_elections_invite_candidates
       case step
       when :nominations_open
         Notifier.notify(incumbents, election, "on_ballot") if incumbents.any?
         Announcer.nominations_open(election)
+        Notifier.enqueue_invites(election, "can_run") if invite
+      when :nominations_extended
+        Announcer.nominations_extended(election)
+        Notifier.enqueue_invites(election, "nominations_extended") if invite
+      when :vote_skipped
+        Announcer.vote_skipped(election)
+        Notifier.notify(User.real.where(admin: true).pluck(:id), election, "vote_skipped")
+        Disteleplus.vote_skipped(election)
       when :voting_open
         Announcer.voting_open(election)
         Notifier.enqueue_voters(election, "voting_open") if notify_voters
@@ -113,8 +162,10 @@ module DiscourseModElections
       Rails.logger.warn("#{DiscourseModElections::LOG_TAG} #{step} follow-up failed: #{e.message}")
     end
 
-    # An admin ends the current phase early.
+    # An admin ends the current phase early. Nominations an admin closes stay
+    # closed, uncontested or not: they chose to stop waiting for candidates.
     def self.end_phase!(election, actor, now = Time.zone.now)
+      closing_nominations = false
       election.with_lock do
         if election.scheduled?
           gap = election.nominations_open_at - now
@@ -125,6 +176,7 @@ module DiscourseModElections
           )
         elsif election.nominating?
           raise Error.new(:too_early) if now <= election.nominations_open_at
+          closing_nominations = true
           election.update!(
             voting_open_at: now,
             voting_close_at: [election.voting_close_at, now + 1.minute].max,
@@ -141,7 +193,7 @@ module DiscourseModElections
         election_id: election.id,
         status: election.status,
       )
-      advance!(election.reload, now)
+      advance!(election.reload, now, extend_nominations: !closing_nominations)
     end
 
     # An election an admin starts by hand, for dates off the calendar.

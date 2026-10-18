@@ -94,6 +94,10 @@ export interface ModElection {
   nominations_open_at: string;
   voting_open_at: string;
   voting_close_at: string;
+  // No more candidates than seats when nominations closed: they stayed
+  // open longer, then there was no Vote Week.
+  nominations_extended: boolean;
+  vote_skipped: boolean;
   // The step strip's dates, as days on the forum's calendar ("January 8").
   days: { nominations: string; voting: string; results: string };
   topic_url: string | null;
@@ -154,6 +158,7 @@ export interface ModElectionSummary {
   id: number;
   status: ModElectionStatus;
   ends_at: string | null;
+  extended: boolean;
   voter?: boolean;
   voted?: boolean;
 }

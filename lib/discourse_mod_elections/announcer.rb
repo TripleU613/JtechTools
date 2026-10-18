@@ -22,6 +22,24 @@ module DiscourseModElections
       log(e)
     end
 
+    def self.nominations_extended(election)
+      reply(
+        election,
+        I18n.t("mod_elections.topic.nominations_extended", **dates(election), url: page_url),
+      )
+    end
+
+    def self.vote_skipped(election)
+      names = election.candidates.running.includes(:user).map { |c| "- #{user_link(c.user)}" }
+      raw =
+        if names.empty?
+          I18n.t("mod_elections.topic.vote_skipped_nobody")
+        else
+          I18n.t("mod_elections.topic.vote_skipped", candidates: names.join("\n"))
+        end
+      reply(election, raw)
+    end
+
     def self.voting_open(election)
       names = election.candidates.running.includes(:user).map { |c| user_link(c.user) }
       names = [I18n.t("mod_elections.topic.nobody")] if names.empty?
