@@ -790,6 +790,15 @@ after_initialize do
     notified.concat(::User.where(id: ids - already).to_a)
   end
 
+  # Moving posts with "keep the original" copies each reply with Post#dup,
+  # which leaves custom fields behind: a whisper's copy came out public. A
+  # global listener, like :post_created's, so it runs while the bundle is
+  # switched off too. The rest of a move is in PostMoverWhisperPatch.
+  DiscourseEvent.on(:post_moved) do |new_post, _original_topic_id, old_post|
+    next if old_post.blank? || new_post.id == old_post.id
+    DiscourseModCategories::Whisper.copy_to!(old_post, new_post)
+  end
+
   # Whisper fields are serialized whether or not whispers are switched on:
   # existing whispers stay private either way, so they keep their banner.
   whisper_only = -> { DiscourseModCategories::Whisper.whisper?(object) }

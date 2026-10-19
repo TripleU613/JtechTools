@@ -350,6 +350,53 @@ module DiscourseModCategories
       merged
     end
 
+    # Post#dup, core's copy of a reply moved with "keep the original", leaves
+    # custom fields behind; the copy takes the whisper's here. Read from the
+    # original's own custom fields, not post_fields: those parse every value
+    # as JSON, and the admins-only mark would not survive the round trip.
+    def copy_to!(original, copy)
+      return unless whisper?(original)
+      return if whisper?(copy)
+
+      original
+        .custom_fields
+        .slice(*whisper_fields)
+        .each { |name, value| copy.custom_fields[name] = value }
+      copy.save_custom_fields(true)
+    end
+
+    # After the whispers `whisper_ids` (copies included) are moved into
+    # `topic`. Core counted each one towards the reply count of the moved
+    # post it answers, and a staff whisper makes its non-staff targets
+    # participants of the topic it is in, as prepare_new_post! does.
+    def posts_moved!(topic, whisper_ids)
+      ::DB.exec(<<~SQL, ids: whisper_ids, topic_id: topic.id)
+        UPDATE posts parent SET reply_count = GREATEST(0, parent.reply_count - x.replies)
+        FROM (
+          SELECT reply_to_post_number, COUNT(*) AS replies FROM posts
+          WHERE id IN (:ids) AND reply_to_post_number IS NOT NULL
+          GROUP BY reply_to_post_number
+        ) x
+        WHERE parent.topic_id = :topic_id AND parent.post_number = x.reply_to_post_number
+      SQL
+
+      staff_whisper_ids =
+        ::Post
+          .where(id: whisper_ids)
+          .joins(:user)
+          .where("users.admin OR users.moderator")
+          .pluck(:id)
+      return if staff_whisper_ids.empty?
+
+      target_ids =
+        ::PostCustomField
+          .where(post_id: staff_whisper_ids, name: targets_field)
+          .pluck(:value)
+          .flat_map { |value| normalize_ids(value) }
+      participant_ids = ::User.where(id: target_ids, admin: false, moderator: false).pluck(:id)
+      merge_participants(topic, participant_ids) if participant_ids.any?
+    end
+
     # SQL fragment (for a query over the bare `posts` table) that is true
     # for posts everyone who can read the topic sees: core's public post
     # types, minus whispers.
