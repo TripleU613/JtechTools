@@ -22,6 +22,56 @@ module DiscourseModCategories
       DiscourseModCategories.whisper_audience_max_post_number(topic, user)
     end
 
+    # Core's tracking state (the sidebar, the topic list's unread dot) gives
+    # every whisperer highest_staff_post_number. A whisperer who can't open a
+    # trailing whisper (a moderator facing an admin's, or a member of
+    # whispers_allowed_groups it doesn't name) can never send a timing for
+    # it, so the topic stayed unread after they'd read all of it. Moving
+    # their last read past the whispers they can't see fixes every surface
+    # at once.
+    def self.skip_hidden_whispers!(user, topic_id)
+      return unless SiteSetting.mod_whisper_audience_aware_topic_list
+      return if !user.is_a?(::User) || user.admin? || !user.whisperer?
+      topic = ::Topic.find_by(id: topic_id)
+      return if topic.nil? || !trailing_whispers?(topic)
+
+      staff_max = topic.highest_staff_post_number
+      topic_user = ::TopicUser.find_by(user_id: user.id, topic_id: topic.id)
+      return if topic_user.nil? || topic_user.last_read_post_number.to_i >= staff_max
+
+      visible = DiscourseModCategories.whisper_audience_max_post_number(topic, user).to_i
+      return if topic_user.last_read_post_number.to_i < visible
+
+      ::TopicUser.where(id: topic_user.id).update_all(last_read_post_number: staff_max)
+      ::TopicTrackingState.publish_read(topic.id, staff_max, user)
+    end
+
+    # The same for a new whisper: whisperers outside its audience who had
+    # read up to it stay caught up instead of seeing the topic turn unread.
+    def self.skip_new_whisper!(post)
+      return unless SiteSetting.mod_whisper_audience_aware_topic_list
+      whisper_group_ids = SiteSetting.whispers_allowed_groups_map
+      return if whisper_group_ids.empty?
+      audience_ids = DiscourseModCategories::Whisper.audience_user_ids(post)
+      return if audience_ids.nil?
+
+      ::DB.exec(
+        <<~SQL,
+          UPDATE topic_users SET last_read_post_number = :post_number
+          WHERE topic_id = :topic_id
+            AND last_read_post_number = :post_number - 1
+            AND user_id NOT IN (:audience_ids)
+            AND user_id IN (
+              SELECT user_id FROM group_users WHERE group_id IN (:whisper_group_ids)
+            )
+        SQL
+        post_number: post.post_number,
+        topic_id: post.topic_id,
+        audience_ids: audience_ids.presence || [-1],
+        whisper_group_ids: whisper_group_ids,
+      )
+    end
+
     module SerializerExtension
       def highest_post_number
         value = super
@@ -30,9 +80,8 @@ module DiscourseModCategories
         if user&.moderator? && !user.admin?
           # A moderator is a whisperer, so core gave them the staff number,
           # which counts admins' whispers they can't open: they'd show as new
-          # for good. ponytail: the sidebar's New/Unread counts (core's
-          # tracking-state SQL) still count them; per-moderator SQL there if
-          # it matters.
+          # for good. Core's tracking-state SQL still counts them; for that,
+          # skip_hidden_whispers! moves their last read past them.
           visible = DiscourseModCategories::WhisperUnread.visible_max_post_number(object, user)
           return visible && visible < value ? visible : value
         end
@@ -64,7 +113,9 @@ module DiscourseModCategories
             Thread.current[:mod_whisper_timing_user_id] = nil
           end
         end
-        super
+        result = super
+        DiscourseModCategories::WhisperUnread.skip_hidden_whispers!(current_user, topic_id)
+        result
       end
     end
 

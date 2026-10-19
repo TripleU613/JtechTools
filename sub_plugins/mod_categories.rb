@@ -729,6 +729,7 @@ after_initialize do
     next unless DiscourseModCategories::Whisper.whisper?(post)
 
     DiscourseModCategories::Whisper.refresh_topic_counters(topic)
+    DiscourseModCategories::WhisperUnread.skip_new_whisper!(post)
     if post.reply_to_post_number.present?
       ::Topic
         .where(id: topic.id)
