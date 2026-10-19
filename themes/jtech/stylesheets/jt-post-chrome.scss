@@ -174,6 +174,66 @@ nav.post-controls {
   }
 }
 
+// ── Expanded replies ──────────────────────────────────────
+// The post being answered (the reply-to tab) and a post's replies (the
+// Replies button) open in the stream between core's hairlines, which on
+// this palette are next to invisible, so they read as more posts. A sunken
+// panel with a border, an accent bar on the left and rounded corners sets
+// them apart, and the collapse chevron is a button at its top corner
+// instead of floating in the margin.
+.topic-post .embedded-posts {
+  --border-color: var(--jt-border-strong);
+  box-sizing: border-box;
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  background: var(--jt-surface-sunken);
+  border: 1px solid var(--jt-border-strong);
+  border-inline-start: 3px solid var(--jt-accent);
+  border-radius: var(--jt-radius-md);
+
+  &.top {
+    margin-bottom: var(--space-3);
+  }
+
+  &.bottom {
+    margin-top: var(--space-2);
+    border: 1px solid var(--jt-border-strong);
+    border-inline-start: 3px solid var(--jt-accent);
+  }
+
+  // Core's thread lines: the panel does their job
+  .row::before,
+  .topic-body::before {
+    display: none;
+  }
+
+  .topic-body,
+  .topic-avatar {
+    background: transparent;
+    border-top: 0;
+  }
+
+  .collapse-down,
+  .collapse-up {
+    position: static;
+    margin: 0 0 var(--space-1);
+    transform: none;
+    color: var(--jt-text-muted);
+    border: 1px solid var(--jt-border);
+    border-radius: var(--jt-radius-control);
+
+    &:hover {
+      color: var(--jt-text);
+      border-color: var(--jt-border-strong);
+    }
+  }
+
+  .topic-meta-data h5 a,
+  .arrow,
+  .post-date {
+    color: var(--jt-text-muted);
+  }
+}
+
 // ── Reactions ─────────────────────────────────────────────
 // The plugin paints hover/used states with --love-low / --primary-low, which
 // come out as a mid-grey slab in this palette. Re-point them in its container.
