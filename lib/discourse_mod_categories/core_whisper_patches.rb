@@ -127,13 +127,7 @@ module DiscourseModCategories
   module TopicWhisperPatch
     def reset_bumped_at(post_or_post_id = nil)
       return super if post_or_post_id
-
-      last_public =
-        ordered_posts
-          .where(user_deleted: false, hidden: false, post_type: ::Post.types[:regular])
-          .where("NOT #{DiscourseModCategories::WhisperQueryFilter.is_whisper_sql("posts")}")
-          .last
-      super(last_public || first_post)
+      super(DiscourseModCategories::Whisper.last_bumping_post(self) || first_post)
     end
   end
 

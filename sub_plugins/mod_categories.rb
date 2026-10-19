@@ -1228,8 +1228,14 @@ after_initialize do
           end
           DiscourseModCategories::Whisper.refresh_topic_counters(topic)
           # It bumped the topic while it was public; the bump goes back to
-          # the last post everyone can see.
-          topic.reset_bumped_at if (topic.bumped_at - post.created_at).abs < 1.second
+          # the post before it that would have had it (a later reply here
+          # was posted without a bump, or the bump would be its).
+          if (topic.bumped_at - post.created_at).abs < 1.second
+            topic.reset_bumped_at(
+              DiscourseModCategories::Whisper.last_bumping_post(topic, before: post) ||
+                topic.first_post,
+            )
+          end
         end
         # Other posts may carry a baked link preview of this post.
         DiscourseModCategories::Whisper.rebake_linking_posts(post)
@@ -1239,11 +1245,14 @@ after_initialize do
         ::SearchIndexer.index(post, force: true)
         ::TopicLink.extract_from(post)
         ::Topic.reset_highest(post.topic_id) if post.topic_id
-        # Public again, it bumps the topic as it would have when posted. The
-        # bump comes from the last post core would bump to, so one a flag
-        # hides or its author withdrew waits until it's back.
+        # Public again, it bumps the topic as it would have when posted, if
+        # it's now the post core would bump to: not while a flag hides it or
+        # its author has withdrawn it, nor past a later reply.
         topic = post.topic&.reload
-        topic.reset_bumped_at if topic && topic.bumped_at < post.created_at
+        if topic && topic.bumped_at < post.created_at &&
+             DiscourseModCategories::Whisper.last_bumping_post(topic)&.id == post.id
+          topic.reset_bumped_at(post)
+        end
       end
       DiscourseModCategories::Whisper.refresh_reply_counts(
         ::PostReply.where(reply_post_id: post.id).pluck(:post_id),

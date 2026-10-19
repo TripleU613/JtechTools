@@ -137,6 +137,22 @@ RSpec.describe "Update post whisper" do
       expect(topic.reload.bumped_at).to be_within(1.second).of(op.created_at)
     end
 
+    it "doesn't hand the bump on to a later reply posted without one" do
+      op.update_columns(created_at: 2.hours.ago)
+      post_record.update_columns(created_at: 10.minutes.ago)
+      Fabricate(:post, topic: topic, user: other_user).update_columns(created_at: 5.minutes.ago)
+      ::Topic.where(id: topic.id).update_all(bumped_at: post_record.created_at)
+      sign_in(moderator)
+
+      put "/discourse-mod-categories/post/#{post_record.id}/whisper.json",
+          params: {
+            mod_whisper: true,
+            mod_whisper_target_user_ids: [target.id],
+          }
+
+      expect(topic.reload.bumped_at).to be_within(1.second).of(op.created_at)
+    end
+
     it "leaves a bump that came later alone" do
       post_record.update_columns(created_at: 10.minutes.ago)
       ::Topic.where(id: topic.id).update_all(bumped_at: 1.minute.ago)
@@ -199,6 +215,21 @@ RSpec.describe "Update post whisper" do
           }
 
       expect(topic.reload.bumped_at).to be_within(1.second).of(post_record.created_at)
+    end
+
+    it "leaves the bump alone when a later reply was posted without one" do
+      op.update_columns(created_at: 2.hours.ago)
+      post_record.update_columns(created_at: 10.minutes.ago)
+      Fabricate(:post, topic: topic, user: other_user).update_columns(created_at: 5.minutes.ago)
+      ::Topic.where(id: topic.id).update_all(bumped_at: op.created_at)
+      sign_in(moderator)
+
+      put "/discourse-mod-categories/post/#{post_record.id}/whisper.json",
+          params: {
+            mod_whisper: false,
+          }
+
+      expect(topic.reload.bumped_at).to be_within(1.second).of(op.created_at)
     end
 
     it "leaves the bump alone while its author has withdrawn the post" do
