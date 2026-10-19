@@ -248,6 +248,37 @@
   }
 }
 
+// ── Banner ────────────────────────────────────────────────────────────────
+// The plugin's card, tinted with core's tertiary, is the theme's raised
+// surface here, the ballot box sits on the palette's accent like a place
+// number, and the label takes the UI tracking.
+.global-notice .alert[id^="global-notice-mod-elections-"] {
+  border-color: var(--jt-border);
+  border-radius: var(--jt-radius-lg);
+  background: var(--jt-surface-raised);
+}
+
+.mod-elections-notice {
+  &__icon {
+    border-radius: var(--jt-radius-md);
+    background: var(--jt-accent);
+    color: var(--jt-on-accent);
+  }
+
+  &__label {
+    color: var(--jt-text-muted);
+    letter-spacing: var(--jt-tracking-ui);
+  }
+
+  &__title {
+    letter-spacing: var(--jt-tracking-heading);
+  }
+
+  &__detail {
+    color: var(--jt-text-muted);
+  }
+}
+
 // ── Admin tab ─────────────────────────────────────────────────────────────
 .mod-elections-admin {
   &__off {

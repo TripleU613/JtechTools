@@ -586,11 +586,15 @@ en:
         text: Elections
         title: Mod elections
       notice:
-        nominating: "Mod elections: nominations are open until %{date}."
+        label: Mod elections
+        nominating_title: Nominations are open
+        nominating_detail: "Until %{date}"
         nominating_link: Run, or see who's running
-        nominating_extended: "Mod elections: there are no more candidates than seats, so nominations stay open until %{date}."
+        nominating_extended_title: Nominations are still open
+        nominating_extended_detail: "There are no more candidates than seats, so nominations stay open until %{date}."
         nominating_extended_link: Run, or see who's running
-        voting: "Vote Week is open until %{date}."
+        voting_title: Vote Week is open
+        voting_detail: "Until %{date}"
         voting_link: Vote
       status:
         scheduled: Coming up
