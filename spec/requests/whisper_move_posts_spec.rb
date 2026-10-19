@@ -2,6 +2,7 @@
 
 require "rails_helper"
 require_relative "../../db/migrate/20261019000001_clear_whisper_first_post_copies"
+require_relative "../../db/migrate/20261019000002_give_whisper_headed_topics_a_public_owner"
 
 # Moving posts into a topic bumps it when its last public post is one of
 # them. A moved whisper is a regular post, so it must not count: the topic
@@ -215,6 +216,51 @@ RSpec.describe "Moving a whisper into another topic" do
           )
         expect(revised).to eq(true)
         expect(headed_category.reload.description).to be_nil
+      end
+    end
+
+    # Core made the whisper's author the topic's owner, shown in topic lists.
+    describe "its owner" do
+      before { headed_topic.update_columns(user_id: moderator.id) }
+
+      def give_owner!
+        ActiveRecord::Migration.suppress_messages { GiveWhisperHeadedTopicsAPublicOwner.new.up }
+        headed_topic.reload.user_id
+      end
+
+      it "becomes the author of its first public post" do
+        Fabricate(:post, topic: headed_topic, user: other_poster)
+        owner = topic.reload.user_id
+
+        expect(give_owner!).to eq(other_poster.id)
+        expect(topic.reload.user_id).to eq(owner)
+      end
+
+      it "becomes whoever moved the whisper there, with no public post" do
+        MovedPost.create!(
+          old_topic_id: topic.id,
+          old_post_id: whisper_post.id,
+          old_post_number: whisper_post.post_number,
+          new_topic_id: headed_topic.id,
+          new_topic_title: headed_topic.title,
+          new_post_id: headed_whisper.id,
+          new_post_number: 1,
+          created_new_topic: true,
+          post_user_id: moderator.id,
+          user_id: admin.id,
+        )
+
+        expect(give_owner!).to eq(admin.id)
+      end
+
+      it "becomes the system user with neither" do
+        expect(give_owner!).to eq(Discourse::SYSTEM_USER_ID)
+      end
+
+      it "stays as it is when it isn't the whisper's author" do
+        headed_topic.update_columns(user_id: other_poster.id)
+
+        expect(give_owner!).to eq(other_poster.id)
       end
     end
   end
