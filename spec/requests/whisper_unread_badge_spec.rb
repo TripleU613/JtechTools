@@ -180,6 +180,14 @@ RSpec.describe "Whisper unread badge" do
       expect(topic.reload.bumped_at).to be_within(1.second).of(op.created_at)
     end
 
+    it "goes to the post before a whisper staff reset the bump date to" do
+      sign_in(admin)
+      put "/t/#{topic.id}/reset-bump-date/#{whisper_post.id}.json"
+
+      expect(response.status).to eq(200)
+      expect(topic.reload.bumped_at).to be_within(1.second).of(regular_reply.created_at)
+    end
+
     it "moves back to the post before it when a flag hides it" do
       regular_reply.hide!(PostActionType.types[:spam])
 

@@ -123,11 +123,21 @@ module DiscourseModCategories
   # Topic#reset_bumped_at (the last public post deleted or hidden by flags,
   # "reset bump date") moves the bump to the topic's last regular post, which
   # can be a whisper: the topic jumped up the list for everyone over a post
-  # most of them can't see. The last post that isn't a whisper sets it.
+  # most of them can't see. The last post that isn't a whisper sets it, and a
+  # whisper staff pick to reset the bump to hands it to the post before it.
   module TopicWhisperPatch
     def reset_bumped_at(post_or_post_id = nil)
-      return super if post_or_post_id
-      super(DiscourseModCategories::Whisper.last_bumping_post(self) || first_post)
+      if !post_or_post_id
+        return super(DiscourseModCategories::Whisper.last_bumping_post(self) || first_post)
+      end
+
+      post = post_or_post_id.is_a?(::Post) ? post_or_post_id : ::Post.find_by(id: post_or_post_id)
+      if post && DiscourseModCategories::Whisper.whisper?(post)
+        return(
+          super(DiscourseModCategories::Whisper.last_bumping_post(self, before: post) || first_post)
+        )
+      end
+      super
     end
   end
 
