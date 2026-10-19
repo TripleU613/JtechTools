@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "rails_helper"
+require_relative "../../db/migrate/20261019000001_clear_whisper_topic_excerpts"
 
 # Moving posts into a topic bumps it when its last public post is one of
 # them. A moved whisper is a regular post, so it must not count: the topic
@@ -137,6 +138,48 @@ RSpec.describe "Moving a whisper into another topic" do
       expect(regular_reply.post_number).to eq(1)
       expect(whisper_post.reload.topic_id).to eq(new_topic.id)
       expect(Guardian.new(other_poster).can_see_post?(whisper_post)).to eq(false)
+    end
+  end
+
+  # One moved to the head of a topic before such moves were refused: the
+  # topic took its excerpt and picture from the whisper.
+  describe "a topic a whisper already heads" do
+    fab!(:upload, :image_upload)
+    fab!(:headed_topic, :topic)
+    fab!(:headed_whisper) do
+      Fabricate(
+        :post,
+        topic: headed_topic,
+        user: moderator,
+        raw:
+          "Only for you: zebrasecret. <img src=\"#{upload.url}\" width=\"1500\" height=\"2000\">",
+      )
+    end
+
+    before do
+      headed_whisper.custom_fields[DiscourseModCategories::POST_WHISPER_TARGETS_FIELD] = [target.id]
+      headed_whisper.save_custom_fields(true)
+      headed_topic.update_columns(excerpt: "Only for you: zebrasecret.", image_upload_id: upload.id)
+    end
+
+    it "loses the excerpt and picture it took from the whisper" do
+      topic.update_columns(excerpt: "A public excerpt.")
+
+      ActiveRecord::Migration.suppress_messages { ClearWhisperTopicExcerpts.new.up }
+
+      expect(headed_topic.reload.excerpt).to be_nil
+      expect(headed_topic.image_upload_id).to be_nil
+      expect(topic.reload.excerpt).to eq("A public excerpt.")
+    end
+
+    it "doesn't take them back from the whisper when it's rebaked" do
+      headed_topic.update_columns(excerpt: nil, image_upload_id: nil)
+
+      headed_whisper.rebake!
+      CookedPostProcessor.new(headed_whisper.reload).post_process
+
+      expect(headed_topic.reload.excerpt).to be_nil
+      expect(headed_topic.image_upload_id).to be_nil
     end
   end
 end

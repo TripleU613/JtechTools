@@ -21,9 +21,17 @@ module DiscourseModCategories
   #     its parent's public reply_count.
   #   * Topic#reset_bumped_at — the bump goes back to the last public post,
   #     never a whisper.
+  #   * Post#excerpt_for_topic — a whisper never writes its topic's public
+  #     excerpt (one can still head a topic it was moved into before such
+  #     moves were refused, and an edit or rebake would write it again).
   module PostWhisperPatch
     def whisper?
       super || DiscourseModCategories::Whisper.whisper?(self)
+    end
+
+    def excerpt_for_topic
+      return nil if DiscourseModCategories::Whisper.whisper?(self)
+      super
     end
 
     # Whisper.prime! remembers a post's whisper fields; changing or
@@ -72,6 +80,18 @@ module DiscourseModCategories
       result = super
       DiscourseModCategories::Whisper.prepare_new_post!(@post, @opts) if @post
       result
+    end
+  end
+
+  # A topic's picture (its card and list thumbnail) comes from its first
+  # post's image. A whisper at the head of a topic, moved there before such
+  # moves were refused, gives it none.
+  module CookedPostProcessorWhisperPatch
+    def update_post_image
+      return super unless @post.is_first_post? && DiscourseModCategories::Whisper.whisper?(@post)
+      topic = @post.topic
+      topic.update_column(:image_upload_id, nil) if topic&.image_upload_id
+      nil
     end
   end
 
@@ -447,6 +467,7 @@ module DiscourseModCategories
   def self.apply_core_whisper_patches!
     ::Post.prepend(PostWhisperPatch)
     ::PostCreator.prepend(PostCreatorWhisperPatch)
+    ::CookedPostProcessor.prepend(CookedPostProcessorWhisperPatch)
     ::Post.singleton_class.prepend(PostClassWhisperPatch)
     ::Topic.singleton_class.prepend(TopicClassWhisperPatch)
     ::Topic.prepend(TopicWhisperPatch)
