@@ -176,8 +176,23 @@ module DiscourseModCategories
   # the topic for everyone and showed its author as the last poster. The
   # scope narrows core's query to skip ours too; all_queries is what
   # reaches the destination.ordered_posts association.
+  #
+  # With "keep the original" core copies each reply with Post#dup, which
+  # leaves custom fields behind, so a whisper's copy came out public; the
+  # copies take the whisper fields once every post is moved, before anything
+  # else reads them. Core also counts each moved reply towards the moved
+  # post it answers, so a moved whisper added a reply to a public post.
   module PostMoverWhisperPatch
     private
+
+    def move_each_post
+      super
+      DiscourseModCategories::Whisper.copy_to_moved_copies!
+      whisper_ids = DiscourseModCategories::Whisper.whisper_post_ids(@post_ids_after_move)
+      if whisper_ids.any?
+        DiscourseModCategories::Whisper.posts_moved!(destination_topic, whisper_ids)
+      end
+    end
 
     def update_last_post_stats
       ::Post

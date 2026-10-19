@@ -158,6 +158,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Fixed**
 
+- Whispers: copying a whisper into another topic (moving posts with `freeze_original`, which keeps the original where it was) no longer makes the copy an ordinary post that anyone can read. The copy is a whisper to the same people, and the people it names can whisper back to staff in that topic. A whisper moved or copied along with the post it answers no longer counts as a reply to that post.
 - Whispers: a topic no longer jumps up the list over a whisper for people who can't see it. A post staff turn into a whisper takes back the bump it gave its topic while it was public; when the last public post is deleted or hidden by flags, the topic goes back to the post before it instead of on to a whisper after it; and resetting the bump date to a whisper gives it the post before the whisper's.
 - Whispers: moving a whisper into another topic no longer bumps that topic up the list, or shows the whisper's author as its last poster, for people who can't see the whisper. Public posts moved with it still bump it, as before.
 - Whispers: a whisper you can't see no longer leaves the topic unread after you've read the rest of it. It hit everyone in `whispers_allowed_groups` the whisper doesn't include: members of those groups, and moderators under an admin's whisper. Whoever was already caught up stays caught up when one is posted. Setting: `mod_whisper_audience_aware_topic_list`.
