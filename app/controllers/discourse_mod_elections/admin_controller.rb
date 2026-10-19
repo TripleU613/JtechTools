@@ -42,6 +42,19 @@ module DiscourseModElections
       render_json_dump(Presenter.admin_election(election))
     end
 
+    # The seats, or the dates still ahead; what isn't sent stays as it is.
+    def update
+      Lifecycle.update!(
+        @election,
+        current_user,
+        seats: params[:seats].presence&.to_i,
+        nominations_open_at: parse_time(:nominations_open_at, required: false),
+        voting_open_at: parse_time(:voting_open_at, required: false),
+        voting_close_at: parse_time(:voting_close_at, required: false),
+      )
+      render_json_dump(Presenter.admin_election(@election.reload))
+    end
+
     def end_phase
       Lifecycle.end_phase!(@election, current_user)
       render_json_dump(Presenter.admin_election(@election.reload))
@@ -144,7 +157,8 @@ module DiscourseModElections
       @election.ballots.find_by(id: params[:ballot_id]) || raise(Discourse::NotFound)
     end
 
-    def parse_time(key)
+    def parse_time(key, required: true)
+      return if !required && params[key].blank?
       Time.zone.parse(params.require(key).to_s)
     rescue ArgumentError
       raise DiscourseModElections::Error.new(:invalid_dates)

@@ -60,7 +60,7 @@ On the Mod elections tab an admin can mark a moderator as **stepped down** (they
 
 ## Starting one by hand
 
-The tab can also start an election off the calendar, with its own dates and number of seats (Vote Week has to start in the future, so people have time to run), end a phase early, or cancel an election. A cancelled election stays cancelled; the schedule won't start it again, even if the time zone setting changes. Only one election runs at a time: if one is still unpublished when the next is due, the next doesn't start, and admins get a notification saying so. While the module is off the tab still shows everything, but changes nothing.
+The tab can also start an election off the calendar, with its own dates and number of seats (Vote Week has to start in the future, so people have time to run), end a phase early, or cancel an election. An election under way can be changed too (**Change seats or dates**): its number of seats and any date still ahead, until voting closes. Before nominations open that is every date; during nominations, when they close and when Vote Week ends; during Vote Week, when it ends. A new date has to be in the future. Once voting has closed the seats and dates are fixed, since more or fewer seats then would change who the ballots elect. Each change goes in the staff log and, with a category set, in the election's topic. A cancelled election stays cancelled; the schedule won't start it again, even if the time zone setting changes. Only one election runs at a time: if one is still unpublished when the next is due, the next doesn't start, and admins get a notification saying so. While the module is off the tab still shows everything, but changes nothing.
 
 ## Settings
 
