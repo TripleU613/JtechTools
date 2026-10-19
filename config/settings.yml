@@ -1415,6 +1415,15 @@ jtech_mod_elections:
     max: 20
     depends_on:
       - "mod_elections_enabled"
+  # Who can open the elections page (and gets its sidebar link, banner and
+  # Dumbcourse menu entry). Logged-out visitors never do; staff always can.
+  mod_elections_view_allowed_groups:
+    default: "11"
+    type: group_list
+    client: false
+    allow_any: false
+    depends_on:
+      - "mod_elections_enabled"
 
   # Calendar. Nominations open at midnight on the 1st of each listed month,
   # in the time zone below.

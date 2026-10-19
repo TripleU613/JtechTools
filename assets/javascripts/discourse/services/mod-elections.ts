@@ -164,6 +164,7 @@ export interface ModElectionSummary {
 }
 
 export type ModElectionsCurrentUser = User & {
+  can_view_mod_elections?: boolean;
   id: number;
   username: string;
   mod_election?: ModElectionSummary;

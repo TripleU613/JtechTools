@@ -41,7 +41,12 @@ export default {
     const currentUser = container.lookup(
       "service:current-user"
     ) as ModElectionsCurrentUser | null;
-    const summary = currentUser?.mod_election;
+    // The page is for members in mod_elections_view_allowed_groups: nobody
+    // else gets the link or the banner (the server turns them away too).
+    if (!currentUser?.can_view_mod_elections) {
+      return;
+    }
+    const summary = currentUser.mod_election;
 
     withPluginApi((api) => {
       api.addCommunitySectionLink(

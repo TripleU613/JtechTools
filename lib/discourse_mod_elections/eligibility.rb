@@ -16,6 +16,15 @@ module DiscourseModElections
       member?(user) && !user.admin?
     end
 
+    # Who can open the elections page: staff, and members of
+    # mod_elections_view_allowed_groups (trust level 1 by default). Never a
+    # visitor.
+    def self.can_view?(user)
+      return false if user.nil? || user.id.to_i <= 0
+      return true if user.staff?
+      user.in_any_groups?(SiteSetting.mod_elections_view_allowed_groups_map)
+    end
+
     def self.run_blocked_reason(user, election, now: Time.zone.now)
       return :not_nominating unless election.taking_nominations?(now)
       return :not_allowed unless member?(user)

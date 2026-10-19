@@ -9,7 +9,8 @@ module DiscourseModElections
     requires_plugin "jtech-tools"
 
     before_action :ensure_enabled
-    before_action :ensure_logged_in, except: %i[page show]
+    before_action :ensure_logged_in, except: %i[page]
+    before_action :ensure_can_view, only: %i[show]
     before_action :ensure_own_session, except: %i[page show]
     before_action :limit_writes, except: %i[page show]
     before_action :find_election, except: %i[page show]
@@ -69,6 +70,11 @@ module DiscourseModElections
     end
 
     private
+
+    # The page is for members: mod_elections_view_allowed_groups, and staff.
+    def ensure_can_view
+      raise Discourse::InvalidAccess unless Eligibility.can_view?(current_user)
+    end
 
     def ensure_enabled
       raise Discourse::NotFound unless DiscourseModElections.enabled?

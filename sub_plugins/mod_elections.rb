@@ -76,6 +76,14 @@ after_initialize do
     end,
   ) { DiscourseModElections::Presenter.current_user_summary(object) }
 
+  # Whether this member can open the elections page at all: the sidebar
+  # link, the banner and the page check it (the server does too).
+  add_to_serializer(
+    :current_user,
+    :can_view_mod_elections,
+    include_condition: -> { DiscourseModElections.enabled? },
+  ) { DiscourseModElections::Eligibility.can_view?(object) }
+
   # By now the account's candidacies have no user (the foreign key nulls
   # it); take them off any ballot still open.
   on(:user_destroyed) do |_user|

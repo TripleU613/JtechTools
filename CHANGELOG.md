@@ -150,6 +150,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Changed**
 
+- Mod elections: the page is for members. A visitor is sent to log in, and `mod_elections_view_allowed_groups` (trust level 1 by default) says which members can open it; the sidebar link, the banner and Dumbcourse's menu entry show for them only.
 - A new install is neutral. The JTech theme's headline (Welcome to the forum), search placeholder and footer links are general, with Terms and Privacy at the forum's own pages; the subtitle, footer tagline, footer notice, home icon and other hosts start empty; translations go to Google directly (`translator_tweaks_worker_url`) and no other theme's rows open on click (`jtech_row_click_theme_ids`). Forums that already ran the plugin keep their words and links. JTech Forums' own settings are in [docs/setup/](docs/setup/), with `rake jtech:theme:settings` to apply the theme's.
 - A new install starts with everything off: the master switch `jtech_enabled`, every feature, the JTech theme (`jtech_theme_install`) and its app icon (`jtech_app_icon`). Turn on what you want under Admin → Plugins → Jtech Tools. Forums that already ran the plugin keep everything as it was.
 - JTech theme: the topic list's tabs (Latest, New, Unread, Top…) are one dropdown on a computer too, as on a phone and as Discourse's Compact Nav component does. As a row they ran out of room beside the filters and New Topic and scrolled sideways.
@@ -157,6 +158,8 @@ What changed for forums running Jtech Tools. Newest first.
 **Fixed**
 
 - Whispers: a whisper you can't see no longer leaves the topic unread after you've read the rest of it. It hit everyone in `whispers_allowed_groups` the whisper doesn't include: members of those groups, and moderators under an admin's whisper. Whoever was already caught up stays caught up when one is posted. Setting: `mod_whisper_audience_aware_topic_list`.
+- JTech theme: the reply-to tab at a post's top right is the name in the text colour on a raised pill, with the arrow in the accent, instead of small grey type; on phones it keeps the name, which Discourse hides there.
+- JTech theme: the post being answered (the reply-to tab) and a post's replies (the Replies button) open in a panel of their own, sunken, bordered and with an accent bar on the left, with the collapse chevron a button at its top corner. They used to open between hairlines that are next to invisible on this palette, so they read as more posts in the stream.
 - JTech theme: scrolling down a topic in Safari no longer leaps forward a post's height when Discourse unloads a post above the screen.
 - JTech theme: Who's Online beside the topic list's tabs is Online: 3 and the faces of the people online in a row at all times, spread out into the room up to New Topic (fading at its end when more are online than fit), instead of a box that popped out on a click.
 - JTech theme: reader mode centres the reading column itself, the timeline hanging to its right (centring the two together left the text off to the left), with the title over the column; and its switch and Aa button are the same bordered squares as the admin wrench beside them.

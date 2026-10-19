@@ -4,10 +4,26 @@ require "rails_helper"
 
 RSpec.describe "Mod elections endpoints" do
   fab!(:admin)
-  fab!(:moderator) { Fabricate(:moderator, trust_level: TrustLevel[3], created_at: 1.year.ago) }
-  fab!(:member) { Fabricate(:user, trust_level: TrustLevel[2], created_at: 1.year.ago) }
-  fab!(:newbie) { Fabricate(:user, trust_level: TrustLevel[1], created_at: 1.year.ago) }
-  fab!(:other) { Fabricate(:user, trust_level: TrustLevel[3], created_at: 1.year.ago) }
+  fab!(:moderator) do
+    Fabricate(
+      :moderator,
+      trust_level: TrustLevel[3],
+      created_at: 1.year.ago,
+      refresh_auto_groups: true,
+    )
+  end
+  fab!(:member) do
+    Fabricate(:user, trust_level: TrustLevel[2], created_at: 1.year.ago, refresh_auto_groups: true)
+  end
+  fab!(:newbie) do
+    Fabricate(:user, trust_level: TrustLevel[1], created_at: 1.year.ago, refresh_auto_groups: true)
+  end
+  fab!(:other) do
+    Fabricate(:user, trust_level: TrustLevel[3], created_at: 1.year.ago, refresh_auto_groups: true)
+  end
+  fab!(:visitor) do
+    Fabricate(:user, trust_level: TrustLevel[0], created_at: 1.year.ago, refresh_auto_groups: true)
+  end
 
   before do
     SiteSetting.jtech_enabled = true
@@ -43,7 +59,7 @@ RSpec.describe "Mod elections endpoints" do
   end
 
   describe "the page" do
-    it "shows the election and its candidates to anyone, and nobody's ballot" do
+    it "shows the election and its candidates to a member, and nobody's ballot" do
       election = start_election
       DiscourseModElections::Nominations.run!(member, election, "Fair and fast.")
       open_voting(election)
@@ -53,6 +69,7 @@ RSpec.describe "Mod elections endpoints" do
         election.candidates.where.not(user: other).order(:id).pluck(:id),
       )
 
+      sign_in(newbie)
       get "/jtech-elections/current.json"
       body = response.parsed_body
       expect(body.dig("election", "status")).to eq("voting")
@@ -66,7 +83,7 @@ RSpec.describe "Mod elections endpoints" do
           "statement"
         ],
       ).to eq("Fair and fast.")
-      expect(body["me"]).to be_nil
+      expect(body.dig("me", "ballot")).to be_nil
       expect(response.body).not_to include("ranking")
 
       sign_in(member)
@@ -79,6 +96,7 @@ RSpec.describe "Mod elections endpoints" do
       election = start_election
       DiscourseModElections::Lifecycle.end_phase!(election, admin)
 
+      sign_in(newbie)
       get "/jtech-elections/current.json"
       expect(response.parsed_body["message_bus_last_id"]).to eq(
         MessageBus.last_id(DiscourseModElections::State::CHANNEL),
@@ -131,10 +149,7 @@ RSpec.describe "Mod elections endpoints" do
       row = ->(body) { body.dig("election", "candidates").find { |c| c["id"] == candidate.id } }
 
       get "/jtech-elections/current.json"
-      expect(row.call(response.parsed_body)).to include(
-        "status" => "disqualified",
-        "disqualified_reason" => nil,
-      )
+      expect(response.status).to eq(403)
       expect(response.body).not_to include("Alt account")
 
       sign_in(other)
@@ -154,6 +169,7 @@ RSpec.describe "Mod elections endpoints" do
       open_voting(election)
       UserDestroyer.new(admin).destroy(member)
 
+      sign_in(other)
       get "/jtech-elections/current.json"
       expect(
         response.parsed_body.dig("election", "candidates").map { |c| c.dig("user", "username") },
@@ -634,6 +650,7 @@ RSpec.describe "Mod elections endpoints" do
       SiteSetting.mod_elections_timezone = "Pacific/Auckland"
       election.update!(nominations_open_at: Time.zone.parse("2026-01-31 12:00 UTC"))
 
+      sign_in(other)
       get "/jtech-elections/current.json", params: { id: election.id }
       body = response.parsed_body
 
@@ -648,6 +665,7 @@ RSpec.describe "Mod elections endpoints" do
       UsernameChanger.change(member, "renamed_member", admin)
       SiteSetting.enable_names = false
 
+      sign_in(other)
       get "/jtech-elections/current.json", params: { id: election.id }
       winner =
         response
@@ -737,6 +755,51 @@ RSpec.describe "Mod elections endpoints" do
           response.status
         end
       expect(statuses.last).to eq(429)
+    end
+  end
+
+  describe "who can see the page" do
+    before { start_election }
+
+    it "turns a visitor away" do
+      get "/jtech-elections/current.json"
+      expect(response.status).to eq(403)
+    end
+
+    it "is for trust level 1 and up by default" do
+      sign_in(visitor)
+      get "/jtech-elections/current.json"
+      expect(response.status).to eq(403)
+
+      sign_in(newbie)
+      get "/jtech-elections/current.json"
+      expect(response.status).to eq(200)
+    end
+
+    it "follows mod_elections_view_allowed_groups, staff aside" do
+      SiteSetting.mod_elections_view_allowed_groups = Group::AUTO_GROUPS[:trust_level_3].to_s
+      sign_in(newbie)
+      get "/jtech-elections/current.json"
+      expect(response.status).to eq(403)
+
+      sign_in(other)
+      get "/jtech-elections/current.json"
+      expect(response.status).to eq(200)
+
+      SiteSetting.mod_elections_view_allowed_groups = ""
+      sign_in(moderator)
+      get "/jtech-elections/current.json"
+      expect(response.status).to eq(200)
+    end
+
+    it "tells the browser who may open it" do
+      sign_in(visitor)
+      get "/session/current.json"
+      expect(response.parsed_body.dig("current_user", "can_view_mod_elections")).to eq(false)
+
+      sign_in(newbie)
+      get "/session/current.json"
+      expect(response.parsed_body.dig("current_user", "can_view_mod_elections")).to eq(true)
     end
   end
 end
