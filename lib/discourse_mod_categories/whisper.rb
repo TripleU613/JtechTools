@@ -351,16 +351,19 @@ module DiscourseModCategories
     end
 
     # Post#dup, core's copy of a reply moved with "keep the original", leaves
-    # custom fields behind. The copies among the moved posts `post_ids` take
-    # their originals' whisper rows here, as stored, in one statement. A
-    # moved topic's first post already has them: core copies its fields.
-    def copy_to_moved_copies!(post_ids)
-      ::DB.exec(<<~SQL, ids: post_ids, names: whisper_fields)
+    # custom fields behind. The copies a PostMover just made take their
+    # originals' whisper rows here, as stored, in one statement. They come
+    # from PostMover's temp_moved_posts, this move's mapping only: moved_posts
+    # keeps every earlier move too, and would make a copy that staff have
+    # since made public a whisper again when it's moved on. A moved topic's
+    # first post already has them: core copies its fields.
+    def copy_to_moved_copies!
+      ::DB.exec(<<~SQL, names: whisper_fields)
         INSERT INTO post_custom_fields (post_id, name, value, created_at, updated_at)
         SELECT mp.new_post_id, pcf.name, pcf.value, NOW(), NOW()
-        FROM moved_posts mp
+        FROM temp_moved_posts mp
         JOIN post_custom_fields pcf ON pcf.post_id = mp.old_post_id AND pcf.name IN (:names)
-        WHERE mp.new_post_id IN (:ids) AND mp.old_post_id <> mp.new_post_id
+        WHERE mp.old_post_id <> mp.new_post_id
           AND NOT EXISTS (
             SELECT 1 FROM post_custom_fields copied
             WHERE copied.post_id = mp.new_post_id AND copied.name = pcf.name

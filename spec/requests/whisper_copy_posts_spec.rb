@@ -168,4 +168,21 @@ RSpec.describe "Copying a whisper into another topic" do
     expect(DiscourseModCategories::Whisper.whisper?(copy.reload)).to eq(true)
     expect(Guardian.new(stranger).can_see_post?(copy)).to eq(false)
   end
+
+  it "leaves a copy staff made public alone when it's moved on" do
+    copy = copy!(whisper).first
+    put "/discourse-mod-categories/post/#{copy.id}/whisper.json", params: { mod_whisper: false }
+    expect(DiscourseModCategories::Whisper.whisper?(copy.reload)).to eq(false)
+    third = create_post(user: author, category: category, raw: "A third topic for it.").topic
+
+    post "/t/#{destination.id}/move-posts.json",
+         params: {
+           post_ids: [copy.id],
+           destination_topic_id: third.id,
+         }
+
+    expect(response.status).to eq(200)
+    expect(copy.reload.topic_id).to eq(third.id)
+    expect(DiscourseModCategories::Whisper.whisper?(copy)).to eq(false)
+  end
 end

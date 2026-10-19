@@ -164,7 +164,7 @@ module DiscourseModCategories
 
     def move_each_post
       super
-      DiscourseModCategories::Whisper.copy_to_moved_copies!(@post_ids_after_move)
+      DiscourseModCategories::Whisper.copy_to_moved_copies!
       whisper_ids = DiscourseModCategories::Whisper.whisper_post_ids(@post_ids_after_move)
       if whisper_ids.any?
         DiscourseModCategories::Whisper.posts_moved!(destination_topic, whisper_ids)
