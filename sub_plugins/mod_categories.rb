@@ -1227,6 +1227,9 @@ after_initialize do
             topic.save_custom_fields(true)
           end
           DiscourseModCategories::Whisper.refresh_topic_counters(topic)
+          # It bumped the topic while it was public; the bump goes back to
+          # the last post everyone can see.
+          topic.reset_bumped_at if (topic.bumped_at - post.created_at).abs < 1.second
         end
         # Other posts may carry a baked link preview of this post.
         DiscourseModCategories::Whisper.rebake_linking_posts(post)
@@ -1236,6 +1239,11 @@ after_initialize do
         ::SearchIndexer.index(post, force: true)
         ::TopicLink.extract_from(post)
         ::Topic.reset_highest(post.topic_id) if post.topic_id
+        # Public again, it bumps the topic as it would have when posted.
+        topic = post.topic&.reload
+        if topic && post.is_last_reply? && topic.bumped_at < post.created_at
+          topic.reset_bumped_at(post)
+        end
       end
       DiscourseModCategories::Whisper.refresh_reply_counts(
         ::PostReply.where(reply_post_id: post.id).pluck(:post_id),

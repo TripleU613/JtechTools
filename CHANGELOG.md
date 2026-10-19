@@ -157,6 +157,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Fixed**
 
+- Whispers: a topic no longer jumps up the list over a whisper for people who can't see it. A post staff turn into a whisper takes back the bump it gave its topic while it was public (made public again, it gives it back), and when the last public post is deleted or hidden by flags, the topic goes back to the post before it instead of on to a whisper after it.
 - Whispers: a whisper you can't see no longer leaves the topic unread after you've read the rest of it. It hit everyone in `whispers_allowed_groups` the whisper doesn't include: members of those groups, and moderators under an admin's whisper. Whoever was already caught up stays caught up when one is posted. Setting: `mod_whisper_audience_aware_topic_list`.
 - JTech theme: on phones a post's reply-to tab keeps the name, which Discourse hides there, compact in the top right corner on the poster's line, with the date (and the unread dot) under it. When room runs short the name in the tab shortens, and on a very narrow screen only its arrow and picture stay, so the poster's name and title are never cut short; a long title wraps in its pill.
 - JTech theme: the post being answered (the reply-to tab) and a post's replies (the Replies button) open in a panel of their own, sunken, bordered and with an accent bar on the left, with the collapse chevron a button at its top corner. They used to open between hairlines that are next to invisible on this palette, so they read as more posts in the stream.

@@ -166,6 +166,27 @@ RSpec.describe "Whisper unread badge" do
     end
   end
 
+  describe "the bump when the last public post goes" do
+    before do
+      op.update_columns(created_at: 2.hours.ago)
+      regular_reply.update_columns(created_at: 30.minutes.ago)
+      whisper_post.update_columns(created_at: 5.minutes.ago)
+      ::Topic.where(id: topic.id).update_all(bumped_at: regular_reply.created_at)
+    end
+
+    it "moves back to the post before it when it's deleted, not on to a whisper after it" do
+      PostDestroyer.new(admin, regular_reply).destroy
+
+      expect(topic.reload.bumped_at).to be_within(1.second).of(op.created_at)
+    end
+
+    it "moves back to the post before it when a flag hides it" do
+      regular_reply.hide!(PostActionType.types[:spam])
+
+      expect(topic.reload.bumped_at).to be_within(1.second).of(op.created_at)
+    end
+  end
+
   describe "reading a whisper" do
     it "lets a non-staff target mark a trailing whisper read" do
       sign_in(target)

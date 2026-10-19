@@ -120,6 +120,37 @@ RSpec.describe "Update post whisper" do
       expect(body["mod_is_whisper"]).to eq(true)
       expect(body["mod_whisper_target_user_ids"]).to eq([target.id])
     end
+
+    it "takes back the bump the post gave the topic while it was public" do
+      op.update_columns(created_at: 2.hours.ago)
+      post_record.update_columns(created_at: 10.minutes.ago)
+      ::Topic.where(id: topic.id).update_all(bumped_at: post_record.created_at)
+      sign_in(moderator)
+
+      put "/discourse-mod-categories/post/#{post_record.id}/whisper.json",
+          params: {
+            mod_whisper: true,
+            mod_whisper_target_user_ids: [target.id],
+          }
+
+      expect(response.status).to eq(200)
+      expect(topic.reload.bumped_at).to be_within(1.second).of(op.created_at)
+    end
+
+    it "leaves a bump that came later alone" do
+      post_record.update_columns(created_at: 10.minutes.ago)
+      ::Topic.where(id: topic.id).update_all(bumped_at: 1.minute.ago)
+      bumped_at = topic.reload.bumped_at
+      sign_in(moderator)
+
+      put "/discourse-mod-categories/post/#{post_record.id}/whisper.json",
+          params: {
+            mod_whisper: true,
+            mod_whisper_target_user_ids: [target.id],
+          }
+
+      expect(topic.reload.bumped_at).to eq_time(bumped_at)
+    end
   end
 
   describe "disarming a whisper back into a regular post" do
@@ -154,6 +185,20 @@ RSpec.describe "Update post whisper" do
           }
 
       expect(response.parsed_body["mod_is_whisper"]).to eq(false)
+    end
+
+    it "bumps the topic as the post would have when it was posted" do
+      op.update_columns(created_at: 2.hours.ago)
+      post_record.update_columns(created_at: 10.minutes.ago)
+      ::Topic.where(id: topic.id).update_all(bumped_at: op.created_at)
+      sign_in(moderator)
+
+      put "/discourse-mod-categories/post/#{post_record.id}/whisper.json",
+          params: {
+            mod_whisper: false,
+          }
+
+      expect(topic.reload.bumped_at).to be_within(1.second).of(post_record.created_at)
     end
   end
 

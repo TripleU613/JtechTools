@@ -19,6 +19,8 @@ module DiscourseModCategories
   #     and the topic stats broadcast is skipped.
   #   * Post#create_reply_relationship_with — a whisper reply doesn't raise
   #     its parent's public reply_count.
+  #   * Topic#reset_bumped_at — the bump goes back to the last public post,
+  #     never a whisper.
   module PostWhisperPatch
     def whisper?
       super || DiscourseModCategories::Whisper.whisper?(self)
@@ -115,6 +117,23 @@ module DiscourseModCategories
   module TopicClassWhisperPatch
     def public_post_types_sql
       "(#{super} AND NOT #{DiscourseModCategories::WhisperQueryFilter.is_whisper_sql("posts")})"
+    end
+  end
+
+  # Topic#reset_bumped_at (the last public post deleted or hidden by flags,
+  # "reset bump date") moves the bump to the topic's last regular post, which
+  # can be a whisper: the topic jumped up the list for everyone over a post
+  # most of them can't see. The last post that isn't a whisper sets it.
+  module TopicWhisperPatch
+    def reset_bumped_at(post_or_post_id = nil)
+      return super if post_or_post_id
+
+      last_public =
+        ordered_posts
+          .where(user_deleted: false, hidden: false, post_type: ::Post.types[:regular])
+          .where("NOT #{DiscourseModCategories::WhisperQueryFilter.is_whisper_sql("posts")}")
+          .last
+      super(last_public || first_post)
     end
   end
 
@@ -383,6 +402,7 @@ module DiscourseModCategories
     ::PostCreator.prepend(PostCreatorWhisperPatch)
     ::Post.singleton_class.prepend(PostClassWhisperPatch)
     ::Topic.singleton_class.prepend(TopicClassWhisperPatch)
+    ::Topic.prepend(TopicWhisperPatch)
     ::Oneboxer.singleton_class.prepend(OneboxerWhisperPatch)
     ::UserNotifications.singleton_class.prepend(UserNotificationsWhisperPatch)
     ::LatestPostsQuery.prepend(LatestPostsQueryWhisperPatch)
