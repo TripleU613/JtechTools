@@ -1,7 +1,7 @@
 import type Owner from "@ember/owner";
 import { withPluginApi } from "discourse/lib/plugin-api";
 import type SiteSettingsService from "discourse/services/site-settings";
-import NotificationsTypeFilter from "../components/notifications-type-filter";
+import NotificationsTypeFilter from "../components/notifications-type-filter.gts";
 
 // Adds a second filter dropdown to /u/{username}/notifications, sitting
 // next to Discourse's existing All / Read / Unread filter. The dropdown

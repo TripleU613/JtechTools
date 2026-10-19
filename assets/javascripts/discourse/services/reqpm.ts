@@ -5,10 +5,10 @@ import { ajax } from "discourse/lib/ajax";
 import type User from "discourse/models/user";
 import type ModalService from "discourse/services/modal";
 import type SiteSettingsService from "discourse/services/site-settings";
-import ReqpmSetupModal from "../components/reqpm-setup-modal";
-import ReqpmUserModal from "../components/reqpm-user-modal";
-import type { MessageBus } from "../lib/message-bus";
-import type { ReqpmKindId } from "../lib/reqpm-kinds";
+import ReqpmSetupModal from "../components/reqpm-setup-modal.gts";
+import ReqpmUserModal from "../components/reqpm-user-modal.gts";
+import type { MessageBus } from "../lib/message-bus.ts";
+import type { ReqpmKindId } from "../lib/reqpm-kinds.ts";
 
 const BASE = "/jtech-reqpm";
 

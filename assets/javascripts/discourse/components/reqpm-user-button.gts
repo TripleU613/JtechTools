@@ -2,7 +2,7 @@ import Component from "@glimmer/component";
 import { action } from "@ember/object";
 import { service } from "@ember/service";
 import DButton from "discourse/components/d-button";
-import ReqpmService, { ReqpmCurrentUser } from "../services/reqpm";
+import ReqpmService, { ReqpmCurrentUser } from "../services/reqpm.ts";
 
 // The user card / profile model, as far as this button reads it.
 export interface ReqpmButtonUser {

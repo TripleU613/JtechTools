@@ -13,8 +13,8 @@ import icon from "discourse/helpers/d-icon";
 import DiscourseURL from "discourse/lib/url";
 import type AppEventsService from "discourse/services/app-events";
 import { i18n } from "discourse-i18n";
-import type DisteleplusService from "../services/disteleplus";
-import DisteleplusConversation from "./disteleplus-conversation";
+import type DisteleplusService from "../services/disteleplus.ts";
+import DisteleplusConversation from "./disteleplus-conversation.gts";
 
 interface DisteleplusDrawerSignature {
   Args: Record<string, never>;

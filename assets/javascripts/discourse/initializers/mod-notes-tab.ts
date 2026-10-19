@@ -4,7 +4,7 @@ import type UserMenuTab from "discourse/lib/user-menu/tab";
 import type User from "discourse/models/user";
 import type SiteSettings from "discourse/services/site-settings";
 import { i18n } from "discourse-i18n";
-import ModNotesPanel from "../components/mod-notes-panel";
+import ModNotesPanel from "../components/mod-notes-panel.gts";
 
 interface NotesTabSiteSettings {
   mod_categories_enabled: boolean;

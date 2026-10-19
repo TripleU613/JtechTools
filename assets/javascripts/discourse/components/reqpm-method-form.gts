@@ -12,14 +12,14 @@ import {
   kindInfo,
   type ReqpmKindId,
   type ReqpmKindInfo,
-} from "../lib/reqpm-kinds";
+} from "../lib/reqpm-kinds.ts";
 import ReqpmService, {
   reqpmError,
   ReqpmMethodAttrs,
   ReqpmOwnMethod,
   ReqpmSiteSettings,
-} from "../services/reqpm";
-import ReqpmKindIcon from "./reqpm-kind-icon";
+} from "../services/reqpm.ts";
+import ReqpmKindIcon from "./reqpm-kind-icon.gts";
 
 interface ReqpmMethodFormSignature {
   Args: {

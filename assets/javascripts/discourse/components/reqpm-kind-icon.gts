@@ -1,7 +1,7 @@
 import Component from "@glimmer/component";
 import icon from "discourse/helpers/d-icon";
 import { emojiUrlFor } from "discourse/lib/text";
-import { CUSTOM, kindInfo, type ReqpmKindInfo } from "../lib/reqpm-kinds";
+import { CUSTOM, kindInfo, type ReqpmKindInfo } from "../lib/reqpm-kinds.ts";
 
 interface ReqpmKindIconSignature {
   Args: { kind: string | null | undefined; emoji?: string | null };

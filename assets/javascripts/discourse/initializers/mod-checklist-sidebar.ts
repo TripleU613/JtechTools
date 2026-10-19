@@ -4,7 +4,7 @@ import type User from "discourse/models/user";
 import type ModalService from "discourse/services/modal";
 import type SiteSettings from "discourse/services/site-settings";
 import { i18n } from "discourse-i18n";
-import ModChecklistModal from "../components/mod-checklist-modal";
+import ModChecklistModal from "../components/mod-checklist-modal.gts";
 
 interface ChecklistSidebarSiteSettings {
   mod_categories_enabled: boolean;

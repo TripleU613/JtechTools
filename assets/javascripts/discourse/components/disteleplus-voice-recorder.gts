@@ -16,11 +16,11 @@ import {
   normalisePeaks,
   paintBars,
   type WebkitAudioWindow,
-} from "../lib/disteleplus-voice-player";
+} from "../lib/disteleplus-voice-player.ts";
 import DisteleplusService, {
   DisteleplusSiteSettings,
   RawMessage,
-} from "../services/disteleplus";
+} from "../services/disteleplus.ts";
 
 interface DisteleplusVoiceRecorderSignature {
   Args: {

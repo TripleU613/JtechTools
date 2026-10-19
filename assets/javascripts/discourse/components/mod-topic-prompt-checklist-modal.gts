@@ -16,8 +16,8 @@ import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 import type Topic from "discourse/models/topic";
 import { i18n } from "discourse-i18n";
-import type { ChecklistItem } from "../lib/first-post-checklist";
-import { trustLevelOptions } from "../lib/trust-level-options";
+import type { ChecklistItem } from "../lib/first-post-checklist.ts";
+import { trustLevelOptions } from "../lib/trust-level-options.ts";
 
 // Select-kit components are classic components with no Glint signature;
 // this gives ComboBox one so `class` and the args used here type-check.

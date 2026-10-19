@@ -3,7 +3,7 @@ import { action } from "@ember/object";
 import { service } from "@ember/service";
 import DButton from "discourse/components/d-button";
 import type Post from "discourse/models/post";
-import ReqpmService from "../services/reqpm";
+import ReqpmService from "../services/reqpm.ts";
 
 type ListingPost = Post & {
   user_id: number;

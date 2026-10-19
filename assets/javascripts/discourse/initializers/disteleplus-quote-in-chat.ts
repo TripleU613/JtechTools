@@ -7,7 +7,7 @@ import DiscourseURL from "discourse/lib/url";
 import DisteleplusService, {
   DisteleplusCurrentUser,
   DisteleplusSiteSettings,
-} from "../services/disteleplus";
+} from "../services/disteleplus.ts";
 
 const EXCERPT_LENGTH = 300;
 

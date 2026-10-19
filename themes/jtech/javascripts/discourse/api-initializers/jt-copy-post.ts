@@ -1,6 +1,6 @@
 import { settings } from "virtual:theme";
 import { apiInitializer } from "discourse/lib/api";
-import JtCopyPost from "../components/jt-copy-post";
+import JtCopyPost from "../components/jt-copy-post.gts";
 
 interface PostMenuDag {
   add(key: string, value: unknown, position?: { after?: string }): void;

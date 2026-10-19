@@ -8,7 +8,7 @@ import icon from "discourse/helpers/d-icon";
 import getURL from "discourse/lib/get-url";
 import type Site from "discourse/models/site";
 import { i18n } from "discourse-i18n";
-import type DisteleplusService from "../services/disteleplus";
+import type DisteleplusService from "../services/disteleplus.ts";
 
 interface DisteleplusHeaderIconSignature {
   Args: Record<string, never>;

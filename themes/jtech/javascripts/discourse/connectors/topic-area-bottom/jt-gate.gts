@@ -1,5 +1,5 @@
 import type { TemplateOnlyComponent } from "@ember/component/template-only";
-import JtGate, { type GateTopic } from "../../components/jt-gate";
+import JtGate, { type GateTopic } from "../../components/jt-gate.gts";
 
 interface JtGateConnectorSignature {
   Args: { outletArgs: { model: GateTopic } };

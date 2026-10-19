@@ -21,11 +21,11 @@ import icon from "discourse/helpers/d-icon";
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 import { getAbsoluteURL } from "discourse/lib/get-url";
-import { clipboardCopy } from "discourse/lib/utilities";
 import lightbox from "discourse/lib/lightbox";
 import { emojiUrlFor } from "discourse/lib/text";
 import { TextareaAutocompleteHandler } from "discourse/lib/textarea-text-manipulation";
 import userSearch, { validateSearchResult } from "discourse/lib/user-search";
+import { clipboardCopy } from "discourse/lib/utilities";
 import type Site from "discourse/models/site";
 import type AppEventsService from "discourse/services/app-events";
 import type ComposerService from "discourse/services/composer";
@@ -33,7 +33,7 @@ import type EmojiStore from "discourse/services/emoji-store";
 import type ModalService from "discourse/services/modal";
 import dAutocomplete from "discourse/ui-kit/modifiers/d-autocomplete";
 import { i18n } from "discourse-i18n";
-import { enhanceWithin } from "../lib/disteleplus-voice-player";
+import { enhanceWithin } from "../lib/disteleplus-voice-player.ts";
 import DisteleplusService, {
   DisteleplusCurrentUser,
   DisteleplusMessage,
@@ -43,12 +43,12 @@ import DisteleplusService, {
   Reaction,
   ReadState,
   Typer,
-} from "../services/disteleplus";
-import DisteleplusMessageInfo from "./disteleplus-message-info";
-import DisteleplusPoll from "./disteleplus-poll";
-import DisteleplusPollBuilder from "./disteleplus-poll-builder";
-import DisteleplusReactionInfo from "./disteleplus-reaction-info";
-import DisteleplusVoiceRecorder from "./disteleplus-voice-recorder";
+} from "../services/disteleplus.ts";
+import DisteleplusMessageInfo from "./disteleplus-message-info.gts";
+import DisteleplusPoll from "./disteleplus-poll.gts";
+import DisteleplusPollBuilder from "./disteleplus-poll-builder.gts";
+import DisteleplusReactionInfo from "./disteleplus-reaction-info.gts";
+import DisteleplusVoiceRecorder from "./disteleplus-voice-recorder.gts";
 
 const EMOJI_CONTEXT = "disteleplus";
 const DEFAULT_QUICK_REACTIONS = ["+1", "heart", "laughing", "fire", "tada"];

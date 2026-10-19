@@ -8,6 +8,7 @@
     "node_modules/discourse/declarations/**/*"
   ],
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
     "paths": {
       "discourse/plugins/jtech-tools/*": [
         "./assets/javascripts/*"

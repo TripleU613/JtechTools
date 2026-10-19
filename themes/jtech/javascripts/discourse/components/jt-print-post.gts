@@ -5,7 +5,7 @@ import { settings, themePrefix } from "virtual:theme";
 import type Post from "discourse/models/post";
 import type SiteSettingsService from "discourse/services/site-settings";
 import DButton from "discourse/ui-kit/d-button";
-import { printPost, type PrintTopic } from "../lib/jt-print";
+import { printPost, type PrintTopic } from "../lib/jt-print.ts";
 
 type PrintablePost = Post & {
   post_number: number;

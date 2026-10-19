@@ -21,7 +21,7 @@ import ModElectionsService, {
   ModElectionMe,
   ModElectionPage,
   ModElectionsCurrentUser,
-} from "../services/mod-elections";
+} from "../services/mod-elections.ts";
 
 interface ModElectionsBallotSignature {
   Args: {

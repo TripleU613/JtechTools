@@ -5,8 +5,8 @@ import type ModalService from "discourse/services/modal";
 import type SiteSettings from "discourse/services/site-settings";
 import ModWhisperAddParticipantModal, {
   type AddParticipantPost,
-} from "../components/mod-whisper-add-participant-modal";
-import type { WhisperPostFields } from "../lib/mod-whisper-reply-audience";
+} from "../components/mod-whisper-add-participant-modal.gts";
+import type { WhisperPostFields } from "../lib/mod-whisper-reply-audience.ts";
 
 interface AddParticipantSiteSettings {
   mod_whisper_enabled: boolean;

@@ -2,8 +2,8 @@ import { settings, themePrefix } from "virtual:theme";
 import { apiInitializer } from "discourse/lib/api";
 import type ModalService from "discourse/services/modal";
 import type SiteSettingsService from "discourse/services/site-settings";
-import JtVoiceRecorder from "../components/modal/jt-voice-recorder";
-import { voiceFormat } from "../lib/jt-voice";
+import JtVoiceRecorder from "../components/modal/jt-voice-recorder.gts";
+import { voiceFormat } from "../lib/jt-voice.ts";
 
 interface Toolbar {
   addButton(button: {

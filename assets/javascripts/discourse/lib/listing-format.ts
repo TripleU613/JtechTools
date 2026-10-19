@@ -1,6 +1,6 @@
 import { get } from "@ember/object";
 import type Composer from "discourse/models/composer";
-import type { ListingCardFormat } from "./listing-card";
+import type { ListingCardFormat } from "./listing-card.ts";
 
 export interface ListingChoice {
   multiple: boolean;

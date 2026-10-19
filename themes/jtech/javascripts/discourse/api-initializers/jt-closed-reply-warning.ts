@@ -2,7 +2,7 @@ import { settings, themePrefix } from "virtual:theme";
 import { apiInitializer } from "discourse/lib/api";
 import type AppEvents from "discourse/services/app-events";
 import { i18n } from "discourse-i18n";
-import JtClosedReplyWarning from "../components/jt-closed-reply-warning";
+import JtClosedReplyWarning from "../components/jt-closed-reply-warning.gts";
 
 interface ReplyComposer {
   model?: {

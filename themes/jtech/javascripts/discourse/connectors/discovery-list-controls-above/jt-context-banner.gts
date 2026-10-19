@@ -1,7 +1,7 @@
 import type { TemplateOnlyComponent } from "@ember/component/template-only";
 import JtContextBanner, {
   type JtContextBannerSignature,
-} from "../../components/jt-context-banner";
+} from "../../components/jt-context-banner.gts";
 
 interface JtContextBannerConnectorSignature {
   Args: { outletArgs: JtContextBannerSignature["Args"] };

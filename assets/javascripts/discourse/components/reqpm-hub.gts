@@ -26,10 +26,10 @@ import ReqpmService, {
   ReqpmOwnMethod,
   ReqpmReceivedRow,
   ReqpmSentRow,
-} from "../services/reqpm";
-import ReqpmContactList from "./reqpm-contact-list";
-import ReqpmKindIcon from "./reqpm-kind-icon";
-import ReqpmPreferences from "./reqpm-preferences";
+} from "../services/reqpm.ts";
+import ReqpmContactList from "./reqpm-contact-list.gts";
+import ReqpmKindIcon from "./reqpm-kind-icon.gts";
+import ReqpmPreferences from "./reqpm-preferences.gts";
 
 type ReqpmHubTab = "requests" | "contacts" | "card" | "shared";
 

@@ -1,7 +1,7 @@
 import { apiInitializer } from "discourse/lib/api";
 import type ModalService from "discourse/services/modal";
-import JtCommandMenu from "../components/jt-command-menu";
-import { commandMenuShortcutBound } from "../lib/jt-command-menu-shortcut";
+import JtCommandMenu from "../components/jt-command-menu.gts";
+import { commandMenuShortcutBound } from "../lib/jt-command-menu-shortcut.ts";
 
 // ⌘K / Ctrl+K opens the command menu. Not global: inside the composer and
 // other text fields Ctrl+K keeps meaning "insert link".

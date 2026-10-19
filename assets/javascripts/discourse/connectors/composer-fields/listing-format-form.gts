@@ -11,7 +11,7 @@ import {
   type ListingComposer,
   type ListingSetup,
   listingSetup,
-} from "../../lib/listing-format";
+} from "../../lib/listing-format.ts";
 
 interface ListingFormatFormSignature {
   Args: { outletArgs: { model?: ListingComposer | null } };
@@ -34,6 +34,10 @@ const EDITOR_ROOM = 300;
 // The section names are fixed text, so the format can't be broken by
 // editing it; the editor below fills the pictures section.
 export default class ListingFormatForm extends Component<ListingFormatFormSignature> {
+  // Ticks aren't tracked (they live on the composer), so a pick bumps this
+  // to update the box's hint.
+  @tracked picks = 0;
+
   // The form sits above the editor inside the composer's fixed height, so
   // a short composer would leave the editor no room and its toolbar over
   // the form. Grow it once to fit, the way dragging its edge would.
@@ -129,10 +133,6 @@ export default class ListingFormatForm extends Component<ListingFormatFormSignat
     };
   });
 
-  // Ticks aren't tracked (they live on the composer), so a pick bumps this
-  // to update the box's hint.
-  @tracked picks = 0;
-
   placeholder = (row: Row): string => {
     void this.picks;
     const needs = this.composer
@@ -147,6 +147,15 @@ export default class ListingFormatForm extends Component<ListingFormatFormSignat
     }
     return row.choice ? i18n("listing_format.composer.other_details") : "";
   };
+
+  value = (field: string): string =>
+    this.composer?.listingValues?.[field] ?? "";
+
+  isPicked = (field: string, option: string): boolean =>
+    this.composer?.listingPicked?.[field]?.includes(option) ?? false;
+
+  optionId = (row: Row, option: string): string =>
+    `${row.id}-${option.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 
   get composer(): ListingComposer | null | undefined {
     return this.args.outletArgs?.model;
@@ -170,15 +179,6 @@ export default class ListingFormatForm extends Component<ListingFormatFormSignat
     }));
   }
 
-  value = (field: string): string =>
-    this.composer?.listingValues?.[field] ?? "";
-
-  isPicked = (field: string, option: string): boolean =>
-    this.composer?.listingPicked?.[field]?.includes(option) ?? false;
-
-  optionId = (row: Row, option: string): string =>
-    `${row.id}-${option.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
-
   @action
   update(field: string, event: Event) {
     const values = this.composer?.listingValues;
@@ -193,12 +193,12 @@ export default class ListingFormatForm extends Component<ListingFormatFormSignat
     if (!picked) {
       return;
     }
-    const on = (event.target as HTMLInputElement).checked;
+    const checked = (event.target as HTMLInputElement).checked;
     const current = picked[row.field] ?? [];
     this.picks++;
     if (!row.choice?.multiple) {
-      picked[row.field] = on ? [option] : [];
-    } else if (on) {
+      picked[row.field] = checked ? [option] : [];
+    } else if (checked) {
       picked[row.field] = [...current, option];
     } else {
       picked[row.field] = current.filter((o) => o !== option);
@@ -238,9 +238,9 @@ export default class ListingFormatForm extends Component<ListingFormatFormSignat
               </label>
               {{#if row.choice}}
                 <div
+                  aria-label={{row.field}}
                   class="listing-format-form__options"
                   role={{if row.choice.multiple "group" "radiogroup"}}
-                  aria-label={{row.field}}
                 >
                   {{#each row.choice.options as |option|}}
                     <label
@@ -248,10 +248,10 @@ export default class ListingFormatForm extends Component<ListingFormatFormSignat
                       for={{this.optionId row option}}
                     >
                       <input
-                        id={{this.optionId row option}}
-                        type={{if row.choice.multiple "checkbox" "radio"}}
-                        name={{row.id}}
                         checked={{this.isPicked row.field option}}
+                        id={{this.optionId row option}}
+                        name={{row.id}}
+                        type={{if row.choice.multiple "checkbox" "radio"}}
                         {{on "change" (fn this.pick row option)}}
                       />
                       {{option}}
@@ -260,10 +260,10 @@ export default class ListingFormatForm extends Component<ListingFormatFormSignat
                 </div>
               {{/if}}
               <textarea
-                id={{row.id}}
                 class="listing-format-form__input"
-                rows="1"
+                id={{row.id}}
                 placeholder={{this.placeholder row}}
+                rows="1"
                 value={{this.value row.field}}
                 {{on "input" (fn this.update row.field)}}
               ></textarea>

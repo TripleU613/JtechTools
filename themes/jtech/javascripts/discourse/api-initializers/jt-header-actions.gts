@@ -7,10 +7,10 @@ import type User from "discourse/models/user";
 import type InterfaceColor from "discourse/services/interface-color";
 import JtHeaderIcon, {
   type JtHeaderIconKind,
-} from "../components/jt-header-icon";
-import JtHeaderNewTopic from "../components/jt-header-new-topic";
-import JtHeaderSearch from "../components/jt-header-search";
-import { colorToggleAvailable } from "../lib/jt-color-mode";
+} from "../components/jt-header-icon.gts";
+import JtHeaderNewTopic from "../components/jt-header-new-topic.gts";
+import JtHeaderSearch from "../components/jt-header-search.gts";
+import { colorToggleAvailable } from "../lib/jt-color-mode.ts";
 
 type HeaderUser = User & { can_send_private_messages?: boolean };
 

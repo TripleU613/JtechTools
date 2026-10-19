@@ -17,7 +17,7 @@ import {
   type FooterMessageTopic,
   topicFooterFeatureActive,
   topicFooterMessage,
-} from "../../lib/topic-footer-message";
+} from "../../lib/topic-footer-message.ts";
 
 type DirectionSiteSettings = SiteSettings & {
   support_mixed_text_direction: boolean;

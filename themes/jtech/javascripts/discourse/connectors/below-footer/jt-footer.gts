@@ -1,6 +1,6 @@
 import type { TemplateOnlyComponent } from "@ember/component/template-only";
 import { settings } from "virtual:theme";
-import JtFooter from "../../components/jt-footer";
+import JtFooter from "../../components/jt-footer.gts";
 
 interface JtFooterConnectorSignature {
   Args: { outletArgs: { showFooter: boolean } };

@@ -3,9 +3,9 @@ import { action, get } from "@ember/object";
 import { service } from "@ember/service";
 import DButton from "discourse/components/d-button";
 import { i18n } from "discourse-i18n";
-import type { WhisperTargetComposer } from "../../components/mod-whisper-target-modal";
-import { setPendingWhisperEdit } from "../../lib/mod-whisper-pending";
-import type { WhisperTargetBadge } from "../../lib/mod-whisper-reply-audience";
+import type { WhisperTargetComposer } from "../../components/mod-whisper-target-modal.gts";
+import { setPendingWhisperEdit } from "../../lib/mod-whisper-pending.ts";
+import type { WhisperTargetBadge } from "../../lib/mod-whisper-reply-audience.ts";
 
 interface ModWhisperArmedPillSignature {
   Args: { outletArgs: { model?: WhisperTargetComposer | null } };

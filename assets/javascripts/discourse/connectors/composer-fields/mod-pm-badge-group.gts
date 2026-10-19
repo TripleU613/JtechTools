@@ -7,7 +7,7 @@ import type ModalService from "discourse/services/modal";
 import type SiteSettings from "discourse/services/site-settings";
 import ModPmBadgePicker, {
   type RecipientsComposer,
-} from "../../components/mod-pm-badge-picker";
+} from "../../components/mod-pm-badge-picker.gts";
 
 interface PmBadgeGroupSiteSettings {
   mod_categories_enabled: boolean;

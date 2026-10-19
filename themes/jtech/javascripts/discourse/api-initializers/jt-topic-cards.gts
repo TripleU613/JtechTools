@@ -8,8 +8,8 @@ import type Category from "discourse/models/category";
 import type Topic from "discourse/models/topic";
 import JtTopicCard, {
   type JtTopicCardSignature,
-} from "../components/jt-topic-card";
-import { VANILLA_CLASS } from "../lib/jt-vanilla";
+} from "../components/jt-topic-card.gts";
+import { VANILLA_CLASS } from "../lib/jt-vanilla.ts";
 
 // What core's topic list passes the topic-list-* transformers, as far as
 // this file reads it.

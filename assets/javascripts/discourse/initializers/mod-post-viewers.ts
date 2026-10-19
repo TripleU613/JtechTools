@@ -7,7 +7,7 @@ import type ModalService from "discourse/services/modal";
 import type SiteSettings from "discourse/services/site-settings";
 import ModPostViewers, {
   type PostViewersResponse,
-} from "../components/mod-post-viewers";
+} from "../components/mod-post-viewers.gts";
 
 interface PostViewersSiteSettings {
   mod_categories_enabled: boolean;

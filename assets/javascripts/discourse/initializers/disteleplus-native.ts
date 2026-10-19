@@ -1,10 +1,10 @@
 import type Owner from "@ember/owner";
 import { withPluginApi } from "discourse/lib/plugin-api";
-import DisteleplusHeaderIcon from "../components/disteleplus-header-icon";
+import DisteleplusHeaderIcon from "../components/disteleplus-header-icon.gts";
 import DisteleplusService, {
   DisteleplusCurrentUser,
   DisteleplusSiteSettings,
-} from "../services/disteleplus";
+} from "../services/disteleplus.ts";
 
 export default {
   name: "disteleplus-native",

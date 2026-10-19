@@ -10,11 +10,11 @@ import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 import type Category from "discourse/models/category";
 import { i18n } from "discourse-i18n";
-import { messageToHtml } from "../../lib/linkify-message";
+import { messageToHtml } from "../../lib/linkify-message.ts";
 import {
   type TrustLevelOption,
   trustLevelOptions,
-} from "../../lib/trust-level-options";
+} from "../../lib/trust-level-options.ts";
 
 // Select-kit components are classic components with no Glint signature;
 // this gives ComboBox one so `class` and the args used here type-check.

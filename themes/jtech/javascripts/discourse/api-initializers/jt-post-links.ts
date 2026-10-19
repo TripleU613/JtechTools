@@ -1,6 +1,6 @@
 import type RouterService from "@ember/routing/router-service";
 import { apiInitializer } from "discourse/lib/api";
-import { needsFullPageLoad } from "../lib/jt-links";
+import { needsFullPageLoad } from "../lib/jt-links.ts";
 
 // Links inside posts to same-site pages that aren't forum pages (the landing
 // site at /home, /terms, …) open as a normal page load instead of the forum's

@@ -10,8 +10,8 @@ import ReqpmService, {
   ReqpmCard,
   ReqpmCurrentUser,
   ReqpmSetupMode,
-} from "../services/reqpm";
-import ReqpmCardEditor from "./reqpm-card-editor";
+} from "../services/reqpm.ts";
+import ReqpmCardEditor from "./reqpm-card-editor.gts";
 
 interface ReqpmSetupModalSignature {
   Args: {

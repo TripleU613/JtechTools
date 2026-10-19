@@ -5,7 +5,7 @@ import type Tag from "discourse/models/tag";
 import dIcon from "discourse/ui-kit/helpers/d-icon";
 import dNumber from "discourse/ui-kit/helpers/d-number";
 import { i18n } from "discourse-i18n";
-import { dEmoji } from "../lib/jt-core-helpers";
+import { dEmoji } from "../lib/jt-core-helpers.ts";
 
 type BannerCategory = Category & {
   uploaded_logo?: { url: string } | null;

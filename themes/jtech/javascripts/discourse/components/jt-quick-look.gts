@@ -14,7 +14,7 @@ import DModalBase from "discourse/ui-kit/d-modal";
 import dAvatar from "discourse/ui-kit/helpers/d-avatar";
 import dFormatDate from "discourse/ui-kit/helpers/d-format-date";
 import { i18n } from "discourse-i18n";
-import { categoryLinkHTML } from "../lib/jt-core-helpers";
+import { categoryLinkHTML } from "../lib/jt-core-helpers.ts";
 
 // DModal declares @title as a plain string, but renders whatever it gets;
 // the title here is trusted HTML (see `title` below).

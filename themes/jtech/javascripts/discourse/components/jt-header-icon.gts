@@ -7,10 +7,10 @@ import type User from "discourse/models/user";
 import type Header from "discourse/services/header";
 import type InterfaceColor from "discourse/services/interface-color";
 import dIcon from "discourse/ui-kit/helpers/d-icon";
-import { toggleColorMode } from "../lib/jt-color-mode";
-import { jtLabel } from "../lib/jt-labels";
-import { needsFullPageLoad } from "../lib/jt-links";
-import { pickUserMenuTab } from "../lib/jt-user-menu";
+import { toggleColorMode } from "../lib/jt-color-mode.ts";
+import { jtLabel } from "../lib/jt-labels.ts";
+import { needsFullPageLoad } from "../lib/jt-links.ts";
+import { pickUserMenuTab } from "../lib/jt-user-menu.ts";
 
 export type JtHeaderIconKind = "home" | "messages" | "notifications" | "theme";
 

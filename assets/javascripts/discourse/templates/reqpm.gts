@@ -1,7 +1,7 @@
 import type { TemplateOnlyComponent } from "@ember/component/template-only";
 import RouteTemplate from "ember-route-template";
-import ReqpmHub from "../components/reqpm-hub";
-import type ReqpmController from "../controllers/reqpm";
+import ReqpmHub from "../components/reqpm-hub.gts";
+import type ReqpmController from "../controllers/reqpm.ts";
 
 const ReqpmTemplate: TemplateOnlyComponent<{
   Args: { controller: ReqpmController };

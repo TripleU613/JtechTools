@@ -11,10 +11,10 @@ import DButton from "discourse/components/d-button";
 import type DialogService from "discourse/dialog-holder/services/dialog";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 import { i18n } from "discourse-i18n";
-import { KINDS, type ReqpmKindId } from "../lib/reqpm-kinds";
-import ReqpmService, { ReqpmCard, ReqpmOwnMethod } from "../services/reqpm";
-import ReqpmKindIcon from "./reqpm-kind-icon";
-import ReqpmMethodForm from "./reqpm-method-form";
+import { KINDS, type ReqpmKindId } from "../lib/reqpm-kinds.ts";
+import ReqpmService, { ReqpmCard, ReqpmOwnMethod } from "../services/reqpm.ts";
+import ReqpmKindIcon from "./reqpm-kind-icon.gts";
+import ReqpmMethodForm from "./reqpm-method-form.gts";
 
 const isLast = (index: number, length: number): boolean => index === length - 1;
 

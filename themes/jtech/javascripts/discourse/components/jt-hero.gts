@@ -16,8 +16,8 @@ import type SiteSettings from "discourse/services/site-settings";
 import DButton from "discourse/ui-kit/d-button";
 import dIcon from "discourse/ui-kit/helpers/d-icon";
 import { i18n } from "discourse-i18n";
-import JtHeroQuirks, { FLARE } from "../lib/jt-hero-quirks";
-import JtPlanet from "../lib/jt-planet";
+import JtHeroQuirks, { FLARE } from "../lib/jt-hero-quirks.ts";
+import JtPlanet from "../lib/jt-planet.ts";
 
 const DISMISS_KEY = "jt-hero-dismissed";
 const SEEN_KEY = "jt-hero-seen";

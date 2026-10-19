@@ -18,7 +18,7 @@ import type {
   ChecklistItem,
   ChecklistUser,
   OwedChecklist,
-} from "../lib/first-post-checklist";
+} from "../lib/first-post-checklist.ts";
 
 interface ModFirstPostChecklistSignature {
   Args: {

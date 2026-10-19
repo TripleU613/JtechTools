@@ -13,7 +13,7 @@ import {
   DENSITIES,
   type Density,
   setDensity,
-} from "../../lib/jt-density";
+} from "../../lib/jt-density.ts";
 
 // The sidebar footer's density button, beside the palette button: how
 // tightly topic lists are set (lib/jt-density), with a small picture of each.

@@ -5,7 +5,7 @@ import type ModalService from "discourse/services/modal";
 import type SiteSettings from "discourse/services/site-settings";
 import ModTopicMessagesModal, {
   type TopicMessagesTopic,
-} from "../components/mod-topic-messages-modal";
+} from "../components/mod-topic-messages-modal.gts";
 
 interface TopicAdminMenuSiteSettings {
   mod_categories_enabled: boolean;

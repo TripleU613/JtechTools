@@ -16,7 +16,7 @@ import type User from "discourse/models/user";
 import type InterfaceColor from "discourse/services/interface-color";
 import dIcon from "discourse/ui-kit/helpers/d-icon";
 import { i18n } from "discourse-i18n";
-import { showingDark, vanillaShown } from "../../lib/jt-vanilla";
+import { showingDark, vanillaShown } from "../../lib/jt-vanilla.ts";
 
 interface Scheme {
   id: number;

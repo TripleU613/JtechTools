@@ -3,9 +3,9 @@ import type DialogService from "discourse/dialog-holder/services/dialog";
 import { withPluginApi } from "discourse/lib/plugin-api";
 import type Post from "discourse/models/post";
 import { i18n } from "discourse-i18n";
-import ListingFormatReqpmButton from "../components/listing-format-reqpm-button";
-import ListingFormatStatus from "../components/listing-format-status";
-import { buildListingCard } from "../lib/listing-card";
+import ListingFormatReqpmButton from "../components/listing-format-reqpm-button.gts";
+import ListingFormatStatus from "../components/listing-format-status.gts";
+import { buildListingCard } from "../lib/listing-card.ts";
 import {
   assemble,
   type ListingComposer,
@@ -13,8 +13,8 @@ import {
   type ListingTopicFields,
   missingDetails,
   missingValues,
-} from "../lib/listing-format";
-import type ReqpmService from "../services/reqpm";
+} from "../lib/listing-format.ts";
+import type ReqpmService from "../services/reqpm.ts";
 
 interface PostMenuDag {
   add(key: string, value: unknown, position?: { before?: string }): void;

@@ -10,8 +10,8 @@ import {
 } from "virtual:theme";
 import getURL from "discourse/lib/get-url";
 import { i18n } from "discourse-i18n";
-import { needsFullPageLoad } from "../lib/jt-links";
-import JtechMark from "./jtech-mark";
+import { needsFullPageLoad } from "../lib/jt-links.ts";
+import JtechMark from "./jtech-mark.gts";
 
 interface FooterColumnLink extends JtechThemeFooterLink {
   fullPage: boolean;

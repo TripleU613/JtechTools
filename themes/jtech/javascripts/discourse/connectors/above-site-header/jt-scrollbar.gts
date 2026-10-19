@@ -1,6 +1,6 @@
 import type { TemplateOnlyComponent } from "@ember/component/template-only";
 import { settings } from "virtual:theme";
-import JtScrollbar from "../../components/jt-scrollbar";
+import JtScrollbar from "../../components/jt-scrollbar.gts";
 
 interface ScrollbarSignature {
   Args: { outletArgs: Record<string, unknown> };
