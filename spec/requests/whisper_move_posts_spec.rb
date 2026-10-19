@@ -29,7 +29,8 @@ RSpec.describe "Moving a whisper into another topic" do
 
     regular_reply.update_columns(created_at: 30.minutes.ago)
     whisper_post.update_columns(created_at: 5.minutes.ago)
-    # One time for both: the move recomputes last_posted_at from the post.
+    # one time for both: the move recomputes last_posted_at from the last
+    # public post, so the two have to agree as they do in a real topic
     destination_posted_at = 3.hours.ago
     destination_op.update_columns(created_at: destination_posted_at)
     ::Topic.where(id: destination.id).update_all(

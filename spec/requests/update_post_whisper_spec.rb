@@ -120,6 +120,85 @@ RSpec.describe "Update post whisper" do
       expect(body["mod_is_whisper"]).to eq(true)
       expect(body["mod_whisper_target_user_ids"]).to eq([target.id])
     end
+
+    it "takes back the bump the post gave the topic while it was public" do
+      op.update_columns(created_at: 2.hours.ago)
+      post_record.update_columns(created_at: 10.minutes.ago)
+      ::Topic.where(id: topic.id).update_all(bumped_at: post_record.created_at)
+      sign_in(moderator)
+
+      put "/discourse-mod-categories/post/#{post_record.id}/whisper.json",
+          params: {
+            mod_whisper: true,
+            mod_whisper_target_user_ids: [target.id],
+          }
+
+      expect(response.status).to eq(200)
+      expect(topic.reload.bumped_at).to be_within(1.second).of(op.created_at)
+    end
+
+    it "doesn't hand the bump on to a later reply posted without one" do
+      op.update_columns(created_at: 2.hours.ago)
+      post_record.update_columns(created_at: 10.minutes.ago)
+      Fabricate(:post, topic: topic, user: other_user).update_columns(created_at: 5.minutes.ago)
+      ::Topic.where(id: topic.id).update_all(bumped_at: post_record.created_at)
+      sign_in(moderator)
+
+      put "/discourse-mod-categories/post/#{post_record.id}/whisper.json",
+          params: {
+            mod_whisper: true,
+            mod_whisper_target_user_ids: [target.id],
+          }
+
+      expect(topic.reload.bumped_at).to be_within(1.second).of(op.created_at)
+    end
+
+    it "leaves the bump of a reply that came the same second" do
+      post_record.update_columns(created_at: 10.minutes.ago)
+      later = Fabricate(:post, topic: topic, user: other_user)
+      later.update_columns(created_at: post_record.created_at + 0.3)
+      ::Topic.where(id: topic.id).update_all(bumped_at: later.created_at)
+      sign_in(moderator)
+
+      put "/discourse-mod-categories/post/#{post_record.id}/whisper.json",
+          params: {
+            mod_whisper: true,
+            mod_whisper_target_user_ids: [target.id],
+          }
+
+      expect(topic.reload.bumped_at).to eq_time(later.created_at)
+    end
+
+    it "re-reads the bump first, so a reply's bump that came meanwhile stays" do
+      op.update_columns(created_at: 2.hours.ago)
+      post_record.update_columns(created_at: 10.minutes.ago)
+      ::Topic.where(id: topic.id).update_all(bumped_at: post_record.created_at)
+      converted = Post.find(post_record.id)
+      converted.topic # loaded while the post still had the bump
+      later = Fabricate(:post, topic: topic, user: other_user)
+      ::Topic.where(id: topic.id).update_all(bumped_at: later.created_at)
+
+      converted.custom_fields[targets_field] = [target.id]
+      converted.save_custom_fields(true)
+      DiscourseEvent.trigger(:mod_whisper_state_changed, converted, true)
+
+      expect(topic.reload.bumped_at).to eq_time(later.created_at)
+    end
+
+    it "leaves a bump that came later alone" do
+      post_record.update_columns(created_at: 10.minutes.ago)
+      ::Topic.where(id: topic.id).update_all(bumped_at: 1.minute.ago)
+      bumped_at = topic.reload.bumped_at
+      sign_in(moderator)
+
+      put "/discourse-mod-categories/post/#{post_record.id}/whisper.json",
+          params: {
+            mod_whisper: true,
+            mod_whisper_target_user_ids: [target.id],
+          }
+
+      expect(topic.reload.bumped_at).to eq_time(bumped_at)
+    end
   end
 
   describe "disarming a whisper back into a regular post" do
@@ -154,6 +233,20 @@ RSpec.describe "Update post whisper" do
           }
 
       expect(response.parsed_body["mod_is_whisper"]).to eq(false)
+    end
+
+    it "leaves the topic's bump where it is, as core does for its own whispers" do
+      op.update_columns(created_at: 2.hours.ago)
+      post_record.update_columns(created_at: 10.minutes.ago)
+      ::Topic.where(id: topic.id).update_all(bumped_at: op.created_at)
+      sign_in(moderator)
+
+      put "/discourse-mod-categories/post/#{post_record.id}/whisper.json",
+          params: {
+            mod_whisper: false,
+          }
+
+      expect(topic.reload.bumped_at).to be_within(1.second).of(op.created_at)
     end
   end
 
