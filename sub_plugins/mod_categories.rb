@@ -1239,12 +1239,11 @@ after_initialize do
         ::SearchIndexer.index(post, force: true)
         ::TopicLink.extract_from(post)
         ::Topic.reset_highest(post.topic_id) if post.topic_id
-        # Public again, it bumps the topic as it would have when posted (a
-        # post a flag has hidden waits for core to unhide it).
+        # Public again, it bumps the topic as it would have when posted. The
+        # bump comes from the last post core would bump to, so one a flag
+        # hides or its author withdrew waits until it's back.
         topic = post.topic&.reload
-        if topic && !post.hidden? && post.is_last_reply? && topic.bumped_at < post.created_at
-          topic.reset_bumped_at(post)
-        end
+        topic.reset_bumped_at if topic && topic.bumped_at < post.created_at
       end
       DiscourseModCategories::Whisper.refresh_reply_counts(
         ::PostReply.where(reply_post_id: post.id).pluck(:post_id),
