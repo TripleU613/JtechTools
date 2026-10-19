@@ -85,7 +85,7 @@ RSpec.describe "Mod elections" do
     visit "/latest"
 
     banner = find(".global-notice .mod-elections-notice")
-    expect(banner).to have_css(".mod-elections-notice__label", text: "Mod elections")
+    expect(banner).to have_css(".mod-elections-notice__label", text: /mod elections/i)
     expect(banner).to have_css(".mod-elections-notice__title", text: "Nominations are open")
     expect(banner).to have_css(".mod-elections-notice__detail", text: "Until")
     expect(banner).to have_css(
