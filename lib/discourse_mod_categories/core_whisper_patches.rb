@@ -21,9 +21,26 @@ module DiscourseModCategories
   #     its parent's public reply_count.
   #   * Topic#reset_bumped_at — the bump goes back to the last public post,
   #     never a whisper.
+  #   * Post#excerpt_for_topic, Post#sync_category_description — a whisper
+  #     never writes its topic's public excerpt, or the description of the
+  #     category whose topic it heads (one can still head a topic it was
+  #     moved into before such moves were refused, and an edit or rebake
+  #     would write them again).
   module PostWhisperPatch
     def whisper?
       super || DiscourseModCategories::Whisper.whisper?(self)
+    end
+
+    def excerpt_for_topic
+      return nil if DiscourseModCategories::Whisper.whisper?(self)
+      super
+    end
+
+    # The category comes back unchanged, as core's does when there's
+    # nothing to change: PostRevisor refuses the edit on nil.
+    def sync_category_description(category = nil)
+      return super unless DiscourseModCategories::Whisper.whisper?(self)
+      category || ::Category.find_by(topic_id: topic_id)
     end
 
     # Whisper.prime! remembers a post's whisper fields; changing or
@@ -72,6 +89,18 @@ module DiscourseModCategories
       result = super
       DiscourseModCategories::Whisper.prepare_new_post!(@post, @opts) if @post
       result
+    end
+  end
+
+  # A topic's picture (its card and list thumbnail) comes from its first
+  # post's image. A whisper at the head of a topic, moved there before such
+  # moves were refused, gives it none.
+  module CookedPostProcessorWhisperPatch
+    def update_post_image
+      return super unless @post.is_first_post? && DiscourseModCategories::Whisper.whisper?(@post)
+      topic = @post.topic
+      topic.update_column(:image_upload_id, nil) if topic&.image_upload_id
+      nil
     end
   end
 
@@ -182,12 +211,24 @@ module DiscourseModCategories
   # copies take the whisper fields once every post is moved, before anything
   # else reads them. Core also counts each moved reply towards the moved
   # post it answers, so a moved whisper added a reply to a public post.
+  #
+  # A whisper moved first into a new topic, or ahead of an existing topic's
+  # first post in chronological order, became that topic's first post: its
+  # text went into the public excerpt, and its author became the topic's
+  # owner. The move is refused and rolled back instead, with an error the
+  # move-posts endpoint shows as it is (as it does its own refusals).
   module PostMoverWhisperPatch
     private
 
     def move_each_post
       super
       DiscourseModCategories::Whisper.copy_to_moved_copies!
+      first_post_ids = ::Post.where(topic_id: destination_topic.id, post_number: 1).pluck(:id)
+      if DiscourseModCategories::Whisper.whisper_post_ids(first_post_ids).any?
+        raise ::ActiveRecord::RecordNotSaved.new(
+                I18n.t("discourse_mod_categories.whisper.move_first_post_not_allowed"),
+              )
+      end
       whisper_ids = DiscourseModCategories::Whisper.whisper_post_ids(@post_ids_after_move)
       if whisper_ids.any?
         DiscourseModCategories::Whisper.posts_moved!(destination_topic, whisper_ids)
@@ -435,6 +476,7 @@ module DiscourseModCategories
   def self.apply_core_whisper_patches!
     ::Post.prepend(PostWhisperPatch)
     ::PostCreator.prepend(PostCreatorWhisperPatch)
+    ::CookedPostProcessor.prepend(CookedPostProcessorWhisperPatch)
     ::Post.singleton_class.prepend(PostClassWhisperPatch)
     ::Topic.singleton_class.prepend(TopicClassWhisperPatch)
     ::Topic.prepend(TopicWhisperPatch)

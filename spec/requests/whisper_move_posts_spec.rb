@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require "rails_helper"
+require_relative "../../db/migrate/20261019000001_clear_whisper_first_post_copies"
 
 # Moving posts into a topic bumps it when its last public post is one of
 # them. A moved whisper is a regular post, so it must not count: the topic
@@ -74,5 +75,147 @@ RSpec.describe "Moving a whisper into another topic" do
     expect(destination.bumped_at).to eq_time(Time.zone.now)
     expect(destination.last_posted_at).to eq_time(regular_reply.created_at)
     expect(destination.last_post_user_id).to eq(author.id)
+  end
+
+  # A topic's title, excerpt and owner are public, so its first post can't be
+  # a whisper. Moving one into a new topic, or ahead of an existing topic's
+  # first post, would make it one.
+  describe "a whisper as a topic's first post" do
+    let(:refusal) { I18n.t("discourse_mod_categories.whisper.move_first_post_not_allowed") }
+
+    it "refuses to start a new topic with a whisper" do
+      expect {
+        post "/t/#{topic.id}/move-posts.json",
+             params: {
+               post_ids: [whisper_post.id],
+               title: "A new topic made from a whisper",
+             }
+      }.not_to change { Topic.count }
+
+      expect(response.status).to eq(422)
+      expect(response.parsed_body["errors"]).to eq([refusal])
+      expect(whisper_post.reload.topic_id).to eq(topic.id)
+    end
+
+    it "refuses to start a new topic with a copy of a whisper" do
+      expect {
+        post "/t/#{topic.id}/move-posts.json",
+             params: {
+               post_ids: [whisper_post.id],
+               title: "A new topic made from a whisper",
+               freeze_original: true,
+             }
+      }.not_to change { Post.count }
+
+      expect(response.status).to eq(422)
+    end
+
+    it "refuses to put a whisper ahead of an existing topic's first post" do
+      whisper_post.update_columns(created_at: 4.hours.ago)
+
+      post "/t/#{topic.id}/move-posts.json",
+           params: {
+             post_ids: [whisper_post.id],
+             destination_topic_id: destination.id,
+             chronological_order: true,
+           }
+
+      expect(response.status).to eq(422)
+      expect(destination_op.reload.post_number).to eq(1)
+      expect(destination.reload.user_id).not_to eq(moderator.id)
+    end
+
+    it "starts a new topic with a public post, and the whisper after it stays private" do
+      post "/t/#{topic.id}/move-posts.json",
+           params: {
+             post_ids: [regular_reply.id, whisper_post.id],
+             title: "A new topic made from a reply",
+           }
+
+      expect(response.status).to eq(200)
+      new_topic = regular_reply.reload.topic
+      expect(new_topic.id).not_to eq(topic.id)
+      expect(regular_reply.post_number).to eq(1)
+      expect(whisper_post.reload.topic_id).to eq(new_topic.id)
+      expect(Guardian.new(other_poster).can_see_post?(whisper_post)).to eq(false)
+    end
+  end
+
+  # One moved to the head of a topic before such moves were refused: the
+  # topic took its excerpt and picture from the whisper.
+  describe "a topic a whisper already heads" do
+    fab!(:upload, :image_upload)
+    fab!(:headed_topic, :topic)
+    fab!(:headed_whisper) do
+      Fabricate(
+        :post,
+        topic: headed_topic,
+        user: moderator,
+        raw:
+          "Only for you: zebrasecret. <img src=\"#{upload.url}\" width=\"1500\" height=\"2000\">",
+      )
+    end
+
+    before do
+      headed_whisper.custom_fields[DiscourseModCategories::POST_WHISPER_TARGETS_FIELD] = [target.id]
+      headed_whisper.save_custom_fields(true)
+      headed_topic.update_columns(excerpt: "Only for you: zebrasecret.", image_upload_id: upload.id)
+    end
+
+    it "loses the excerpt and picture it took from the whisper" do
+      topic.update_columns(excerpt: "A public excerpt.")
+
+      ActiveRecord::Migration.suppress_messages { ClearWhisperFirstPostCopies.new.up }
+
+      expect(headed_topic.reload.excerpt).to be_nil
+      expect(headed_topic.image_upload_id).to be_nil
+      expect(topic.reload.excerpt).to eq("A public excerpt.")
+    end
+
+    it "doesn't take them back from the whisper when it's rebaked" do
+      headed_topic.update_columns(excerpt: nil, image_upload_id: nil)
+
+      headed_whisper.rebake!
+      CookedPostProcessor.new(headed_whisper.reload).post_process
+
+      expect(headed_topic.reload.excerpt).to be_nil
+      expect(headed_topic.image_upload_id).to be_nil
+    end
+
+    context "when it's a category's topic" do
+      fab!(:headed_category, :category)
+
+      before do
+        headed_category.update_columns(
+          topic_id: headed_topic.id,
+          description: "Only for you: zebrasecret.",
+        )
+      end
+
+      it "loses the description it took from the whisper" do
+        topic.category.update_columns(description: "A public description.")
+
+        ActiveRecord::Migration.suppress_messages { ClearWhisperFirstPostCopies.new.up }
+
+        expect(headed_category.reload.description).to be_nil
+        expect(topic.category.reload.description).to eq("A public description.")
+      end
+
+      it "doesn't take it back when the whisper is rebaked or edited" do
+        headed_category.update_columns(description: nil)
+
+        headed_whisper.rebake!
+        expect(headed_category.reload.description).to be_nil
+
+        revised =
+          PostRevisor.new(headed_whisper.reload).revise!(
+            admin,
+            { raw: "Only for you: zebrasecret, edited." },
+            skip_validations: true,
+          )
+        expect(revised).to eq(true)
+        expect(headed_category.reload.description).to be_nil
+      end
+    end
   end
 end
