@@ -84,6 +84,16 @@ RSpec.describe "Whispers a whisperer can't see" do
     expect(unread_topic_ids(moderator)).not_to include(topic.id)
   end
 
+  it "keeps them caught up across a deleted post before the whisper" do
+    read_up_to(moderator, reply.post_number)
+    PostDestroyer.new(admin, Fabricate(:post, topic: topic, user: author)).destroy
+
+    whisper = whisper_from(admin)
+
+    expect(whisper.post_number).to eq(reply.post_number + 2)
+    expect(TopicUser.get(topic, moderator).last_read_post_number).to eq(whisper.post_number)
+  end
+
   it "does the same for a regular user in whispers_allowed_groups" do
     whisper_group = Fabricate(:group)
     reader = Fabricate(:user)

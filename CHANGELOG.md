@@ -156,6 +156,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Fixed**
 
+- Whispers: a whisper you can't see no longer leaves the topic unread after you've read the rest of it. It hit everyone in `whispers_allowed_groups` the whisper doesn't include: members of those groups, and moderators under an admin's whisper. Whoever was already caught up stays caught up when one is posted. Setting: `mod_whisper_audience_aware_topic_list`.
 - JTech theme: scrolling down a topic in Safari no longer leaps forward a post's height when Discourse unloads a post above the screen.
 - JTech theme: Who's Online beside the topic list's tabs is Online: 3 and the faces of the people online in a row at all times, spread out into the room up to New Topic (fading at its end when more are online than fit), instead of a box that popped out on a click.
 - JTech theme: reader mode centres the reading column itself, the timeline hanging to its right (centring the two together left the text off to the left), with the title over the column; and its switch and Aa button are the same bordered squares as the admin wrench beside them.
