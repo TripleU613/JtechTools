@@ -73,47 +73,6 @@ module DiscourseModCategories
     end
   end
 
-  # Moving posts to another topic. Core counts each moved reply towards the
-  # moved post it answers, and picks the destination's last post (its bump
-  # and last poster) by post type, so a moved whisper added a reply to a
-  # public post, bumped the topic for everyone and showed as its last poster.
-  # A copy made with "keep the original" is already a whisper by then: the
-  # :post_moved listener gives it the original's whisper fields.
-  module PostMoverWhisperPatch
-    private
-
-    def move_each_post
-      # One query for the whisper fields of every post being moved, instead
-      # of one per post in the :post_moved listener.
-      DiscourseModCategories::Whisper.prime!(posts.to_a)
-      super
-      @mod_moved_whisper_ids =
-        DiscourseModCategories::Whisper.whisper_post_ids(@post_ids_after_move)
-      if @mod_moved_whisper_ids.any?
-        DiscourseModCategories::Whisper.posts_moved!(destination_topic, @mod_moved_whisper_ids)
-      end
-    end
-
-    def update_last_post_stats
-      return super if @mod_moved_whisper_ids.blank?
-
-      post =
-        DiscourseModCategories::WhisperQueryFilter.apply(
-          destination_topic.ordered_posts.where.not(post_type: ::Post.types[:whisper]),
-          nil,
-        ).last
-      return if post.nil? || @post_ids_after_move.exclude?(post.id)
-
-      now = Time.zone.now
-      destination_topic.update_columns(
-        last_posted_at: post.created_at,
-        last_post_user_id: post.user_id,
-        bumped_at: now,
-        updated_at: now,
-      )
-    end
-  end
-
   # Class-level Post scopes core uses as its "posts this viewer may see"
   # filters. Post.secured(guardian) backs /posts/:id/replies, reply history,
   # PostAlerter's collapsed "N replies" counts, bookmarks, drafts, the user
@@ -185,6 +144,38 @@ module DiscourseModCategories
     def group_notifying_via_smtp(post)
       return nil if DiscourseModCategories::Whisper.whisper?(post)
       super
+    end
+  end
+
+  # Moving posts bumps the destination topic when its last post is one of
+  # the moved ones, and makes that post the topic's last post. Core skips
+  # only core whispers when it picks that post, so a moved whisper bumped
+  # the topic for everyone and showed its author as the last poster. The
+  # scope narrows core's query to skip ours too; all_queries is what
+  # reaches the destination.ordered_posts association.
+  #
+  # Core also counts each moved reply towards the moved post it answers, so
+  # a moved whisper added a reply to a public post. A copy made with "keep
+  # the original" is a whisper by the time any of this runs: the :post_moved
+  # listener gives it the original's whisper fields.
+  module PostMoverWhisperPatch
+    private
+
+    def move_each_post
+      # One query for the whisper fields of every post being moved, instead
+      # of one per post in the :post_moved listener.
+      DiscourseModCategories::Whisper.prime!(posts.to_a)
+      super
+      whisper_ids = DiscourseModCategories::Whisper.whisper_post_ids(@post_ids_after_move)
+      if whisper_ids.any?
+        DiscourseModCategories::Whisper.posts_moved!(destination_topic, whisper_ids)
+      end
+    end
+
+    def update_last_post_stats
+      ::Post
+        .where("NOT #{DiscourseModCategories::WhisperQueryFilter.is_whisper_sql("posts")}")
+        .scoping(all_queries: true) { super }
     end
   end
 
@@ -422,7 +413,6 @@ module DiscourseModCategories
   def self.apply_core_whisper_patches!
     ::Post.prepend(PostWhisperPatch)
     ::PostCreator.prepend(PostCreatorWhisperPatch)
-    ::PostMover.prepend(PostMoverWhisperPatch)
     ::Post.singleton_class.prepend(PostClassWhisperPatch)
     ::Topic.singleton_class.prepend(TopicClassWhisperPatch)
     ::Oneboxer.singleton_class.prepend(OneboxerWhisperPatch)
@@ -430,6 +420,7 @@ module DiscourseModCategories
     ::LatestPostsQuery.prepend(LatestPostsQueryWhisperPatch)
     ::Guardian.prepend(GuardianWhisperScopePatch)
     ::PostAlerter.prepend(PostAlerterWhisperPatch)
+    ::PostMover.prepend(PostMoverWhisperPatch)
     ::TopicView.prepend(TopicViewWhisperPatch)
     ::UserSummary.prepend(UserSummaryWhisperPatch)
     ::UserAction.singleton_class.prepend(UserActionClassWhisperPatch)
