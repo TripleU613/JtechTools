@@ -157,6 +157,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Fixed**
 
+- Whispers: a whisper you can't see no longer leaves the topic unread after you've read the rest of it. It hit everyone in `whispers_allowed_groups` the whisper doesn't include: members of those groups, and moderators under an admin's whisper. Whoever was already caught up stays caught up when one is posted. Setting: `mod_whisper_audience_aware_topic_list`.
 - JTech theme: the reply-to tab at a post's top right is the name in the text colour on a raised pill, with the arrow in the accent, instead of small grey type; on phones it keeps the name, which Discourse hides there.
 - JTech theme: the post being answered (the reply-to tab) and a post's replies (the Replies button) open in a panel of their own, sunken, bordered and with an accent bar on the left, with the collapse chevron a button at its top corner. They used to open between hairlines that are next to invisible on this palette, so they read as more posts in the stream.
 - JTech theme: scrolling down a topic in Safari no longer leaps forward a post's height when Discourse unloads a post above the screen.

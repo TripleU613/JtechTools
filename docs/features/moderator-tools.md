@@ -83,6 +83,6 @@ Admin → Plugins → Jtech Tools → **Mod**. The full text of each setting is 
 | `mod_whisper_add_participant_enabled` | `true` | Lets staff add users to an existing whisper. |
 | `mod_whisper_convert_enabled` | `true` | Lets staff turn an existing post into a whisper and back, and retarget its audience. |
 | `mod_whisper_badge_targeting_enabled` | `true` | Lets staff target whispers at badge holders as well as users and groups. |
-| `mod_whisper_audience_aware_topic_list` | `true` | Lets a whisper count as a new, unread post for the non-staff users, groups and badge holders it is addressed to (staff always see whispers as new). |
+| `mod_whisper_audience_aware_topic_list` | `true` | Lets a whisper count as a new, unread post for the non-staff users, groups and badge holders it is addressed to (staff always see whispers as new). It also stops a whisper from leaving a topic unread for people in `whispers_allowed_groups` who can't see it (a moderator under an admin's whisper, a group member it doesn't name). |
 
 [← All features](../README.md#features)
