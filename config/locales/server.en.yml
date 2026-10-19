@@ -1121,6 +1121,7 @@ en:
   discourse_mod_categories:
     whisper:
       first_post_not_allowed: "A new topic can't start with or quote a whisper."
+      move_first_post_not_allowed: "A whisper can't be a topic's first post. Move an earlier public post with it, or move it to the end of an existing topic."
       add_participant_needs_whisper: "Choose a whisper post to add the user to."
     note_notification_alert: '%{username} added a moderator note on "%{topic}"'
     note_reply_notification_alert: '%{username} replied to a moderator note on "%{topic}"'

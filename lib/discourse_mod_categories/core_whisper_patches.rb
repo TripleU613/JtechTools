@@ -182,12 +182,24 @@ module DiscourseModCategories
   # copies take the whisper fields once every post is moved, before anything
   # else reads them. Core also counts each moved reply towards the moved
   # post it answers, so a moved whisper added a reply to a public post.
+  #
+  # A whisper moved first into a new topic, or ahead of an existing topic's
+  # first post in chronological order, became that topic's first post: its
+  # text went into the public excerpt, and its author became the topic's
+  # owner. The move is refused and rolled back instead, with an error the
+  # move-posts endpoint shows as it is (as it does its own refusals).
   module PostMoverWhisperPatch
     private
 
     def move_each_post
       super
       DiscourseModCategories::Whisper.copy_to_moved_copies!
+      first_post_ids = ::Post.where(topic_id: destination_topic.id, post_number: 1).pluck(:id)
+      if DiscourseModCategories::Whisper.whisper_post_ids(first_post_ids).any?
+        raise ::ActiveRecord::RecordNotSaved.new(
+                I18n.t("discourse_mod_categories.whisper.move_first_post_not_allowed"),
+              )
+      end
       whisper_ids = DiscourseModCategories::Whisper.whisper_post_ids(@post_ids_after_move)
       if whisper_ids.any?
         DiscourseModCategories::Whisper.posts_moved!(destination_topic, whisper_ids)

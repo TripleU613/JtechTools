@@ -75,4 +75,68 @@ RSpec.describe "Moving a whisper into another topic" do
     expect(destination.last_posted_at).to eq_time(regular_reply.created_at)
     expect(destination.last_post_user_id).to eq(author.id)
   end
+
+  # A topic's title, excerpt and owner are public, so its first post can't be
+  # a whisper. Moving one into a new topic, or ahead of an existing topic's
+  # first post, would make it one.
+  describe "a whisper as a topic's first post" do
+    let(:refusal) { I18n.t("discourse_mod_categories.whisper.move_first_post_not_allowed") }
+
+    it "refuses to start a new topic with a whisper" do
+      expect {
+        post "/t/#{topic.id}/move-posts.json",
+             params: {
+               post_ids: [whisper_post.id],
+               title: "A new topic made from a whisper",
+             }
+      }.not_to change { Topic.count }
+
+      expect(response.status).to eq(422)
+      expect(response.parsed_body["errors"]).to eq([refusal])
+      expect(whisper_post.reload.topic_id).to eq(topic.id)
+    end
+
+    it "refuses to start a new topic with a copy of a whisper" do
+      expect {
+        post "/t/#{topic.id}/move-posts.json",
+             params: {
+               post_ids: [whisper_post.id],
+               title: "A new topic made from a whisper",
+               freeze_original: true,
+             }
+      }.not_to change { Post.count }
+
+      expect(response.status).to eq(422)
+    end
+
+    it "refuses to put a whisper ahead of an existing topic's first post" do
+      whisper_post.update_columns(created_at: 4.hours.ago)
+
+      post "/t/#{topic.id}/move-posts.json",
+           params: {
+             post_ids: [whisper_post.id],
+             destination_topic_id: destination.id,
+             chronological_order: true,
+           }
+
+      expect(response.status).to eq(422)
+      expect(destination_op.reload.post_number).to eq(1)
+      expect(destination.reload.user_id).not_to eq(moderator.id)
+    end
+
+    it "starts a new topic with a public post, and the whisper after it stays private" do
+      post "/t/#{topic.id}/move-posts.json",
+           params: {
+             post_ids: [regular_reply.id, whisper_post.id],
+             title: "A new topic made from a reply",
+           }
+
+      expect(response.status).to eq(200)
+      new_topic = regular_reply.reload.topic
+      expect(new_topic.id).not_to eq(topic.id)
+      expect(regular_reply.post_number).to eq(1)
+      expect(whisper_post.reload.topic_id).to eq(new_topic.id)
+      expect(Guardian.new(other_poster).can_see_post?(whisper_post)).to eq(false)
+    end
+  end
 end
