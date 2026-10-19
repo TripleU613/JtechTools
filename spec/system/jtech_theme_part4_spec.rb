@@ -109,10 +109,11 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
   end
 
   # A post's header: the name, the title under it, and core's box of post
-  # infos (the reply-to tab, the date) at the right. Since the reply-to tab
-  # became a pill with the name in it, on a phone it took the middle of the
-  # row and squeezed the name and title into a column, with the date out at
-  # the edge, centred on both lines.
+  # infos (the reply-to tab, the date) at the top right. Since the reply-to
+  # tab became a pill with the name in it, on a phone it took the middle of
+  # the row and squeezed the name and title into a column, with the date out
+  # at the edge, centred on both lines. The posts are a year old, so their
+  # dates are as long as they get ("Jun 2025").
   describe "a post's header" do
     fab!(:asker) { Fabricate(:user, username: "Lamden613", trust_level: TrustLevel[2]) }
     fab!(:moderator) do
@@ -123,6 +124,10 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
       )
     end
     fab!(:quoter) { Fabricate(:moderator, username: "kosherboy", title: "Forum Moderator") }
+    # as long as a username gets
+    fab!(:long_named) do
+      Fabricate(:user, username: "averylongusername_42", trust_level: TrustLevel[2])
+    end
 
     fab!(:thread) do
       Fabricate(:topic, category: category, user: asker, title: "Qin F21 Pro ROMs and the bands")
@@ -159,8 +164,23 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
         reply_to_user_id: member.id,
       )
     end
+    fab!(:long_post) do
+      Fabricate(:post, topic: thread, user: long_named, raw: "Mine came with the bands in order.")
+    end
+    fab!(:long_reply) do
+      Fabricate(:post, topic: thread, user: member, raw: "Which ROM do you have?")
+      Fabricate(
+        :post,
+        topic: thread,
+        user: moderator,
+        raw: "Then yours is the stock one.",
+        reply_to_post_number: long_post.post_number,
+        reply_to_user_id: long_named.id,
+      )
+    end
 
     before do
+      Post.where(topic: thread).update_all(created_at: 16.months.ago, updated_at: 16.months.ago)
       Group.refresh_automatic_groups!
       Group.find(Group::AUTO_GROUPS[:moderators]).update!(
         flair_icon: "shield-halved",
@@ -203,6 +223,7 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
             dot: post.querySelector(".read-state svg") && box(".read-state svg"),
             name_cut: cut(".names .first"),
             title_cut: cut(".names .user-title"),
+            tab_cut: cut(".reply-to-tab span"),
           };
         })()
       JS
@@ -214,7 +235,12 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
       visit("/t/#{thread.slug}/#{thread.id}/#{answer.post_number}")
       expect(page).to have_css("#post_#{answer.post_number} .reply-to-tab", text: asker.username)
       expect(page).to have_css("#post_#{follow_up.post_number} .reply-to-tab")
-      # the header's avatars drawn, so the screenshot shows it as people see it
+      expect(page).to have_css("#post_#{long_reply.post_number} .reply-to-tab")
+      wait_for_avatars
+    end
+
+    # The headers' avatars drawn, so a screenshot shows them as people see them
+    def wait_for_avatars
       drawn = <<~JS
         [...document.querySelectorAll(".topic-post :is(.topic-avatar, .reply-to-tab) img.avatar")]
           .every((img) => img.complete && img.naturalWidth > 0)
@@ -222,24 +248,33 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
       try_until_success { expect(page.evaluate_script(drawn)).to eq(true) }
     end
 
-    it "puts the reply-to tab on a line of its own on phones, the date beside the name",
+    it "keeps the reply-to tab in the top right corner on phones, the date under it",
        mobile: true do
       open_thread
       shot("post-header")
 
-      [answer, follow_up].each do |post|
+      [answer, follow_up, long_reply].each do |post|
         at = header(post)
-        # the date on the name's line, at the right
-        expect(at["date"]["middle"]).to be_within(3).of(at["name"]["middle"])
+        # the tab on the name's line, in the corner
+        expect(at["tab"]["middle"]).to be_within(3).of(at["name"]["middle"])
+        expect(at["tab"]["left"]).to be > at["name"]["right"]
+        expect(at["tab"]["right"]).to be_within(2).of(at["meta"]["right"])
+        # the date under it, on the title's line, the unread dot beside it
+        expect(at["date"]["top"]).to be >= at["tab"]["bottom"]
+        expect(at["date"]["middle"]).to be_between(at["title"]["top"], at["title"]["bottom"])
         expect(at["date"]["right"]).to be_within(2).of(at["meta"]["right"])
-        # the tab under the name and its title, from where the name starts
-        expect(at["tab"]["top"]).to be >= at["title"]["bottom"]
-        expect(at["tab"]["left"]).to be_within(2).of(at["name"]["left"])
-        expect(at["dot"]["middle"]).to be_within(3).of(at["name"]["middle"]) if at["dot"]
-        # the whole name and title, not cut short by the tab
+        expect(at["dot"]["middle"]).to be_within(3).of(at["date"]["middle"]) if at["dot"]
+        # the whole name and title: a long title wraps in its pill
         expect(at["name_cut"]).to eq(false)
         expect(at["title_cut"]).to eq(false)
+        # the whole name in the tab, unless there's no room left for it
+        expect(at["tab_cut"]).to eq(post == long_reply)
       end
+
+      visit("/t/#{thread.slug}/#{thread.id}/#{long_reply.post_number}")
+      expect(page).to have_css("#post_#{long_reply.post_number} .reply-to-tab", text: "averylong")
+      wait_for_avatars
+      shot("post-header-long-name")
       expect_no_theme_errors
     end
 

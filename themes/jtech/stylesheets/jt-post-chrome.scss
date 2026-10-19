@@ -135,53 +135,83 @@
     }
 
     // On phones core's box of post infos (the reply-to tab, the date and
-    // the little indicators) sits at the right of the name. With the tab a
-    // pill holding a name, it took the middle of the row: the name and the
-    // title were squeezed into a column and cut short, and the date was
-    // pushed to the edge, centred on both lines. The date and indicators
-    // stay at the right, on the name's line; the tab gets a line of its own
-    // under the name and title.
+    // the little indicators) sits at the top right, by the name. Since the
+    // tab became a pill holding a name it was too big for that corner: it
+    // took the middle of the row, the name and the title were squeezed and
+    // cut short, and the date was centred on both lines. Here the corner
+    // holds the tab, compact, on the name's line, with the date under it on
+    // the title's; side by side when the header is wide enough. When room
+    // runs out the tab's name shortens, and in a narrow header only its
+    // arrow and picture stay. The poster's name keeps its full width.
     @include viewport.until(sm) {
-      flex-wrap: wrap;
-      align-items: baseline;
-      row-gap: 0;
+      container: jt-post-meta / inline-size;
+      align-items: flex-start;
 
       .names {
         flex: 1 1 0;
-        min-width: 0;
+        min-width: min-content;
+
+        // A long title wraps inside its pill rather than holding the name
+        // column wide
+        .user-title {
+          white-space: normal;
+        }
       }
 
       .post-infos {
-        display: contents;
+        flex: 0 1 auto;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        width: min-content;
+        min-width: 0;
+        gap: var(--space-1) var(--space-2);
+
+        > * {
+          flex: none;
+        }
+
+        .reply-to-tab {
+          flex: 0 1 auto;
+          min-width: 0;
+          gap: 0.3em;
+          margin: 0;
+          padding: 0.05em 0.5em 0.05em 0.35em;
+          font-size: var(--jt-text-2xs);
+          line-height: 1.6;
+
+          .avatar {
+            width: 14px;
+            height: 14px;
+          }
+
+          span {
+            min-width: 0;
+          }
+        }
+
+        // Core centres the unread dot (placed absolutely, in the margin) on
+        // this box, which can be two lines now: on the date's line
+        .read-state {
+          display: flex;
+          align-self: flex-end;
+          align-items: center;
+          height: calc(var(--jt-text-sm) * 1.5);
+        }
       }
 
-      // The break before the tab: no height, so a post without one keeps
-      // its header as it was
-      &::after {
-        content: "";
-        flex-basis: 100%;
-        order: 1;
+      @container jt-post-meta (width >= 24rem) {
+        .post-infos {
+          width: auto;
+        }
       }
 
-      // Core centres the unread dot (placed absolutely, in the margin) on
-      // the box it was in; that's the whole header now. On the name's line,
-      // like the date.
-      .post-infos .read-state {
-        display: flex;
-        align-self: flex-start;
-        align-items: center;
-        height: calc(var(--jt-text-md) * 1.3);
-      }
+      @container jt-post-meta (width < 17rem) {
+        .post-infos .reply-to-tab {
+          padding-inline: 0.35em;
 
-      .post-infos .reply-to-tab {
-        order: 2;
-        max-width: 100%;
-        margin: var(--space-2) 0 0;
-        font-size: var(--jt-text-xs);
-
-        .avatar {
-          width: 16px;
-          height: 16px;
+          span {
+            display: none;
+          }
         }
       }
     }
