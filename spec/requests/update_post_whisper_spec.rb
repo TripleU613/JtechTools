@@ -203,52 +203,9 @@ RSpec.describe "Update post whisper" do
       expect(response.parsed_body["mod_is_whisper"]).to eq(false)
     end
 
-    it "bumps the topic as the post would have when it was posted" do
+    it "leaves the topic's bump where it is, as core does for its own whispers" do
       op.update_columns(created_at: 2.hours.ago)
       post_record.update_columns(created_at: 10.minutes.ago)
-      ::Topic.where(id: topic.id).update_all(bumped_at: op.created_at)
-      sign_in(moderator)
-
-      put "/discourse-mod-categories/post/#{post_record.id}/whisper.json",
-          params: {
-            mod_whisper: false,
-          }
-
-      expect(topic.reload.bumped_at).to be_within(1.second).of(post_record.created_at)
-    end
-
-    it "leaves the bump alone when a later reply was posted without one" do
-      op.update_columns(created_at: 2.hours.ago)
-      post_record.update_columns(created_at: 10.minutes.ago)
-      Fabricate(:post, topic: topic, user: other_user).update_columns(created_at: 5.minutes.ago)
-      ::Topic.where(id: topic.id).update_all(bumped_at: op.created_at)
-      sign_in(moderator)
-
-      put "/discourse-mod-categories/post/#{post_record.id}/whisper.json",
-          params: {
-            mod_whisper: false,
-          }
-
-      expect(topic.reload.bumped_at).to be_within(1.second).of(op.created_at)
-    end
-
-    it "leaves the bump alone while its author has withdrawn the post" do
-      op.update_columns(created_at: 2.hours.ago)
-      post_record.update_columns(created_at: 10.minutes.ago, user_deleted: true)
-      ::Topic.where(id: topic.id).update_all(bumped_at: op.created_at)
-      sign_in(moderator)
-
-      put "/discourse-mod-categories/post/#{post_record.id}/whisper.json",
-          params: {
-            mod_whisper: false,
-          }
-
-      expect(topic.reload.bumped_at).to be_within(1.second).of(op.created_at)
-    end
-
-    it "leaves the bump alone while a flag keeps the post hidden" do
-      op.update_columns(created_at: 2.hours.ago)
-      post_record.update_columns(created_at: 10.minutes.ago, hidden: true, hidden_at: Time.zone.now)
       ::Topic.where(id: topic.id).update_all(bumped_at: op.created_at)
       sign_in(moderator)
 

@@ -1245,14 +1245,9 @@ after_initialize do
         ::SearchIndexer.index(post, force: true)
         ::TopicLink.extract_from(post)
         ::Topic.reset_highest(post.topic_id) if post.topic_id
-        # Public again, it bumps the topic as it would have when posted, if
-        # it's now the post core would bump to: not while a flag hides it or
-        # its author has withdrawn it, nor past a later reply.
-        topic = post.topic&.reload
-        if topic && topic.bumped_at < post.created_at &&
-             DiscourseModCategories::Whisper.last_bumping_post(topic)&.id == post.id
-          topic.reset_bumped_at(post)
-        end
+        # The bump stays where it is, as core leaves it when one of its own
+        # whispers is made public: whether this post would have bumped the
+        # topic (posted without a bump, say) isn't known any more.
       end
       DiscourseModCategories::Whisper.refresh_reply_counts(
         ::PostReply.where(reply_post_id: post.id).pluck(:post_id),
