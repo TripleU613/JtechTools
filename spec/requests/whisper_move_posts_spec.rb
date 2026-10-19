@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require "rails_helper"
-require_relative "../../db/migrate/20261019000001_clear_whisper_topic_excerpts"
+require_relative "../../db/migrate/20261019000001_clear_whisper_first_post_copies"
 
 # Moving posts into a topic bumps it when its last public post is one of
 # them. A moved whisper is a regular post, so it must not count: the topic
@@ -165,7 +165,7 @@ RSpec.describe "Moving a whisper into another topic" do
     it "loses the excerpt and picture it took from the whisper" do
       topic.update_columns(excerpt: "A public excerpt.")
 
-      ActiveRecord::Migration.suppress_messages { ClearWhisperTopicExcerpts.new.up }
+      ActiveRecord::Migration.suppress_messages { ClearWhisperFirstPostCopies.new.up }
 
       expect(headed_topic.reload.excerpt).to be_nil
       expect(headed_topic.image_upload_id).to be_nil
@@ -180,6 +180,42 @@ RSpec.describe "Moving a whisper into another topic" do
 
       expect(headed_topic.reload.excerpt).to be_nil
       expect(headed_topic.image_upload_id).to be_nil
+    end
+
+    context "when it's a category's topic" do
+      fab!(:headed_category, :category)
+
+      before do
+        headed_category.update_columns(
+          topic_id: headed_topic.id,
+          description: "Only for you: zebrasecret.",
+        )
+      end
+
+      it "loses the description it took from the whisper" do
+        topic.category.update_columns(description: "A public description.")
+
+        ActiveRecord::Migration.suppress_messages { ClearWhisperFirstPostCopies.new.up }
+
+        expect(headed_category.reload.description).to be_nil
+        expect(topic.category.reload.description).to eq("A public description.")
+      end
+
+      it "doesn't take it back when the whisper is rebaked or edited" do
+        headed_category.update_columns(description: nil)
+
+        headed_whisper.rebake!
+        expect(headed_category.reload.description).to be_nil
+
+        revised =
+          PostRevisor.new(headed_whisper.reload).revise!(
+            admin,
+            { raw: "Only for you: zebrasecret, edited." },
+            skip_validations: true,
+          )
+        expect(revised).to eq(true)
+        expect(headed_category.reload.description).to be_nil
+      end
     end
   end
 end

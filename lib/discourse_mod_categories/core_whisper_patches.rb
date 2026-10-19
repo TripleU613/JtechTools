@@ -21,9 +21,11 @@ module DiscourseModCategories
   #     its parent's public reply_count.
   #   * Topic#reset_bumped_at — the bump goes back to the last public post,
   #     never a whisper.
-  #   * Post#excerpt_for_topic — a whisper never writes its topic's public
-  #     excerpt (one can still head a topic it was moved into before such
-  #     moves were refused, and an edit or rebake would write it again).
+  #   * Post#excerpt_for_topic, Post#sync_category_description — a whisper
+  #     never writes its topic's public excerpt, or the description of the
+  #     category whose topic it heads (one can still head a topic it was
+  #     moved into before such moves were refused, and an edit or rebake
+  #     would write them again).
   module PostWhisperPatch
     def whisper?
       super || DiscourseModCategories::Whisper.whisper?(self)
@@ -32,6 +34,13 @@ module DiscourseModCategories
     def excerpt_for_topic
       return nil if DiscourseModCategories::Whisper.whisper?(self)
       super
+    end
+
+    # The category comes back unchanged, as core's does when there's
+    # nothing to change: PostRevisor refuses the edit on nil.
+    def sync_category_description(category = nil)
+      return super unless DiscourseModCategories::Whisper.whisper?(self)
+      category || ::Category.find_by(topic_id: topic_id)
     end
 
     # Whisper.prime! remembers a post's whisper fields; changing or
