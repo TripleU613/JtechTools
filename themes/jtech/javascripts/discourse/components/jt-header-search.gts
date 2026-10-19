@@ -9,8 +9,8 @@ import type { CapabilitiesService } from "discourse/services/capabilities";
 import type ModalService from "discourse/services/modal";
 import dIcon from "discourse/ui-kit/helpers/d-icon";
 import { i18n } from "discourse-i18n";
-import { commandMenuShortcutBound } from "../lib/jt-command-menu-shortcut";
-import JtCommandMenu from "./jt-command-menu";
+import { commandMenuShortcutBound } from "../lib/jt-command-menu-shortcut.ts";
+import JtCommandMenu from "./jt-command-menu.gts";
 
 interface SearchButtonSignature {
   Args: {

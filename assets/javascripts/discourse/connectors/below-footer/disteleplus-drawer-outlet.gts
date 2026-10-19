@@ -1,10 +1,10 @@
 import Component from "@glimmer/component";
 import { service } from "@ember/service";
-import DisteleplusDrawer from "../../components/disteleplus-drawer";
+import DisteleplusDrawer from "../../components/disteleplus-drawer.gts";
 import type {
   DisteleplusCurrentUser,
   DisteleplusSiteSettings,
-} from "../../services/disteleplus";
+} from "../../services/disteleplus.ts";
 
 interface DisteleplusDrawerOutletSignature {
   Args: { outletArgs: Record<string, unknown> };

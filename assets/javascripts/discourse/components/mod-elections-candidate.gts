@@ -4,7 +4,7 @@ import avatar from "discourse/helpers/avatar";
 import icon from "discourse/helpers/d-icon";
 import getURL from "discourse/lib/get-url";
 import { i18n } from "discourse-i18n";
-import type { ModElectionCandidate } from "../services/mod-elections";
+import type { ModElectionCandidate } from "../services/mod-elections.ts";
 
 const profileUrl = (username: string): string => getURL(`/u/${username}`);
 

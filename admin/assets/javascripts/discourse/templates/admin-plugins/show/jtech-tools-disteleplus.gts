@@ -4,7 +4,7 @@ import AdminAreaSettings from "discourse/admin/components/admin-area-settings";
 import type AdminAreaSettingsBaseController from "discourse/admin/controllers/admin-area-settings-base";
 import JtechAdminActions, {
   type AdminAction,
-} from "../../../components/jtech-admin-actions";
+} from "../../../components/jtech-admin-actions.gts";
 
 // Maintenance actions rendered as real buttons (the legacy flip-a-checkbox
 // *_now settings are hidden; their hooks remain for API callers).

@@ -7,7 +7,7 @@ import { getURLWithCDN } from "discourse/lib/get-url";
 import { i18n } from "discourse-i18n";
 import DisteleplusService, {
   DisteleplusMessage,
-} from "../services/disteleplus";
+} from "../services/disteleplus.ts";
 
 const AVATAR_SIZE = 48;
 

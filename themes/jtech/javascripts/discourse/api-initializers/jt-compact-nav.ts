@@ -1,5 +1,5 @@
 import { apiInitializer } from "discourse/lib/api";
-import { VANILLA_CLASS } from "../lib/jt-vanilla";
+import { VANILLA_CLASS } from "../lib/jt-vanilla.ts";
 
 // The topic list's tabs (Latest, New, Unread, Top…) are one dropdown on a
 // computer too, as on a phone: what Discourse's Compact Nav component does.

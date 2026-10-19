@@ -22,7 +22,7 @@ import {
   MIN_HEADINGS,
   tocApplies,
   type TocHeading,
-} from "../../lib/jt-toc";
+} from "../../lib/jt-toc.ts";
 
 interface TocPost {
   post_number: number;

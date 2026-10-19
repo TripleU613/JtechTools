@@ -15,7 +15,7 @@
 // tails. For people who ask for reduced motion only turning the planet by
 // hand is left (it moves only as they move it).
 
-import type JtPlanet from "./jt-planet";
+import type JtPlanet from "./jt-planet.ts";
 
 // One of the bright stars flaring: it swells, turns a quarter and fades
 export const FLARE: Keyframe[] = [

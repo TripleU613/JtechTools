@@ -5,7 +5,7 @@ import type ModalService from "discourse/services/modal";
 import type SiteSettings from "discourse/services/site-settings";
 import ModTopicPromptChecklistModal, {
   type PromptChecklistTopic,
-} from "../components/mod-topic-prompt-checklist-modal";
+} from "../components/mod-topic-prompt-checklist-modal.gts";
 
 interface PromptChecklistAdminSiteSettings {
   mod_categories_enabled: boolean;

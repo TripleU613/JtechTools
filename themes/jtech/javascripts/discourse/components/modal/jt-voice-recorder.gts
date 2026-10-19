@@ -9,7 +9,7 @@ import type SiteSettingsService from "discourse/services/site-settings";
 import DButton from "discourse/ui-kit/d-button";
 import DModalBase from "discourse/ui-kit/d-modal";
 import { i18n } from "discourse-i18n";
-import { clock, VOICE_BITRATE, voiceFormat } from "../../lib/jt-voice";
+import { clock, VOICE_BITRATE, voiceFormat } from "../../lib/jt-voice.ts";
 
 const DModal = DModalBase as unknown as ComponentLike<{
   Element: HTMLDivElement | HTMLFormElement;

@@ -9,7 +9,7 @@ import type Site from "discourse/models/site";
 import type User from "discourse/models/user";
 import type AppEventsService from "discourse/services/app-events";
 import type SiteSettingsService from "discourse/services/site-settings";
-import type { MessageBus } from "../lib/message-bus";
+import type { MessageBus } from "../lib/message-bus.ts";
 
 // Fields the plugin reads off the current user that core's User model does
 // not declare.

@@ -1,8 +1,8 @@
 import { settings } from "virtual:theme";
 import { apiInitializer } from "discourse/lib/api";
 import { REPLACEMENTS } from "discourse/lib/icon-library";
-import { JT_ICON_MAP, jtIconId } from "../lib/jt-icon-map";
-import { vanillaShown } from "../lib/jt-vanilla";
+import { JT_ICON_MAP, jtIconId } from "../lib/jt-icon-map.ts";
+import { vanillaShown } from "../lib/jt-vanilla.ts";
 
 // Discourse's icons in Lucide's thin outline style (setting lucide_icons):
 // each Font Awesome icon listed in lib/jt-icon-map points at the theme's

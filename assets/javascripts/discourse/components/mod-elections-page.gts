@@ -12,16 +12,16 @@ import icon from "discourse/helpers/d-icon";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 import { duration, longDate } from "discourse/lib/formatter";
 import { i18n } from "discourse-i18n";
-import type { MessageBus } from "../lib/message-bus";
+import type { MessageBus } from "../lib/message-bus.ts";
 import ModElectionsService, {
   ModElection,
   ModElectionCandidate,
   ModElectionPage,
-} from "../services/mod-elections";
-import ModElectionsBallot from "./mod-elections-ballot";
-import ModElectionsCandidate from "./mod-elections-candidate";
-import ModElectionsResults from "./mod-elections-results";
-import ModElectionsRun from "./mod-elections-run";
+} from "../services/mod-elections.ts";
+import ModElectionsBallot from "./mod-elections-ballot.gts";
+import ModElectionsCandidate from "./mod-elections-candidate.gts";
+import ModElectionsResults from "./mod-elections-results.gts";
+import ModElectionsRun from "./mod-elections-run.gts";
 
 type StepState = "done" | "current" | "upcoming";
 

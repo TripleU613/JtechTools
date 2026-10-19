@@ -9,7 +9,7 @@ import type {
   ModElectionsCurrentUser,
   ModElectionsSiteSettings,
   ModElectionSummary,
-} from "../services/mod-elections";
+} from "../services/mod-elections.ts";
 
 // Whether the banner is for this person: during nominations everyone signed
 // in sees it; during Vote Week only voters who haven't voted. Nominations

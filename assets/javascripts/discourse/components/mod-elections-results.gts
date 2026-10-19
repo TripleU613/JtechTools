@@ -10,7 +10,7 @@ import type {
   ModElectionResultCandidate,
   ModElectionStage,
   ModElectionTurnout,
-} from "../services/mod-elections";
+} from "../services/mod-elections.ts";
 
 interface ModElectionsResultsSignature {
   Args: {

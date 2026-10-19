@@ -17,8 +17,8 @@ import { getURLWithCDN } from "discourse/lib/get-url";
 import UntypedEmailGroupUserChooser from "discourse/select-kit/components/email-group-user-chooser";
 import type SiteSettings from "discourse/services/site-settings";
 import { i18n } from "discourse-i18n";
-import type { ChecklistItem } from "../lib/first-post-checklist";
-import { trustLevelOptions } from "../lib/trust-level-options";
+import type { ChecklistItem } from "../lib/first-post-checklist.ts";
+import { trustLevelOptions } from "../lib/trust-level-options.ts";
 
 // Select-kit components are classic components with no Glint signature;
 // these give them one so `class` and the args used here type-check.

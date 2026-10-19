@@ -4,7 +4,11 @@ import DMenu from "float-kit/components/d-menu";
 import { settings, themePrefix } from "virtual:theme";
 import DButton from "discourse/ui-kit/d-button";
 import { i18n } from "discourse-i18n";
-import { READER_SIZES, READER_WIDTHS, readerMode } from "../../lib/jt-reader";
+import {
+  READER_SIZES,
+  READER_WIDTHS,
+  readerMode,
+} from "../../lib/jt-reader.ts";
 
 const WIDTH_NAMES = ["narrow", "medium", "wide", "widest"];
 

@@ -5,9 +5,9 @@ import type User from "discourse/models/user";
 import type InterfaceColor from "discourse/services/interface-color";
 import type SiteSettingsService from "discourse/services/site-settings";
 import I18n from "discourse-i18n";
-import { colorToggleAvailable, toggleColorMode } from "../lib/jt-color-mode";
-import { jtLabel } from "../lib/jt-labels";
-import { JT_SHORTCUTS } from "../lib/jt-shortcuts";
+import { colorToggleAvailable, toggleColorMode } from "../lib/jt-color-mode.ts";
+import { jtLabel } from "../lib/jt-labels.ts";
+import { JT_SHORTCUTS } from "../lib/jt-shortcuts.ts";
 
 type ShortcutName = keyof typeof JT_SHORTCUTS;
 

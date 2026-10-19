@@ -2,7 +2,7 @@ import { settings, themePrefix } from "virtual:theme";
 import { apiInitializer } from "discourse/lib/api";
 import type ModalService from "discourse/services/modal";
 import { i18n } from "discourse-i18n";
-import JtQr from "../components/modal/jt-qr";
+import JtQr from "../components/modal/jt-qr.gts";
 
 // QR code among the share options (topic and post sharing, the buttons over
 // a quote): the link as a code to scan with a phone (setting qr_code_share;

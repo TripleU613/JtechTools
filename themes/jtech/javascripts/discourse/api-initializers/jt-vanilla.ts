@@ -1,5 +1,5 @@
 import { apiInitializer } from "discourse/lib/api";
-import { applyVanilla } from "../lib/jt-vanilla";
+import { applyVanilla } from "../lib/jt-vanilla.ts";
 
 // html.jt-vanilla while a Discourse palette is on screen (lib/jt-vanilla).
 // Set before the first render, then kept in step: core's light / dark switch

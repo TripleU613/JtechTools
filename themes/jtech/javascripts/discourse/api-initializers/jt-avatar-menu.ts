@@ -1,7 +1,7 @@
 import { apiInitializer } from "discourse/lib/api";
 import type User from "discourse/models/user";
 import type Header from "discourse/services/header";
-import { pickUserMenuTab } from "../lib/jt-user-menu";
+import { pickUserMenuTab } from "../lib/jt-user-menu.ts";
 
 type AvatarMenuUser = User & {
   can_review?: boolean;

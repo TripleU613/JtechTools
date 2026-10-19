@@ -14,9 +14,12 @@ import {
   isExternal,
   type ReqpmAction,
   type ReqpmActionLabel,
-} from "../lib/reqpm-kinds";
-import type { ReqpmSharedMethod, ReqpmSiteSettings } from "../services/reqpm";
-import ReqpmKindIcon from "./reqpm-kind-icon";
+} from "../lib/reqpm-kinds.ts";
+import type {
+  ReqpmSharedMethod,
+  ReqpmSiteSettings,
+} from "../services/reqpm.ts";
+import ReqpmKindIcon from "./reqpm-kind-icon.gts";
 
 const GO_ICONS: Record<ReqpmActionLabel, string> = {
   call: "phone",

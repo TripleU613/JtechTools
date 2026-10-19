@@ -8,8 +8,11 @@ import type { ComponentLike } from "@glint/template";
 import DToggleSwitchBase from "discourse/components/d-toggle-switch";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 import { i18n } from "discourse-i18n";
-import ReqpmService, { ReqpmCard, ReqpmCurrentUser } from "../services/reqpm";
-import ReqpmCardEditor from "./reqpm-card-editor";
+import ReqpmService, {
+  ReqpmCard,
+  ReqpmCurrentUser,
+} from "../services/reqpm.ts";
+import ReqpmCardEditor from "./reqpm-card-editor.gts";
 
 // Core declares the switch without a signature.
 const DToggleSwitch = DToggleSwitchBase as unknown as ComponentLike<{

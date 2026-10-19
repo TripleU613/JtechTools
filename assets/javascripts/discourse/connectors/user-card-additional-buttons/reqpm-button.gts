@@ -1,7 +1,7 @@
 import type { TemplateOnlyComponent } from "@ember/component/template-only";
 import ReqpmUserButton, {
   type ReqpmButtonUser,
-} from "../../components/reqpm-user-button";
+} from "../../components/reqpm-user-button.gts";
 
 const ReqpmButton: TemplateOnlyComponent<{
   Args: { outletArgs: { user: ReqpmButtonUser; close?: () => void } };

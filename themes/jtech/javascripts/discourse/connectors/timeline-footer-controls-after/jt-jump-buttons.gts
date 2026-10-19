@@ -1,7 +1,7 @@
 import type { TemplateOnlyComponent } from "@ember/component/template-only";
 import { settings } from "virtual:theme";
 import type Topic from "discourse/models/topic";
-import JtJumpButtons from "../../components/jt-jump-buttons";
+import JtJumpButtons from "../../components/jt-jump-buttons.gts";
 
 interface JtTimelineJumpSignature {
   Args: { outletArgs: { model: Topic } };

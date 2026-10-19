@@ -3,7 +3,7 @@ import { htmlSafe, type SafeString } from "@ember/template";
 import DModal from "discourse/components/d-modal";
 import { getURLWithCDN } from "discourse/lib/get-url";
 import { i18n } from "discourse-i18n";
-import type { MessagePoll, PollVoter } from "../services/disteleplus";
+import type { MessagePoll, PollVoter } from "../services/disteleplus.ts";
 
 const AVATAR_SIZE = 48;
 

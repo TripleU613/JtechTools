@@ -1,6 +1,6 @@
 import type { TemplateOnlyComponent } from "@ember/component/template-only";
 import { settings } from "virtual:theme";
-import JtBackToTop from "../../components/jt-back-to-top";
+import JtBackToTop from "../../components/jt-back-to-top.gts";
 
 interface BackToTopSignature {
   Args: { outletArgs: Record<string, unknown> };

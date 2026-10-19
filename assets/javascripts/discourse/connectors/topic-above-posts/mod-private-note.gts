@@ -1,7 +1,7 @@
 import type { TemplateOnlyComponent } from "@ember/component/template-only";
 import ModPrivateNote, {
   type PrivateNoteTopic,
-} from "../../components/mod-private-note";
+} from "../../components/mod-private-note.gts";
 
 interface ModPrivateNoteConnectorSignature {
   Args: { outletArgs: { model: PrivateNoteTopic } };

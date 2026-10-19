@@ -6,7 +6,7 @@ import { modifier } from "ember-modifier";
 import type Category from "discourse/models/category";
 import { eq } from "discourse/truth-helpers";
 import dIcon from "discourse/ui-kit/helpers/d-icon";
-import { dEmoji } from "../../lib/jt-core-helpers";
+import { dEmoji } from "../../lib/jt-core-helpers.ts";
 
 type IconCategory = Category & { style_type?: "icon" | "emoji" | "square" };
 

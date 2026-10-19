@@ -7,7 +7,7 @@ import { escapeExpression } from "discourse/lib/utilities";
 import DButton from "discourse/ui-kit/d-button";
 import DModalBase from "discourse/ui-kit/d-modal";
 import { i18n } from "discourse-i18n";
-import { qrMatrix } from "../../lib/jt-qr";
+import { qrMatrix } from "../../lib/jt-qr.ts";
 
 const DModal = DModalBase as unknown as ComponentLike<{
   Element: HTMLDivElement | HTMLFormElement;

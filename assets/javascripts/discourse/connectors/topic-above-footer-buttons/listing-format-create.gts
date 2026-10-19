@@ -2,7 +2,7 @@ import Component from "@glimmer/component";
 import { action } from "@ember/object";
 import { getOwner } from "@ember/owner";
 import DButton from "discourse/components/d-button";
-import type { ListingTopicFields } from "../../lib/listing-format";
+import type { ListingTopicFields } from "../../lib/listing-format.ts";
 
 type ListingTopic = ListingTopicFields & {
   details?: { can_create_post?: boolean };

@@ -1,6 +1,6 @@
 import { settings } from "virtual:theme";
 import { apiInitializer } from "discourse/lib/api";
-import JtPrintPost from "../components/jt-print-post";
+import JtPrintPost from "../components/jt-print-post.gts";
 
 interface PostMenuDag {
   add(key: string, value: unknown, position?: { after?: string }): void;

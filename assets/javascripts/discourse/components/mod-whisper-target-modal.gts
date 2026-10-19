@@ -18,13 +18,13 @@ import { i18n } from "discourse-i18n";
 import {
   setPendingWhisperEdit,
   type WhisperStatePayload,
-} from "../lib/mod-whisper-pending";
+} from "../lib/mod-whisper-pending.ts";
 import type {
   WhisperComposerFields,
   WhisperTargetGroup,
   WhisperTargetUser,
-} from "../lib/mod-whisper-reply-audience";
-import type { BadgeChoice, BadgeRecord } from "./mod-pm-badge-picker";
+} from "../lib/mod-whisper-reply-audience.ts";
+import type { BadgeChoice, BadgeRecord } from "./mod-pm-badge-picker.gts";
 
 // Select-kit components are classic components with no Glint signature;
 // this gives MultiSelect one so `class` and the args used here type-check.

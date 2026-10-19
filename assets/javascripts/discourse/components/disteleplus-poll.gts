@@ -14,8 +14,8 @@ import DisteleplusService, {
   DisteleplusMessage,
   MessagePoll,
   PollOption,
-} from "../services/disteleplus";
-import DisteleplusPollStats from "./disteleplus-poll-stats";
+} from "../services/disteleplus.ts";
+import DisteleplusPollStats from "./disteleplus-poll-stats.gts";
 
 interface DisteleplusPollSignature {
   Args: { message: DisteleplusMessage };

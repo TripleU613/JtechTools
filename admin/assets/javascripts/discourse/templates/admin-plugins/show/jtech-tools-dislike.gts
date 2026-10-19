@@ -4,7 +4,7 @@ import AdminAreaSettings from "discourse/admin/components/admin-area-settings";
 import type AdminAreaSettingsBaseController from "discourse/admin/controllers/admin-area-settings-base";
 import JtechAdminActions, {
   type AdminAction,
-} from "../../../components/jtech-admin-actions";
+} from "../../../components/jtech-admin-actions.gts";
 
 // The purge used to be a self-resetting checkbox setting; it is a button now.
 const ACTIONS: AdminAction[] = [

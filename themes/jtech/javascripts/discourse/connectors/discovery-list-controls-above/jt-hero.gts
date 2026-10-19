@@ -1,5 +1,5 @@
 import type { TemplateOnlyComponent } from "@ember/component/template-only";
-import JtHero, { type JtHeroSignature } from "../../components/jt-hero";
+import JtHero, { type JtHeroSignature } from "../../components/jt-hero.gts";
 
 interface JtHeroConnectorSignature {
   Args: { outletArgs: JtHeroSignature["Args"] };

@@ -22,7 +22,7 @@ import { i18n } from "discourse-i18n";
 import ModTopicMessagesModal, {
   type NoteAuthor,
   type TopicMessagesTopic,
-} from "./mod-topic-messages-modal";
+} from "./mod-topic-messages-modal.gts";
 
 interface NoteReply {
   id: string;

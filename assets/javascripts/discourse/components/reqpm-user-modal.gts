@@ -17,7 +17,7 @@ import { popupAjaxError } from "discourse/lib/ajax-error";
 import { shortDate } from "discourse/lib/formatter";
 import getURL from "discourse/lib/get-url";
 import { i18n } from "discourse-i18n";
-import { KINDS, type ReqpmKindId } from "../lib/reqpm-kinds";
+import { KINDS, type ReqpmKindId } from "../lib/reqpm-kinds.ts";
 import ReqpmService, {
   ReqpmBlockedReason,
   ReqpmCard,
@@ -27,10 +27,10 @@ import ReqpmService, {
   ReqpmRelationship,
   ReqpmSharedMethod,
   ReqpmUserRef,
-} from "../services/reqpm";
-import ReqpmCardEditor from "./reqpm-card-editor";
-import ReqpmContactList from "./reqpm-contact-list";
-import ReqpmKindIcon from "./reqpm-kind-icon";
+} from "../services/reqpm.ts";
+import ReqpmCardEditor from "./reqpm-card-editor.gts";
+import ReqpmContactList from "./reqpm-contact-list.gts";
+import ReqpmKindIcon from "./reqpm-kind-icon.gts";
 
 const isEmpty = (list: unknown[] | null | undefined): boolean =>
   !list || list.length === 0;

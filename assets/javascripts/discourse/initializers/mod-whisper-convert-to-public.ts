@@ -6,7 +6,7 @@ import { withPluginApi } from "discourse/lib/plugin-api";
 import type User from "discourse/models/user";
 import type SiteSettings from "discourse/services/site-settings";
 import { i18n } from "discourse-i18n";
-import type { WhisperPostFields } from "../lib/mod-whisper-reply-audience";
+import type { WhisperPostFields } from "../lib/mod-whisper-reply-audience.ts";
 
 interface ConvertToPublicSiteSettings {
   mod_whisper_enabled: boolean;

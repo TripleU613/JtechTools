@@ -1,7 +1,7 @@
 import type Owner from "@ember/owner";
 import { withPluginApi } from "discourse/lib/plugin-api";
 import type SiteSettingsService from "discourse/services/site-settings";
-import JtechPopupNotification from "../components/jtech-popup-notification";
+import JtechPopupNotification from "../components/jtech-popup-notification.gts";
 
 // Mounts the desktop pop-up notification host once, globally, into the
 // always-present `above-footer` outlet. The component itself gates on

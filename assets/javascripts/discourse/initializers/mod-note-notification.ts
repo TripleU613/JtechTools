@@ -1,5 +1,5 @@
 import { withPluginApi } from "discourse/lib/plugin-api";
-import modNoteNotificationRenderer from "../lib/mod-note-notification";
+import modNoteNotificationRenderer from "../lib/mod-note-notification.ts";
 
 // Registers the moderator-note notification renderer. The plugin's
 // moderator-note notifications use the `custom` notification type; the

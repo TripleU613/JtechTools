@@ -12,7 +12,7 @@ import ModElectionsService, {
   ModElectionLimits,
   ModElectionMe,
   ModElectionPage,
-} from "../services/mod-elections";
+} from "../services/mod-elections.ts";
 
 interface ModElectionsRunSignature {
   Args: {

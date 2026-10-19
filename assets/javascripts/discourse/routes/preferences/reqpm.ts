@@ -3,7 +3,7 @@ import type RouterService from "@ember/routing/router-service";
 import { service } from "@ember/service";
 import type User from "discourse/models/user";
 import RestrictedUserRoute from "discourse/routes/restricted-user";
-import type ReqpmService from "../../services/reqpm";
+import type ReqpmService from "../../services/reqpm.ts";
 
 // /u/:username/preferences/reqpm — your own contact card, in settings.
 export default class PreferencesReqpmRoute extends RestrictedUserRoute {

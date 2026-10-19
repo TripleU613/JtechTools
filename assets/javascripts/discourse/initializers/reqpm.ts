@@ -3,7 +3,7 @@ import getURL from "discourse/lib/get-url";
 import { withPluginApi } from "discourse/lib/plugin-api";
 import type BaseCommunitySectionLink from "discourse/lib/sidebar/base-community-section-link";
 import { i18n } from "discourse-i18n";
-import type { ReqpmCurrentUser, ReqpmSiteSettings } from "../services/reqpm";
+import type { ReqpmCurrentUser, ReqpmSiteSettings } from "../services/reqpm.ts";
 
 // Pages the setup prompt never covers: REQ-PM itself (the card editor is
 // right there), admin (so an admin can always reach the settings), and the

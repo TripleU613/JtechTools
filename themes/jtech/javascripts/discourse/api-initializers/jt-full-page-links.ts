@@ -1,6 +1,6 @@
 import type RouterService from "@ember/routing/router-service";
 import { apiInitializer } from "discourse/lib/api";
-import { needsFullPageLoad } from "../lib/jt-links";
+import { needsFullPageLoad } from "../lib/jt-links.ts";
 
 // Same-site links that aren't forum pages (/home, /dumb, …) wherever core
 // renders them, the sidebar's custom links and menus included: marked for a

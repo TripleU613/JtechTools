@@ -4,14 +4,14 @@ import { withPluginApi } from "discourse/lib/plugin-api";
 import type ModalService from "discourse/services/modal";
 import type SiteSettings from "discourse/services/site-settings";
 import { i18n } from "discourse-i18n";
-import ModFirstPostChecklist from "../components/mod-first-post-checklist";
+import ModFirstPostChecklist from "../components/mod-first-post-checklist.gts";
 import {
   type ChecklistUser,
   composerTopicId,
   firstPostChecklistFor,
   refreshOwedChecklist,
-} from "../lib/first-post-checklist";
-import { messageToHtml } from "../lib/linkify-message";
+} from "../lib/first-post-checklist.ts";
+import { messageToHtml } from "../lib/linkify-message.ts";
 import {
   PRECHECK_CONFIRM_KEY,
   PRECHECK_GO_BACK_KEY,
@@ -20,7 +20,7 @@ import {
   precheckPromptFor,
   type PrecheckSiteSettings,
   type PrecheckUser,
-} from "../lib/precheck-prompt";
+} from "../lib/precheck-prompt.ts";
 
 // Gates the composer submit, in order:
 //   1. the forum-wide first-post checklist a new user must acknowledge;

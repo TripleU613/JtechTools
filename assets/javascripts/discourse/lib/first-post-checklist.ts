@@ -1,7 +1,7 @@
 import { ajax } from "discourse/lib/ajax";
 import { CREATE_TOPIC } from "discourse/models/composer";
 import type User from "discourse/models/user";
-import { type PrecheckComposer, REPLY_ACTION } from "./precheck-prompt";
+import { type PrecheckComposer, REPLY_ACTION } from "./precheck-prompt.ts";
 
 export interface ChecklistItem {
   label: string;

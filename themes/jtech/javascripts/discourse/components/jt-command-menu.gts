@@ -22,9 +22,9 @@ import DModal from "discourse/ui-kit/d-modal";
 import dAvatar from "discourse/ui-kit/helpers/d-avatar";
 import dIcon from "discourse/ui-kit/helpers/d-icon";
 import { i18n } from "discourse-i18n";
-import { colorToggleAvailable, toggleColorMode } from "../lib/jt-color-mode";
-import { jtLabel } from "../lib/jt-labels";
-import { CORE_SHORTCUTS, JT_SHORTCUTS } from "../lib/jt-shortcuts";
+import { colorToggleAvailable, toggleColorMode } from "../lib/jt-color-mode.ts";
+import { jtLabel } from "../lib/jt-labels.ts";
+import { CORE_SHORTCUTS, JT_SHORTCUTS } from "../lib/jt-shortcuts.ts";
 
 const t = (key: string, opts?: Record<string, unknown>): string =>
   jtLabel(`cmdk.${key}`, opts);

@@ -7,16 +7,16 @@ import type User from "discourse/models/user";
 import type ModalService from "discourse/services/modal";
 import type SiteSettings from "discourse/services/site-settings";
 import { i18n } from "discourse-i18n";
-import ModWhisperTargetModal from "../components/mod-whisper-target-modal";
+import ModWhisperTargetModal from "../components/mod-whisper-target-modal.gts";
 import {
   clearPendingWhisperEdit,
   takePendingWhisperEdit,
-} from "../lib/mod-whisper-pending";
+} from "../lib/mod-whisper-pending.ts";
 import {
   computeReplyAudience,
   type WhisperComposerFields,
   type WhisperPostFields,
-} from "../lib/mod-whisper-reply-audience";
+} from "../lib/mod-whisper-reply-audience.ts";
 
 // Inline eye SVG so no icon needs registering.
 const EYE_PATH =

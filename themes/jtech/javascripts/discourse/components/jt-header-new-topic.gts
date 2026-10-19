@@ -9,7 +9,7 @@ import type ComposerService from "discourse/services/composer";
 import type DiscoveryService from "discourse/services/discovery";
 import type SiteSettingsService from "discourse/services/site-settings";
 import dIcon from "discourse/ui-kit/helpers/d-icon";
-import { jtLabel } from "../lib/jt-labels";
+import { jtLabel } from "../lib/jt-labels.ts";
 
 type NewTopicUser = User & { can_create_topic?: boolean };
 

@@ -7,7 +7,7 @@ import { popupAjaxError } from "discourse/lib/ajax-error";
 import { i18n } from "discourse-i18n";
 import ModChecklistEditor, {
   type ChecklistConfig,
-} from "./mod-checklist-editor";
+} from "./mod-checklist-editor.gts";
 
 interface ModChecklistModalSignature {
   Args: { closeModal: () => void };

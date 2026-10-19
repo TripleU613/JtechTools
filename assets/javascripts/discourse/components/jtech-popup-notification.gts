@@ -16,7 +16,7 @@ import type Site from "discourse/models/site";
 import type User from "discourse/models/user";
 import type SiteSettingsService from "discourse/services/site-settings";
 import { i18n } from "discourse-i18n";
-import type { MessageBus } from "../lib/message-bus";
+import type { MessageBus } from "../lib/message-bus.ts";
 
 // Desktop-only, Jelly-style pop-up "toast". Purely ADDITIVE — it renders a
 // card when a new notification is published on the current user's

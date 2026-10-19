@@ -7,7 +7,7 @@ import {
   MIN_HEADINGS,
   TOC_MARKER,
   tocApplies,
-} from "../lib/jt-toc";
+} from "../lib/jt-toc.ts";
 
 interface TocPostModel {
   post_number?: number;
