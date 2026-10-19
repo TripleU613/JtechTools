@@ -9,16 +9,40 @@ require "rails_helper"
 RSpec.describe "Mod elections" do
   fab!(:admin)
   fab!(:moderator) do
-    Fabricate(:moderator, username: "shalom_k", trust_level: TrustLevel[3], created_at: 1.year.ago)
+    Fabricate(
+      :moderator,
+      username: "shalom_k",
+      trust_level: TrustLevel[3],
+      created_at: 1.year.ago,
+      refresh_auto_groups: true,
+    )
   end
   fab!(:chaim) do
-    Fabricate(:user, username: "chaim_w", trust_level: TrustLevel[2], created_at: 1.year.ago)
+    Fabricate(
+      :user,
+      username: "chaim_w",
+      trust_level: TrustLevel[2],
+      created_at: 1.year.ago,
+      refresh_auto_groups: true,
+    )
   end
   fab!(:dovid) do
-    Fabricate(:user, username: "dovid_l", trust_level: TrustLevel[3], created_at: 1.year.ago)
+    Fabricate(
+      :user,
+      username: "dovid_l",
+      trust_level: TrustLevel[3],
+      created_at: 1.year.ago,
+      refresh_auto_groups: true,
+    )
   end
   fab!(:voter) do
-    Fabricate(:user, username: "rivka_s", trust_level: TrustLevel[3], created_at: 1.year.ago)
+    Fabricate(
+      :user,
+      username: "rivka_s",
+      trust_level: TrustLevel[3],
+      created_at: 1.year.ago,
+      refresh_auto_groups: true,
+    )
   end
 
   let(:election) do

@@ -616,6 +616,7 @@ en:
         other: "%{count} seats"
       discussion: Discussion
       empty: There hasn't been an election yet.
+      not_allowed: The elections page isn't open to your account yet.
       cancelled: This election was cancelled. The moderators stayed as they were.
       candidates:
         title: Running

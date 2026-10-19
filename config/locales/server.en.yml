@@ -1005,6 +1005,11 @@ en:
       the schedule and hides the page; nothing already published changes.
     mod_elections_seats: How many moderators each election picks. Every seat
       is up in every election.
+    mod_elections_view_allowed_groups: Groups that can open the elections page
+      (the candidates, their statements, the ballot and the results) and get
+      its sidebar link, banner and Dumbcourse menu entry. Trust level 1 by
+      default. Logged-out visitors are sent to log in. Admins and moderators
+      always can. Running and voting have their own rules below.
     mod_elections_schedule_months: Months an election starts in. Nominations
       open at midnight on the 1st, in the time zone below.
     mod_elections_timezone: Time zone the calendar runs in, as a name like

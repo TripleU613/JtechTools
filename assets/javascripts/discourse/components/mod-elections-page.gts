@@ -62,6 +62,7 @@ export default class ModElectionsPage extends Component<ModElectionsPageSignatur
 
   @tracked page: ModElectionPage | null = null;
   @tracked loading = true;
+  @tracked forbidden = false;
   // Which request the page is waiting for: an older one that answers late
   // (a step change racing a click on a past election) is ignored.
   requested = 0;
@@ -255,7 +256,10 @@ export default class ModElectionsPage extends Component<ModElectionsPageSignatur
         }
       }
     } catch (e) {
-      if (!quiet) {
+      // Not in mod_elections_view_allowed_groups: say so in the page.
+      if ((e as { jqXHR?: { status?: number } })?.jqXHR?.status === 403) {
+        this.forbidden = true;
+      } else if (!quiet) {
         popupAjaxError(e);
       }
     } finally {
@@ -287,7 +291,11 @@ export default class ModElectionsPage extends Component<ModElectionsPageSignatur
       </header>
 
       <ConditionalLoadingSpinner @condition={{this.loading}}>
-        {{#if this.election}}
+        {{#if this.forbidden}}
+          <p class="mod-elections-panel">{{i18n
+              "mod_elections.not_allowed"
+            }}</p>
+        {{else if this.election}}
           {{#if this.steps.length}}
             <ol class="mod-elections-steps">
               {{#each this.steps as |step|}}

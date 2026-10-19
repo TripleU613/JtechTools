@@ -150,6 +150,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Changed**
 
+- Mod elections: the page is for members. A visitor is sent to log in, and `mod_elections_view_allowed_groups` (trust level 1 by default) says which members can open it; the sidebar link, the banner and Dumbcourse's menu entry show for them only.
 - A new install is neutral. The JTech theme's headline (Welcome to the forum), search placeholder and footer links are general, with Terms and Privacy at the forum's own pages; the subtitle, footer tagline, footer notice, home icon and other hosts start empty; translations go to Google directly (`translator_tweaks_worker_url`) and no other theme's rows open on click (`jtech_row_click_theme_ids`). Forums that already ran the plugin keep their words and links. JTech Forums' own settings are in [docs/setup/](docs/setup/), with `rake jtech:theme:settings` to apply the theme's.
 - A new install starts with everything off: the master switch `jtech_enabled`, every feature, the JTech theme (`jtech_theme_install`) and its app icon (`jtech_app_icon`). Turn on what you want under Admin → Plugins → Jtech Tools. Forums that already ran the plugin keep everything as it was.
 - JTech theme: the topic list's tabs (Latest, New, Unread, Top…) are one dropdown on a computer too, as on a phone and as Discourse's Compact Nav component does. As a row they ran out of room beside the filters and New Topic and scrolled sideways.

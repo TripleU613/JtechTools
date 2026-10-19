@@ -78,7 +78,7 @@ route("/review", reviewRoute);
 route("/u/:username", profileRoute);
 route("/contacts", contactsRoute);
 route("/contacts/u/:username", contactUserRoute);
-route("/elections", electionsRoute, { public: true });
+route("/elections", electionsRoute);
 route("/preferences", preferencesRoute, { public: true });
 route("/preferences/profile", profilePrefsRoute);
 route("/preferences/email", emailPrefsRoute);
