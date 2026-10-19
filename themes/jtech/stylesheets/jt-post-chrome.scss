@@ -90,24 +90,42 @@
         color: var(--jt-text-subtle);
       }
 
+      // The reply-to tab: the name in the text colour on a raised pill, the
+      // arrow in the accent. It was small grey type, easy to miss, and on
+      // phones core hides the name, leaving an arrow and a tiny picture:
+      // the name stays here.
       .reply-to-tab {
         display: inline-flex;
         align-items: center;
-        gap: 0.35em;
-        padding: 0.1em 0.55em 0.1em 0.35em;
-        font-size: var(--jt-text-xs);
-        color: var(--jt-text-muted);
-        border: 1px solid var(--jt-border);
+        gap: 0.4em;
+        max-width: 100%;
+        padding: 0.15em 0.7em 0.15em 0.5em;
+        font-size: var(--jt-text-sm);
+        font-weight: 500;
+        color: var(--jt-text);
+        background: var(--jt-surface-raised);
+        border: 1px solid var(--jt-border-strong);
         border-radius: var(--jt-radius-pill);
 
-        .avatar {
-          width: 16px;
-          height: 16px;
+        .d-icon {
+          color: var(--jt-accent);
         }
 
-        &:hover {
-          color: var(--jt-text);
-          border-color: var(--jt-border-strong);
+        .avatar {
+          width: 18px;
+          height: 18px;
+        }
+
+        span {
+          display: inline;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        &:hover,
+        &[aria-expanded]:not([aria-expanded="false"]) {
+          border-color: var(--jt-accent);
         }
       }
 

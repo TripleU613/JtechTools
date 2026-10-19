@@ -156,6 +156,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Fixed**
 
+- JTech theme: the reply-to tab at a post's top right is the name in the text colour on a raised pill, with the arrow in the accent, instead of small grey type; on phones it keeps the name, which Discourse hides there.
 - JTech theme: the post being answered (the reply-to tab) and a post's replies (the Replies button) open in a panel of their own, sunken, bordered and with an accent bar on the left, with the collapse chevron a button at its top corner. They used to open between hairlines that are next to invisible on this palette, so they read as more posts in the stream.
 - JTech theme: scrolling down a topic in Safari no longer leaps forward a post's height when Discourse unloads a post above the screen.
 - JTech theme: Who's Online beside the topic list's tabs is Online: 3 and the faces of the people online in a row at all times, spread out into the room up to New Topic (fading at its end when more are online than fit), instead of a box that popped out on a click.
