@@ -170,6 +170,22 @@ module DiscourseModCategories
     end
   end
 
+  # Moving posts bumps the destination topic when its last post is one of
+  # the moved ones, and makes that post the topic's last post. Core skips
+  # only core whispers when it picks that post, so a moved whisper bumped
+  # the topic for everyone and showed its author as the last poster. The
+  # scope narrows core's query to skip ours too; all_queries is what
+  # reaches the destination.ordered_posts association.
+  module PostMoverWhisperPatch
+    private
+
+    def update_last_post_stats
+      ::Post
+        .where("NOT #{DiscourseModCategories::WhisperQueryFilter.is_whisper_sql("posts")}")
+        .scoping(all_queries: true) { super }
+    end
+  end
+
   # Topic "participants" (avatars + counts in the topic map) are computed
   # with raw SQL over every post.
   module TopicViewWhisperPatch
@@ -412,6 +428,7 @@ module DiscourseModCategories
     ::LatestPostsQuery.prepend(LatestPostsQueryWhisperPatch)
     ::Guardian.prepend(GuardianWhisperScopePatch)
     ::PostAlerter.prepend(PostAlerterWhisperPatch)
+    ::PostMover.prepend(PostMoverWhisperPatch)
     ::TopicView.prepend(TopicViewWhisperPatch)
     ::UserSummary.prepend(UserSummaryWhisperPatch)
     ::UserAction.singleton_class.prepend(UserActionClassWhisperPatch)
