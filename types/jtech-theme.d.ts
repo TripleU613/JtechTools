@@ -72,6 +72,7 @@ declare module "virtual:theme" {
     online_box: boolean;
     reader_mode: boolean;
     qr_code_share: boolean;
+    reaction_rollout: boolean;
   }
 
   export const settings: JtechThemeSettings;
