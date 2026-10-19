@@ -388,6 +388,20 @@ module DiscourseModCategories
       SQL
     end
 
+    # The post a topic's bump comes from, picked as core's
+    # Topic#reset_bumped_at picks it (the last regular post a flag hasn't
+    # hidden and its author hasn't withdrawn) but never a whisper. With
+    # `before`, only posts ahead of that one count.
+    def last_bumping_post(topic, before: nil)
+      scope =
+        topic
+          .ordered_posts
+          .where(user_deleted: false, hidden: false, post_type: ::Post.types[:regular])
+          .where("NOT #{WhisperQueryFilter.is_whisper_sql("posts")}")
+      scope = scope.where("posts.post_number < ?", before.post_number) if before
+      scope.last
+    end
+
     # Public reply_count of the posts `post_ids` — whisper replies excluded.
     def refresh_reply_counts(post_ids)
       post_ids = Array(post_ids).compact.uniq

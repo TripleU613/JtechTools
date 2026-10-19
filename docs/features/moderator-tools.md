@@ -12,7 +12,7 @@ Reply inside a topic to specific people: users, groups or everyone holding a bad
 
 - Replies to a whisper, and quotes of one, stay private to the same people automatically.
 - A whisper never bumps its topic or counts as new for people outside its audience. For the people it's addressed to it counts as unread, and they get one notification. A whisper to an automatic group (a trust level, everyone, staff) is read by its members but notifies none of them: a whisper to trust level 2 would ring hundreds of bells.
-- Staff can turn an existing post into a whisper, or make a whisper public. Each change is logged under Staff actions. Only admins can do this to another staff member's post.
+- Staff can turn an existing post into a whisper, or make a whisper public. Each change is logged under Staff actions. Only admins can do this to another staff member's post. A post turned into a whisper stops holding its topic up the list; a whisper made public leaves the topic where it is.
 - Turning whispers off stops new ones. Existing whispers stay private whatever the switches say.
 
 ![A whisper, as its audience sees it](../images/whisper.png)
