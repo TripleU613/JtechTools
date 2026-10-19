@@ -647,10 +647,100 @@
   }
 }
 
-.mod-elections-notice__link {
-  margin-left: 0.35em;
-  font-weight: 600;
-  white-space: nowrap;
+// ── Banner ────────────────────────────────────────────────────────────────
+// Core's global notice is a tinted strip as wide as its sentence. An
+// election's is a card across the page: the ballot box, what's open and
+// until when, and the way in as a button. Core's × stays; it keys on the
+// notice id, which is why the box is found by that.
+.global-notice .alert[id^="global-notice-mod-elections-"] {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  box-sizing: border-box;
+  width: 100%;
+  margin-bottom: 1em;
+  padding: 0.75em;
+  border: 1px solid var(--tertiary-low);
+  border-radius: var(--d-border-radius-large, var(--d-border-radius));
+  background: var(--tertiary-very-low);
+  color: var(--primary);
+  text-align: start;
+
+  > .text {
+    flex: 1;
+    min-width: 0;
+  }
+
+  > .close {
+    position: static;
+    flex-shrink: 0;
+    align-self: flex-start;
+    font-size: var(--font-0);
+  }
+}
+
+.mod-elections-notice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75em 1em;
+  align-items: center;
+
+  &__icon {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 2.75em;
+    height: 2.75em;
+    border-radius: var(--d-border-radius);
+    background: var(--tertiary-low);
+    color: var(--tertiary);
+
+    .d-icon {
+      width: 1.25em;
+      height: 1.25em;
+      color: currentcolor;
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex: 1 1 16em;
+    flex-direction: column;
+    gap: 0.15em;
+    min-width: 0;
+  }
+
+  &__label {
+    color: var(--primary-medium);
+    font-size: var(--font-down-2);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  &__title {
+    font-size: var(--font-up-1);
+    font-weight: 700;
+    line-height: var(--line-height-medium);
+  }
+
+  &__detail {
+    color: var(--primary-high);
+    font-size: var(--font-down-1);
+  }
+
+  &__link.btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  // On a phone the button takes its own row, full width, under the text.
+  @include viewport.until(sm) {
+    &__link.btn {
+      flex: 1 0 100%;
+      justify-content: center;
+    }
+  }
 }
 
 // ── Admin tab ─────────────────────────────────────────────────────────────

@@ -2,6 +2,7 @@ import type Owner from "@ember/owner";
 import escape from "discourse/lib/escape";
 import { longDate } from "discourse/lib/formatter";
 import getURL from "discourse/lib/get-url";
+import { iconHTML } from "discourse/lib/icon-library";
 import { withPluginApi } from "discourse/lib/plugin-api";
 import type BaseCommunitySectionLink from "discourse/lib/sidebar/base-community-section-link";
 import { i18n } from "discourse-i18n";
@@ -84,12 +85,23 @@ export default {
       if (!kind || !summary) {
         return;
       }
-      const date = summary.ends_at ? longDate(summary.ends_at) : "";
-      const message = escape(i18n(`mod_elections.notice.${kind}`, { date }));
-      const link = escape(i18n(`mod_elections.notice.${kind}_link`));
       // Core puts the text in as HTML, so everything in it is escaped here.
+      const text = (key: string, options = {}) =>
+        escape(i18n(`mod_elections.notice.${key}`, options));
+      const detail = summary.ends_at
+        ? `<span class="mod-elections-notice__detail">${text(`${kind}_detail`, { date: longDate(summary.ends_at) })}</span>`
+        : "";
+      // The id stays as it was, so a banner someone closed stays closed.
       api.addGlobalNotice(
-        `${message} <a class="mod-elections-notice__link" href="${getURL("/elections")}">${link}</a>`,
+        `<span class="mod-elections-notice">` +
+          `<span class="mod-elections-notice__icon" aria-hidden="true">${iconHTML("check-to-slot")}</span>` +
+          `<span class="mod-elections-notice__body">` +
+          `<span class="mod-elections-notice__label">${text("label")}</span>` +
+          `<span class="mod-elections-notice__title">${text(`${kind}_title`)}</span>` +
+          detail +
+          `</span>` +
+          `<a class="btn btn-primary mod-elections-notice__link" href="${getURL("/elections")}">${text(`${kind}_link`)}</a>` +
+          `</span>`,
         `mod-elections-${summary.id}-${kind}`,
         { dismissable: true, persistentDismiss: true }
       );

@@ -79,6 +79,31 @@ RSpec.describe "Mod elections" do
     DiscourseModElections::Lifecycle.end_phase!(election, admin)
   end
 
+  it "shows the banner as a card with the way in, and keeps it closed once closed" do
+    election
+    sign_in(chaim)
+    visit "/latest"
+
+    banner = find(".global-notice .mod-elections-notice")
+    expect(banner).to have_css(".mod-elections-notice__label", text: /mod elections/i)
+    expect(banner).to have_css(".mod-elections-notice__title", text: "Nominations are open")
+    expect(banner).to have_css(".mod-elections-notice__detail", text: "Until")
+    expect(banner).to have_css(
+      "a.btn.mod-elections-notice__link[href$='/elections']",
+      text: "Run, or see who's running",
+    )
+    shot("00_banner")
+
+    banner.find(".mod-elections-notice__link").click
+    expect(page).to have_css(".mod-elections")
+
+    find(".global-notice .close").click
+    expect(page).to have_no_css(".global-notice .mod-elections-notice")
+    visit "/latest"
+    expect(page).to have_css("#main-outlet")
+    expect(page).to have_no_css(".global-notice .mod-elections-notice")
+  end
+
   it "lets a member run for mod with a statement" do
     election
     sign_in(chaim)
