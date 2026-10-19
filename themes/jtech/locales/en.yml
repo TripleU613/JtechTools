@@ -23,6 +23,7 @@ en:
       lucide: "Outline (Lucide)"
       classic: "Classic filled (Font Awesome)"
     quick_look_error: "Couldn't load this topic's first post."
+    reply_to: "Replying to"
     open_topic: "Open topic"
     latest_reply: "Latest reply"
     tag: "Tag"

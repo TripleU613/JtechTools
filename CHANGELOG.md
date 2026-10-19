@@ -156,6 +156,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Fixed**
 
+- JTech theme: a reply to an earlier post says so. The tab at the post's top right reads "Replying to" with the person's picture and name in the text colour, on a raised pill, instead of "↪ name" in small grey type; on phones it keeps the name, which Discourse hides there.
 - JTech theme: scrolling down a topic in Safari no longer leaps forward a post's height when Discourse unloads a post above the screen.
 - JTech theme: Who's Online beside the topic list's tabs is Online: 3 and the faces of the people online in a row at all times, spread out into the room up to New Topic (fading at its end when more are online than fit), instead of a box that popped out on a click.
 - JTech theme: reader mode centres the reading column itself, the timeline hanging to its right (centring the two together left the text off to the left), with the title over the column; and its switch and Aa button are the same bordered squares as the admin wrench beside them.
