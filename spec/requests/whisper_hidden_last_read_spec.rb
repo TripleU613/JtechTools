@@ -84,6 +84,20 @@ RSpec.describe "Whispers a whisperer can't see" do
     expect(unread_topic_ids(moderator)).not_to include(topic.id)
   end
 
+  it "does the same for a regular user in whispers_allowed_groups" do
+    whisper_group = Fabricate(:group)
+    reader = Fabricate(:user)
+    whisper_group.add(reader)
+    SiteSetting.whispers_allowed_groups = "#{Group::AUTO_GROUPS[:staff]}|#{whisper_group.id}"
+    read_up_to(reader, op.post_number)
+
+    whisper = whisper_from(moderator)
+    send_timings(reader, [reply.post_number])
+
+    expect(TopicUser.get(topic, reader).last_read_post_number).to eq(whisper.post_number)
+    expect(unread_topic_ids(reader)).not_to include(topic.id)
+  end
+
   it "leaves a moderator who hasn't read the public posts yet alone" do
     read_up_to(moderator, op.post_number)
 
