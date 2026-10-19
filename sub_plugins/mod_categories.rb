@@ -1239,9 +1239,10 @@ after_initialize do
         ::SearchIndexer.index(post, force: true)
         ::TopicLink.extract_from(post)
         ::Topic.reset_highest(post.topic_id) if post.topic_id
-        # Public again, it bumps the topic as it would have when posted.
+        # Public again, it bumps the topic as it would have when posted (a
+        # post a flag has hidden waits for core to unhide it).
         topic = post.topic&.reload
-        if topic && post.is_last_reply? && topic.bumped_at < post.created_at
+        if topic && !post.hidden? && post.is_last_reply? && topic.bumped_at < post.created_at
           topic.reset_bumped_at(post)
         end
       end
