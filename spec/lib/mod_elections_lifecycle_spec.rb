@@ -515,6 +515,21 @@ RSpec.describe DiscourseModElections::Lifecycle do
       expect(election.reload.seats).to eq(2)
     end
 
+    it "treats a deadline that has passed as passed, even before the tick moves it on" do
+      tick_at(2027, 1, 1, 0, 5)
+      contest!
+
+      freeze_time(zone.local(2027, 1, 8, 0, 1))
+      expect(election).to be_nominating
+      expect { edit!(voting_open_at: zone.local(2027, 1, 10)) }.to refused(:not_editable)
+      expect(election.reload).to be_voting
+
+      freeze_time(zone.local(2027, 1, 15, 0, 1))
+      expect { edit!(voting_close_at: zone.local(2027, 1, 20)) }.to refused(:edit_closed)
+      expect(election.reload).to be_closed
+      expect(election.voting_close_at).to eq_time(zone.local(2027, 1, 15))
+    end
+
     it "refuses dates in the past or out of order, and seats that aren't a number of seats" do
       tick_at(2027, 1, 2)
       expect { edit!(voting_open_at: zone.local(2027, 1, 1, 12)) }.to refused(:edit_in_past)

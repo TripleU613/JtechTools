@@ -559,13 +559,23 @@ export default class ModElectionsAdmin extends Component {
   saveEdit() {
     const election = this.current!;
     const form = this.edit!;
+    const changed = election.editable.filter(
+      (field) => form[field] !== this.editFrom![field]
+    );
+    // A cleared date is no date at all: say so, rather than fail unseen
+    if (
+      changed.some(
+        (field) => field !== "seats" && isNaN(new Date(form[field]).getTime())
+      )
+    ) {
+      this.dialog.alert(i18n("admin.mod_elections.current.edit_no_date"));
+      return;
+    }
     const data: Partial<EditForm> = {};
-    election.editable
-      .filter((field) => form[field] !== this.editFrom![field])
-      .forEach((field) => {
-        data[field] =
-          field === "seats" ? form.seats : new Date(form[field]).toISOString();
-      });
+    changed.forEach((field) => {
+      data[field] =
+        field === "seats" ? form.seats : new Date(form[field]).toISOString();
+    });
     this.run(async () => {
       await ajax(`${BASE}/elections/${election.id}.json`, {
         type: "PUT",

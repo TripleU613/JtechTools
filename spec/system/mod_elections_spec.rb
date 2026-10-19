@@ -261,6 +261,15 @@ RSpec.describe "Mod elections" do
     find(".mod-elections-admin__edit-button").click
 
     # In Vote Week only the seats and its end can change
+    # A date cleared by mistake gets a word, not a form that does nothing
+    find(".mod-elections-admin__edit input[type='datetime-local']").fill_in(with: "")
+    find(".mod-elections-admin__save-edit").click
+    expect(page).to have_css(".dialog-body", text: "Fill in every date")
+    find(".dialog-footer .btn-primary").click
+    expect(election.reload.voting_close_at).to be > Time.zone.now
+    find(".mod-elections-admin__edit + .mod-elections-actions .btn-flat").click
+    find(".mod-elections-admin__edit-button").click
+
     within(".mod-elections-admin__edit") do
       expect(page).to have_css("input[type='datetime-local']", count: 1)
       find(".mod-elections-admin__seats").fill_in(with: "3")

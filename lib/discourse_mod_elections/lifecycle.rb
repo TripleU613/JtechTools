@@ -212,6 +212,10 @@ module DiscourseModElections
     # An admin changes an election under way: its seats or the dates still
     # ahead. Only what's given and different changes.
     def self.update!(election, actor, now = Time.zone.now, **wanted)
+      # First wherever the clock says, as the tick would: in the minute
+      # between a deadline and the tick the status still names the phase
+      # that ended, and a later end for it would open it again.
+      advance!(election, now)
       changed = {}
       election.with_lock do
         raise Error.new(:finished) unless election.unfinished?

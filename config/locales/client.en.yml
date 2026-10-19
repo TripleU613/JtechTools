@@ -798,6 +798,7 @@ en:
           edit: Change seats or dates
           edit_save: Save changes
           edit_cancel: Cancel
+          edit_no_date: Fill in every date, or cancel to keep the ones there were.
           cancel: Cancel election
           cancel_confirm: Cancel this election? The moderators stay as they are, and the schedule won't start it again.
           open_page: Open the elections page
