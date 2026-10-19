@@ -153,6 +153,22 @@ RSpec.describe "Update post whisper" do
       expect(topic.reload.bumped_at).to be_within(1.second).of(op.created_at)
     end
 
+    it "leaves the bump of a reply that came the same second" do
+      post_record.update_columns(created_at: 10.minutes.ago)
+      later = Fabricate(:post, topic: topic, user: other_user)
+      later.update_columns(created_at: post_record.created_at + 0.3)
+      ::Topic.where(id: topic.id).update_all(bumped_at: later.created_at)
+      sign_in(moderator)
+
+      put "/discourse-mod-categories/post/#{post_record.id}/whisper.json",
+          params: {
+            mod_whisper: true,
+            mod_whisper_target_user_ids: [target.id],
+          }
+
+      expect(topic.reload.bumped_at).to eq_time(later.created_at)
+    end
+
     it "leaves a bump that came later alone" do
       post_record.update_columns(created_at: 10.minutes.ago)
       ::Topic.where(id: topic.id).update_all(bumped_at: 1.minute.ago)

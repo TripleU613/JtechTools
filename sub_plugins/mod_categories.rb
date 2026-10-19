@@ -1227,10 +1227,11 @@ after_initialize do
             topic.save_custom_fields(true)
           end
           DiscourseModCategories::Whisper.refresh_topic_counters(topic)
-          # It bumped the topic while it was public; the bump goes back to
-          # the post before it that would have had it (a later reply here
-          # was posted without a bump, or the bump would be its).
-          if (topic.bumped_at - post.created_at).abs < 1.second
+          # It bumped the topic while it was public (core copies the post's
+          # created_at into bumped_at, to the microsecond); the bump goes
+          # back to the post before it that would have had it (a later reply
+          # here was posted without a bump, or the bump would be its).
+          if topic.bumped_at == post.created_at
             topic.reset_bumped_at(
               DiscourseModCategories::Whisper.last_bumping_post(topic, before: post) ||
                 topic.first_post,
