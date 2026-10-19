@@ -108,6 +108,154 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
     end
   end
 
+  # A post's header: the name, the title under it, and core's box of post
+  # infos (the reply-to tab, the date) at the right. Since the reply-to tab
+  # became a pill with the name in it, on a phone it took the middle of the
+  # row and squeezed the name and title into a column, with the date out at
+  # the edge, centred on both lines.
+  describe "a post's header" do
+    fab!(:asker) { Fabricate(:user, username: "Lamden613", trust_level: TrustLevel[2]) }
+    fab!(:moderator) do
+      Fabricate(
+        :moderator,
+        username: "anonymousfliphones",
+        title: "Forum Moderator, Phone Distributor",
+      )
+    end
+    fab!(:quoter) { Fabricate(:moderator, username: "kosherboy", title: "Forum Moderator") }
+
+    fab!(:thread) do
+      Fabricate(:topic, category: category, user: asker, title: "Qin F21 Pro ROMs and the bands")
+    end
+    fab!(:question) do
+      Fabricate(:post, topic: thread, user: asker, raw: "Is this ROM the stock one?")
+    end
+    fab!(:aside) do
+      Fabricate(
+        :post,
+        topic: thread,
+        user: member,
+        raw: "The ROM messes it up so F30 bands come last.",
+      )
+    end
+    fab!(:answer) do
+      Fabricate(
+        :post,
+        topic: thread,
+        user: moderator,
+        raw: "Looks custom",
+        reply_to_post_number: question.post_number,
+        reply_to_user_id: asker.id,
+      )
+    end
+    fab!(:follow_up) do
+      Fabricate(
+        :post,
+        topic: thread,
+        user: quoter,
+        raw:
+          "[quote=\"#{member.username}, post:#{aside.post_number}, topic:#{thread.id}\"]\nThe ROM messes it up so F30 bands come last.\n[/quote]\n\nHow do I know if my bands got messed up?",
+        reply_to_post_number: aside.post_number,
+        reply_to_user_id: member.id,
+      )
+    end
+
+    before do
+      Group.refresh_automatic_groups!
+      Group.find(Group::AUTO_GROUPS[:moderators]).update!(
+        flair_icon: "shield-halved",
+        flair_bg_color: "5A29E4",
+        flair_color: "FFFFFF",
+      )
+      [moderator, quoter].each do |mod|
+        mod.update!(flair_group_id: Group::AUTO_GROUPS[:moderators])
+      end
+    end
+
+    # Where each part of a post's header sits, rounded to whole pixels: the
+    # name's link, the title and the date's link rather than core's boxes
+    # around them, which carry padding for focus rings.
+    def header(post)
+      page.evaluate_script(<<~JS)
+        (() => {
+          const post = document.querySelector("#post_#{post.post_number}");
+          const box = (selector) => {
+            const rect = post.querySelector(selector).getBoundingClientRect();
+            return {
+              left: Math.round(rect.left),
+              right: Math.round(rect.right),
+              top: Math.round(rect.top),
+              bottom: Math.round(rect.bottom),
+              middle: Math.round((rect.top + rect.bottom) / 2),
+            };
+          };
+          const cut = (selector) => {
+            const element = post.querySelector(selector);
+            return element.scrollWidth > element.clientWidth;
+          };
+          return {
+            name: box(".names .first a"),
+            title: box(".names .user-title"),
+            date: box("a.post-date"),
+            tab: box(".reply-to-tab"),
+            meta: box(".topic-meta-data"),
+            // the unread dot, while it shows
+            dot: post.querySelector(".read-state svg") && box(".read-state svg"),
+            name_cut: cut(".names .first"),
+            title_cut: cut(".names .user-title"),
+          };
+        })()
+      JS
+    end
+
+    def open_thread
+      page.driver.with_playwright_page { |pw| pw.emulate_media(colorScheme: "dark") }
+      sign_in(member)
+      visit("/t/#{thread.slug}/#{thread.id}/#{answer.post_number}")
+      expect(page).to have_css("#post_#{answer.post_number} .reply-to-tab", text: asker.username)
+      expect(page).to have_css("#post_#{follow_up.post_number} .reply-to-tab")
+      # the header's avatars drawn, so the screenshot shows it as people see it
+      drawn = <<~JS
+        [...document.querySelectorAll(".topic-post :is(.topic-avatar, .reply-to-tab) img.avatar")]
+          .every((img) => img.complete && img.naturalWidth > 0)
+      JS
+      try_until_success { expect(page.evaluate_script(drawn)).to eq(true) }
+    end
+
+    it "puts the reply-to tab on a line of its own on phones, the date beside the name",
+       mobile: true do
+      open_thread
+      shot("post-header")
+
+      [answer, follow_up].each do |post|
+        at = header(post)
+        # the date on the name's line, at the right
+        expect(at["date"]["middle"]).to be_within(3).of(at["name"]["middle"])
+        expect(at["date"]["right"]).to be_within(2).of(at["meta"]["right"])
+        # the tab under the name and its title, from where the name starts
+        expect(at["tab"]["top"]).to be >= at["title"]["bottom"]
+        expect(at["tab"]["left"]).to be_within(2).of(at["name"]["left"])
+        expect(at["dot"]["middle"]).to be_within(3).of(at["name"]["middle"]) if at["dot"]
+        # the whole name and title, not cut short by the tab
+        expect(at["name_cut"]).to eq(false)
+        expect(at["title_cut"]).to eq(false)
+      end
+      expect_no_theme_errors
+    end
+
+    it "keeps the reply-to tab beside the date on a computer" do
+      open_thread
+      shot("post-header")
+
+      at = header(answer)
+      expect(at["tab"]["right"]).to be <= at["date"]["left"]
+      expect(at["tab"]["middle"]).to be_within(3).of(at["date"]["middle"])
+      expect(at["name_cut"]).to eq(false)
+      expect(at["title_cut"]).to eq(false)
+      expect_no_theme_errors
+    end
+  end
+
   describe "voice messages" do
     before { SiteSetting.authorized_extensions = "jpg|png|m4a|ogg|webm" }
 

@@ -133,6 +133,58 @@
         color: var(--jt-text);
       }
     }
+
+    // On phones core's box of post infos (the reply-to tab, the date and
+    // the little indicators) sits at the right of the name. With the tab a
+    // pill holding a name, it took the middle of the row: the name and the
+    // title were squeezed into a column and cut short, and the date was
+    // pushed to the edge, centred on both lines. The date and indicators
+    // stay at the right, on the name's line; the tab gets a line of its own
+    // under the name and title.
+    @include viewport.until(sm) {
+      flex-wrap: wrap;
+      align-items: baseline;
+      row-gap: 0;
+
+      .names {
+        flex: 1 1 0;
+        min-width: 0;
+      }
+
+      .post-infos {
+        display: contents;
+      }
+
+      // The break before the tab: no height, so a post without one keeps
+      // its header as it was
+      &::after {
+        content: "";
+        flex-basis: 100%;
+        order: 1;
+      }
+
+      // Core centres the unread dot (placed absolutely, in the margin) on
+      // the box it was in; that's the whole header now. On the name's line,
+      // like the date.
+      .post-infos .read-state {
+        display: flex;
+        align-self: flex-start;
+        align-items: center;
+        height: calc(var(--jt-text-md) * 1.3);
+      }
+
+      .post-infos .reply-to-tab {
+        order: 2;
+        max-width: 100%;
+        margin: var(--space-2) 0 0;
+        font-size: var(--jt-text-xs);
+
+        .avatar {
+          width: 16px;
+          height: 16px;
+        }
+      }
+    }
   }
 }
 
