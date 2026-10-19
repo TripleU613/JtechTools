@@ -1230,12 +1230,15 @@ after_initialize do
           # It bumped the topic while it was public (core copies the post's
           # created_at into bumped_at, to the microsecond); the bump goes
           # back to the post before it that would have had it (a later reply
-          # here was posted without a bump, or the bump would be its).
-          if topic.bumped_at == post.created_at
-            topic.reset_bumped_at(
-              DiscourseModCategories::Whisper.last_bumping_post(topic, before: post) ||
-                topic.first_post,
-            )
+          # here was posted without a bump, or the bump would be its). Read
+          # under the topic's lock: a reply posted meanwhile has bumped it.
+          topic.with_lock do
+            if topic.bumped_at == post.created_at
+              topic.reset_bumped_at(
+                DiscourseModCategories::Whisper.last_bumping_post(topic, before: post) ||
+                  topic.first_post,
+              )
+            end
           end
         end
         # Other posts may carry a baked link preview of this post.

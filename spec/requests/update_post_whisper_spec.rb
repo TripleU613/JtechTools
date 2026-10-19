@@ -169,6 +169,22 @@ RSpec.describe "Update post whisper" do
       expect(topic.reload.bumped_at).to eq_time(later.created_at)
     end
 
+    it "re-reads the bump first, so a reply's bump that came meanwhile stays" do
+      op.update_columns(created_at: 2.hours.ago)
+      post_record.update_columns(created_at: 10.minutes.ago)
+      ::Topic.where(id: topic.id).update_all(bumped_at: post_record.created_at)
+      converted = Post.find(post_record.id)
+      converted.topic # loaded while the post still had the bump
+      later = Fabricate(:post, topic: topic, user: other_user)
+      ::Topic.where(id: topic.id).update_all(bumped_at: later.created_at)
+
+      converted.custom_fields[targets_field] = [target.id]
+      converted.save_custom_fields(true)
+      DiscourseEvent.trigger(:mod_whisper_state_changed, converted, true)
+
+      expect(topic.reload.bumped_at).to eq_time(later.created_at)
+    end
+
     it "leaves a bump that came later alone" do
       post_record.update_columns(created_at: 10.minutes.ago)
       ::Topic.where(id: topic.id).update_all(bumped_at: 1.minute.ago)
