@@ -431,7 +431,7 @@ en:
       as new for anyone outside their audience either way. On, a whisper also
       stops leaving a topic unread for people who can't see it but are in
       whispers_allowed_groups (a moderator under an admin's whisper, a group
-      member it doesn't name): their last read moves past it.
+      member it doesn't name), because their last read moves past it.
 
     # ── Jtech — Translator tweaks ──────────────────────────────────────────
     translator_tweaks_enabled: Master switch for the Jtech tweak to the
