@@ -244,6 +244,7 @@ Discourse::Application.routes.append do
       get "/seats/countback" => "admin#countback"
       post "/seats/fill" => "admin#fill"
       get "/elections/:id" => "admin#show"
+      put "/elections/:id" => "admin#update"
       post "/elections/:id/end-phase" => "admin#end_phase"
       post "/elections/:id/cancel" => "admin#cancel"
       post "/elections/:id/candidates/:candidate_id/disqualify" => "admin#disqualify"

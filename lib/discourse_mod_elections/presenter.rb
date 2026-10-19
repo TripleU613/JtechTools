@@ -263,6 +263,8 @@ module DiscourseModElections
         voting_close_at: election.voting_close_at,
         nominations_extended: election.nominations_extended?,
         vote_skipped: election.vote_skipped?,
+        # What the admin can still change, so the tab offers just that.
+        editable: Lifecycle.editable(election),
         topic_id: election.topic_id,
         created_by: basic_user(election.created_by),
         published_at: election.published_at,

@@ -33,6 +33,15 @@ const UNFINISHED: ModElectionStatus[] = [
 
 // ── Payloads (DiscourseModElections::Presenter admin_*) ─────────────────
 
+type EditField =
+  | "seats"
+  | "nominations_open_at"
+  | "voting_open_at"
+  | "voting_close_at";
+
+// The change form's fields, as the inputs hold them.
+type EditForm = Record<EditField, string>;
+
 interface AdminElectionRow {
   id: number;
   status: ModElectionStatus;
@@ -90,6 +99,8 @@ interface AdminElection extends AdminElectionRow {
   // open longer, then there was no Vote Week.
   nominations_extended: boolean;
   vote_skipped: boolean;
+  // What can still change: the seats, and the dates still ahead.
+  editable: EditField[];
   topic_id: number | null;
   // When the count was first previewed; ballots are fixed from then.
   previewed_at: string | null;
@@ -183,14 +194,23 @@ export default class ModElectionsAdmin extends Component {
   @tracked reasonFor: ReasonTarget | null = null;
   @tracked reason = "";
 
+  // Changing the election under way: null until the form is open.
+  @tracked edit: EditForm | null = null;
+
   @tracked newSeats = "";
   @tracked newNominations = localInput(new Date());
   @tracked newVoting = localInput(new Date(Date.now() + 7 * 864e5));
   @tracked newClose = localInput(new Date(Date.now() + 14 * 864e5));
 
+  // The change form as it opened, so only what the admin changes is sent.
+  editFrom: EditForm | null = null;
+
   pastUrl = (id: number): string => getURL(`/elections?id=${id}`);
 
   date = (value: string | null): string => (value ? longDate(value) : "");
+
+  canEdit = (field: EditField): boolean =>
+    !!this.current?.editable.includes(field);
 
   isAsking = (kind: string, id: number): boolean =>
     this.reasonFor?.kind === kind && this.reasonFor.id === id;
@@ -509,6 +529,64 @@ export default class ModElectionsAdmin extends Component {
   }
 
   @action
+  startEdit() {
+    const e = this.current!;
+    this.editFrom = {
+      seats: String(e.seats),
+      nominations_open_at: localInput(new Date(e.nominations_open_at)),
+      voting_open_at: localInput(new Date(e.voting_open_at)),
+      voting_close_at: localInput(new Date(e.voting_close_at)),
+    };
+    this.edit = { ...this.editFrom };
+  }
+
+  @action
+  cancelEdit() {
+    this.edit = null;
+  }
+
+  @action
+  setEdit(field: EditField, event: Event) {
+    this.edit = {
+      ...this.edit!,
+      [field]: (event.target as HTMLInputElement).value,
+    };
+  }
+
+  // Only what the admin changed goes, dates as exact moments: a date
+  // shown to the minute and sent back unchanged would move it by seconds.
+  @action
+  saveEdit() {
+    const election = this.current!;
+    const form = this.edit!;
+    const changed = election.editable.filter(
+      (field) => form[field] !== this.editFrom![field]
+    );
+    // A cleared date is no date at all: say so, rather than fail unseen
+    if (
+      changed.some(
+        (field) => field !== "seats" && isNaN(new Date(form[field]).getTime())
+      )
+    ) {
+      this.dialog.alert(i18n("admin.mod_elections.current.edit_no_date"));
+      return;
+    }
+    const data: Partial<EditForm> = {};
+    changed.forEach((field) => {
+      data[field] =
+        field === "seats" ? form.seats : new Date(form[field]).toISOString();
+    });
+    this.run(async () => {
+      await ajax(`${BASE}/elections/${election.id}.json`, {
+        type: "PUT",
+        data,
+      });
+      this.edit = null;
+      await this.load();
+    });
+  }
+
+  @action
   setSeats(event: Event) {
     this.newSeats = (event.target as HTMLInputElement).value;
   }
@@ -569,9 +647,84 @@ export default class ModElectionsAdmin extends Component {
                 <span class="mod-elections-chip">{{i18n
                     (concat "mod_elections.status." this.current.status)
                   }}</span>
+                <span
+                  class="mod-elections-chip mod-elections-admin__seat-count"
+                >{{i18n "mod_elections.seats" count=this.current.seats}}</span>
               </h3>
               <p>{{this.phaseLine}}</p>
+              {{#if this.edit}}
+                <div
+                  class="mod-elections-admin__create mod-elections-admin__edit"
+                >
+                  {{#if (this.canEdit "seats")}}
+                    <label>
+                      {{i18n "admin.mod_elections.create.seats"}}
+                      <input
+                        class="mod-elections-admin__seats"
+                        min="1"
+                        type="number"
+                        value={{this.edit.seats}}
+                        {{on "input" (fn this.setEdit "seats")}}
+                      />
+                    </label>
+                  {{/if}}
+                  {{#if (this.canEdit "nominations_open_at")}}
+                    <label>
+                      {{i18n "admin.mod_elections.create.nominations_open_at"}}
+                      <input
+                        type="datetime-local"
+                        value={{this.edit.nominations_open_at}}
+                        {{on "input" (fn this.setEdit "nominations_open_at")}}
+                      />
+                    </label>
+                  {{/if}}
+                  {{#if (this.canEdit "voting_open_at")}}
+                    <label>
+                      {{i18n "admin.mod_elections.create.voting_open_at"}}
+                      <input
+                        type="datetime-local"
+                        value={{this.edit.voting_open_at}}
+                        {{on "input" (fn this.setEdit "voting_open_at")}}
+                      />
+                    </label>
+                  {{/if}}
+                  {{#if (this.canEdit "voting_close_at")}}
+                    <label>
+                      {{i18n "admin.mod_elections.create.voting_close_at"}}
+                      <input
+                        type="datetime-local"
+                        value={{this.edit.voting_close_at}}
+                        {{on "input" (fn this.setEdit "voting_close_at")}}
+                      />
+                    </label>
+                  {{/if}}
+                </div>
+                <div class="mod-elections-actions">
+                  <DButton
+                    class="btn-primary mod-elections-admin__save-edit"
+                    @action={{this.saveEdit}}
+                    @disabled={{this.busy}}
+                    @label="admin.mod_elections.current.edit_save"
+                  />
+                  <DButton
+                    class="btn-flat"
+                    @action={{this.cancelEdit}}
+                    @label="admin.mod_elections.current.edit_cancel"
+                  />
+                </div>
+              {{/if}}
               <div class="mod-elections-actions">
+                {{#if this.current.editable.length}}
+                  {{#unless this.edit}}
+                    <DButton
+                      class="btn-default mod-elections-admin__edit-button"
+                      @action={{this.startEdit}}
+                      @disabled={{this.busy}}
+                      @icon="pencil"
+                      @label="admin.mod_elections.current.edit"
+                    />
+                  {{/unless}}
+                {{/if}}
                 {{#if this.canEndPhase}}
                   <DButton
                     class="btn-default mod-elections-admin__end-phase"

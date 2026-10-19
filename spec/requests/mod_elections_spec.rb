@@ -554,6 +554,36 @@ RSpec.describe "Mod elections endpoints" do
       expect(member_candidate.reload).to be_running
     end
 
+    it "changes an election's seats and dates for admins only, and says what can change" do
+      closes = 10.days.from_now.change(usec: 0)
+      [nil, moderator].each do |who|
+        sign_in(who) if who
+        put "/jtech-elections/admin/elections/#{election.id}.json", params: { seats: 4 }
+        expect(response.status).to be_in([403, 404]), "#{who&.username || "anon"} changed it"
+      end
+      expect(election.reload.seats).to eq(1)
+
+      sign_in(admin)
+      get "/jtech-elections/admin/elections/#{election.id}.json"
+      expect(response.parsed_body["editable"]).to eq(%w[seats voting_open_at voting_close_at])
+
+      put "/jtech-elections/admin/elections/#{election.id}.json",
+          params: {
+            seats: 4,
+            voting_close_at: closes.iso8601,
+          }
+      expect(response.status).to eq(200)
+      expect(response.parsed_body).to include("seats" => 4)
+      expect(election.reload.voting_close_at).to eq_time(closes)
+
+      put "/jtech-elections/admin/elections/#{election.id}.json",
+          params: {
+            voting_open_at: 30.seconds.ago.iso8601,
+          }
+      expect(response.status).to eq(422)
+      expect(response.parsed_body.dig("extras", "reason")).to eq("edit_in_past")
+    end
+
     it "ends a phase early and cancels" do
       DiscourseModElections::Nominations.run!(member, election, "")
       sign_in(admin)

@@ -763,6 +763,7 @@ en:
             mod_election_create: "start mod election"
             mod_election_cancel: "cancel mod election"
             mod_election_end_phase: "end mod election phase"
+            mod_election_edit: "change mod election"
             mod_election_disqualify: "take candidate off ballot"
             mod_election_reinstate: "put candidate back on ballot"
             mod_election_void_ballot: "set ballot aside"
@@ -794,6 +795,10 @@ en:
             nominating: Close nominations now
             voting: Close voting now
           end_phase_confirm: End this phase now instead of when it's scheduled to?
+          edit: Change seats or dates
+          edit_save: Save changes
+          edit_cancel: Cancel
+          edit_no_date: Fill in every date, or cancel to keep the ones there were.
           cancel: Cancel election
           cancel_confirm: Cancel this election? The moderators stay as they are, and the schedule won't start it again.
           open_page: Open the elections page

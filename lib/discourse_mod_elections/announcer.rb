@@ -68,6 +68,16 @@ module DiscourseModElections
       )
     end
 
+    # An admin changed the seats or the dates still ahead: everyone hears the
+    # new ones, so nobody plans around the old.
+    def self.changed(election)
+      key = election.voting? ? "changed_voting" : "changed"
+      reply(
+        election,
+        I18n.t("mod_elections.topic.#{key}", count: election.seats, **dates(election)),
+      )
+    end
+
     def self.cancelled(election)
       reply(election, I18n.t("mod_elections.topic.cancelled"))
     end

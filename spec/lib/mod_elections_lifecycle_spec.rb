@@ -463,6 +463,92 @@ RSpec.describe DiscourseModElections::Lifecycle do
     end
   end
 
+  describe ".update!" do
+    def edit!(**wanted)
+      described_class.update!(election, admin, **wanted)
+    end
+
+    def refused(reason)
+      raise_error(DiscourseModElections::Error) { |e| expect(e.reason).to eq(reason) }
+    end
+
+    it "changes the seats and the dates still ahead, and tells everyone" do
+      SiteSetting.mod_elections_category = Fabricate(:category).id.to_s
+      tick_at(2027, 1, 2)
+
+      messages =
+        MessageBus.track_publish(DiscourseModElections::State::CHANNEL) do
+          edit!(
+            seats: 5,
+            voting_open_at: zone.local(2027, 1, 10),
+            voting_close_at: zone.local(2027, 1, 20),
+          )
+        end
+      expect(messages.size).to eq(1)
+      expect(election.seats).to eq(5)
+      expect(election.voting_open_at).to eq_time(zone.local(2027, 1, 10))
+      expect(election.voting_close_at).to eq_time(zone.local(2027, 1, 20))
+      log = UserHistory.find_by(custom_type: "mod_election_edit", acting_user_id: admin.id)
+      expect(log.details).to include("seats: 5")
+      expect(election.topic.posts.last.raw).to include("5 seats")
+
+      # The new dates are the ones the calendar follows.
+      tick_at(2027, 1, 8, 0, 5)
+      expect(election).to be_nominating
+    end
+
+    it "changes only what's still ahead in each phase, and nothing once voting has closed" do
+      tick_at(2027, 1, 2)
+      expect { edit!(nominations_open_at: zone.local(2027, 1, 3)) }.to refused(:not_editable)
+
+      contest!
+      tick_at(2027, 1, 8, 0, 5)
+      expect(election).to be_voting
+      expect { edit!(voting_open_at: zone.local(2027, 1, 9)) }.to refused(:not_editable)
+      edit!(seats: 2, voting_close_at: zone.local(2027, 1, 16))
+      expect(election.seats).to eq(2)
+
+      tick_at(2027, 1, 16, 0, 5)
+      expect(election).to be_closed
+      # More or fewer seats now would change who the ballots elect.
+      expect { edit!(seats: 3) }.to refused(:edit_closed)
+      expect(election.reload.seats).to eq(2)
+    end
+
+    it "treats a deadline that has passed as passed, even before the tick moves it on" do
+      tick_at(2027, 1, 1, 0, 5)
+      contest!
+
+      freeze_time(zone.local(2027, 1, 8, 0, 1))
+      expect(election).to be_nominating
+      expect { edit!(voting_open_at: zone.local(2027, 1, 10)) }.to refused(:not_editable)
+      expect(election.reload).to be_voting
+
+      freeze_time(zone.local(2027, 1, 15, 0, 1))
+      expect { edit!(voting_close_at: zone.local(2027, 1, 20)) }.to refused(:edit_closed)
+      expect(election.reload).to be_closed
+      expect(election.voting_close_at).to eq_time(zone.local(2027, 1, 15))
+    end
+
+    it "refuses dates in the past or out of order, and seats that aren't a number of seats" do
+      tick_at(2027, 1, 2)
+      expect { edit!(voting_open_at: zone.local(2027, 1, 1, 12)) }.to refused(:edit_in_past)
+      expect { edit!(voting_open_at: zone.local(2027, 1, 20)) }.to refused(:invalid_dates)
+      expect { edit!(seats: 0) }.to refused(:invalid_seats)
+
+      election.reload
+      expect(election.seats).to eq(3)
+      expect(election.voting_open_at).to eq_time(zone.local(2027, 1, 8))
+    end
+
+    it "logs and announces nothing when nothing is different" do
+      tick_at(2027, 1, 2)
+      expect { edit!(seats: election.seats, voting_open_at: election.voting_open_at) }.not_to(
+        change { UserHistory.where(custom_type: "mod_election_edit").count },
+      )
+    end
+  end
+
   describe ".create!" do
     it "starts an election off the calendar, but not while another is unfinished" do
       freeze_time

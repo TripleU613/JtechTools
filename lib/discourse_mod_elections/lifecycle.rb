@@ -196,6 +196,52 @@ module DiscourseModElections
       advance!(election.reload, now, extend_nominations: !closing_nominations)
     end
 
+    # What an admin can still change, by phase: a date only while it's ahead,
+    # and nothing once voting has closed, when more or fewer seats would
+    # change who the ballots elect.
+    EDITABLE = {
+      scheduled: %i[seats nominations_open_at voting_open_at voting_close_at],
+      nominating: %i[seats voting_open_at voting_close_at],
+      voting: %i[seats voting_close_at],
+    }.freeze
+
+    def self.editable(election)
+      EDITABLE.fetch(election.status.to_sym, [])
+    end
+
+    # An admin changes an election under way: its seats or the dates still
+    # ahead. Only what's given and different changes.
+    def self.update!(election, actor, now = Time.zone.now, **wanted)
+      # First wherever the clock says, as the tick would: in the minute
+      # between a deadline and the tick the status still names the phase
+      # that ended, and a later end for it would open it again.
+      advance!(election, now)
+      changed = {}
+      election.with_lock do
+        raise Error.new(:finished) unless election.unfinished?
+        raise Error.new(:edit_closed) if election.closed?
+        changes = wanted.compact.reject { |field, value| election.public_send(field) == value }
+        raise Error.new(:not_editable) if (changes.keys - editable(election)).any?
+        next if changes.empty?
+
+        election.assign_attributes(changes)
+        opens, closes = election.voting_open_at, election.voting_close_at
+        raise Error.new(:invalid_dates) if election.nominations_open_at >= opens || opens >= closes
+        # The end of the phase under way, and anything after it, is ahead,
+        # so people still have the time the dates promise.
+        raise Error.new(:edit_in_past) if changes.except(:seats).values.any? { |at| at <= now }
+        raise Error.new(:invalid_seats) unless election.valid?
+        changed = election.changes.transform_values(&:last)
+        election.save!
+      end
+      return election if changed.empty?
+
+      StaffLog.log(actor, "mod_election_edit", election_id: election.id, **changed.symbolize_keys)
+      State.changed!
+      Announcer.changed(election)
+      advance!(election, now)
+    end
+
     # An election an admin starts by hand, for dates off the calendar.
     def self.create!(actor, seats:, nominations_open_at:, voting_open_at:, voting_close_at:)
       unless nominations_open_at && voting_open_at && voting_close_at &&

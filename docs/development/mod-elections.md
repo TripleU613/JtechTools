@@ -79,7 +79,7 @@ Publishing, under the lock: grants and revokes moderation (`grant_moderation!` /
 
 `Seats.vacate!` marks a seat stepped down or removed, under the election's lock (like a countback filling it). Removed for abuse goes straight to trust level 3, unlocked; either way the person leaves any later election's ballot (`Nominations.leave_ballots!`: removed is disqualified with a reason, stepped down is withdrawn). Someone made an admin since keeps their rights and trust level.
 
-Every admin action goes in the staff action log through `StaffLog.log`, which puts the person an entry is about in the log's user column (core's `log_custom` keeps it only as text): `mod_election_create`, `_end_phase`, `_cancel`, `_disqualify`, `_reinstate`, `_void_ballot`, `_restore_ballot`, `_publish`, `_vacate`, `_countback`.
+Every admin action goes in the staff action log through `StaffLog.log`, which puts the person an entry is about in the log's user column (core's `log_custom` keeps it only as text): `mod_election_create`, `_edit`, `_end_phase`, `_cancel`, `_disqualify`, `_reinstate`, `_void_ballot`, `_restore_ballot`, `_publish`, `_vacate`, `_countback`.
 
 ## Privacy
 
@@ -105,7 +105,7 @@ Notifications carry only the election id, the step and a link. The MessageBus me
 
 - `GET /jtech-elections/current.json` (`?id=` for a past one): anyone who can see the forum. `scheduled` elections are never shown. Dates that mean days on the calendar (the step strip's `days`, `next_opening`, the history's month `label`s) are formatted here in the calendar's zone, so the page and Dumbcourse show the same days wherever the reader is; exact moments (the deadlines) go as times and show in the reader's own zone.
 - `POST|PUT|DELETE /jtech-elections/:id/candidacy.json`, `PUT|DELETE /jtech-elections/:id/ballot.json`: signed in, from the member's own browser session (no API keys, no impersonation), rate limited (30 a minute, 200 an hour).
-- `/jtech-elections/admin/…`: admins only (`AdminConstraint` and `Admin::AdminController`). The reads work with the module off, so an admin can always see what happened; the writes (the preview included, since it fixes the ballots) refuse with `module_off`. The address report and setting ballots aside or back work only while the election is closed, and setting aside only before the first preview.
+- `/jtech-elections/admin/…`: admins only (`AdminConstraint` and `Admin::AdminController`). The reads work with the module off, so an admin can always see what happened; the writes (the preview included, since it fixes the ballots) refuse with `module_off`. The address report and setting ballots aside or back work only while the election is closed, and setting aside only before the first preview. `PUT /elections/:id` (`Lifecycle.update!`) changes the seats and the dates still ahead (`Lifecycle::EDITABLE`, by phase; the admin JSON lists them as `editable`), under the election's lock, refusing a date in the past (`edit_in_past`), one whose step has begun (`not_editable`) and anything once voting has closed (`edit_closed`).
 - Creating an election (the schedule, or an admin by hand) checks for an unfinished one and creates it under one `DistributedMutex`, so two can't both get through.
 
 ## Testing

@@ -254,6 +254,39 @@ RSpec.describe "Mod elections" do
     expect(row).to have_text("You")
   end
 
+  it "lets an admin change the seats and the dates still ahead" do
+    open_voting
+    sign_in(admin)
+    visit "/admin/plugins/jtech-tools/mod-elections"
+    find(".mod-elections-admin__edit-button").click
+
+    # In Vote Week only the seats and its end can change
+    # A date cleared by mistake gets a word, not a form that does nothing
+    find(".mod-elections-admin__edit input[type='datetime-local']").fill_in(with: "")
+    find(".mod-elections-admin__save-edit").click
+    expect(page).to have_css(".dialog-body", text: "Fill in every date")
+    find(".dialog-footer .btn-primary").click
+    expect(election.reload.voting_close_at).to be > Time.zone.now
+    find(".mod-elections-admin__edit + .mod-elections-actions .btn-flat").click
+    find(".mod-elections-admin__edit-button").click
+
+    within(".mod-elections-admin__edit") do
+      expect(page).to have_css("input[type='datetime-local']", count: 1)
+      find(".mod-elections-admin__seats").fill_in(with: "3")
+    end
+    shot("11_admin_edit")
+    find(".mod-elections-admin__save-edit").click
+
+    expect(page).to have_no_css(".mod-elections-admin__edit")
+    expect(page).to have_css(".mod-elections-admin__seat-count", text: "3 seats")
+    expect(election.reload.seats).to eq(3)
+    shot("12_admin_edited")
+
+    sign_in(voter)
+    visit "/elections"
+    expect(page).to have_css(".mod-elections__meta", text: "3 seats")
+  end
+
   it "lets an admin check the count before publishing it, then shows the results" do
     open_voting
     DiscourseModElections::Voting.cast!(voter, election, [candidate_for(chaim).id])

@@ -1214,6 +1214,12 @@ en:
 
         %{ballots} ballots were counted. [Every stage of the count](%{url})
       cancelled: "This election was cancelled. The moderators stay as they are."
+      changed:
+        one: "An admin changed this election. It's for %{count} seat; nominations close %{voting_open}, and Vote Week runs from then to %{voting_close}."
+        other: "An admin changed this election. It's for %{count} seats; nominations close %{voting_open}, and Vote Week runs from then to %{voting_close}."
+      changed_voting:
+        one: "An admin changed this election. It's for %{count} seat, and Vote Week ends %{voting_close}."
+        other: "An admin changed this election. It's for %{count} seats, and Vote Week ends %{voting_close}."
       countback: "A moderator left their seat mid-term. Counting the same ballots again without them gives the seat to %{user}."
       nobody: "Nobody"
       deleted_user: "(deleted account)"
@@ -1247,6 +1253,10 @@ en:
       too_early: "Nominations haven't opened yet."
       invalid_dates: "Check the dates: nominations, then Vote Week, then the close, in that order."
       dates_in_past: "Vote Week has to start in the future, so people have time to run. Check the dates."
+      edit_in_past: "A date you change has to be in the future. Check the dates."
+      edit_closed: "Voting has closed, so the seats and dates are fixed: changing them now would change who the ballots elect. Publish, or cancel the election."
+      not_editable: "That step has already started, so its date can't change. Change only the dates still ahead."
+      invalid_seats: "Seats have to be a whole number from 1 to 99."
       winners_cannot_serve: "%{names} can't take a seat any more (see the preview). Take them off the ballot, then publish: the count moves on to the next candidate."
       module_off: "Mod elections are off. Turn them on in the settings below first."
     reasons:
