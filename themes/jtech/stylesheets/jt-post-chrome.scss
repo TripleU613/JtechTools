@@ -365,6 +365,166 @@ nav.post-controls {
   }
 }
 
+// ── Reactions as a row (reaction_rollout) ─────────────────
+// The picker leaves its box over the post and opens in the post's menu, a
+// row rolling out to the left of the heart: in the row of buttons, so the
+// space it takes pushes what's beside it along rather than covering it. It
+// takes the room there is and scrolls the rest. Only its width moves, once,
+// as it opens; nothing is drawn over the page, and nothing runs while it sits.
+html.jt-reaction-rollout {
+  --jt-rx-cell: 2.25rem;
+
+  // Flex all the way down to the row, so each box can narrow below its
+  // content: a block (the plugin's shim, on computers) sizes an inline box
+  // in it to the content's full width whatever min-width says.
+  .post-controls .discourse-reactions-actions-button-shim,
+  .post-controls .discourse-reactions-actions {
+    display: flex;
+    flex: 0 1 auto;
+    align-items: center;
+    min-width: 0;
+  }
+
+  // one line: the row narrows and scrolls rather than push the buttons
+  // onto a line of their own
+  .post-controls:has(.discourse-reactions-picker.is-expanded) .actions {
+    flex-wrap: nowrap;
+    min-width: 0;
+
+    > :not(.discourse-reactions-actions-button-shim) {
+      flex-shrink: 0;
+    }
+  }
+
+  .post-controls .discourse-reactions-picker {
+    position: static;
+    width: auto;
+    min-width: 0;
+    padding: 0;
+    visibility: visible;
+  }
+
+  .discourse-reactions-picker .discourse-reactions-picker-container {
+    display: flex;
+    gap: 0;
+
+    --jt-rx-end: 0.125rem;
+    max-width: calc(
+      var(--jt-rx-count, 7) * var(--jt-rx-cell) + 0.125rem + var(--jt-rx-end) +
+        2px
+    );
+    margin: 0 var(--space-1) 0 0;
+    padding: 0 var(--jt-rx-end) 0 0.125rem;
+    overflow: auto hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+    background: var(--jt-fill);
+    border-radius: var(--jt-radius-pill);
+    box-shadow: none;
+    animation: jt-rx-roll var(--jt-motion) both;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      animation: none;
+    }
+
+    // With no mouse to point at it, a fade at the right edge says there are
+    // more to swipe to. It covers the end padding, so a row that fits shows
+    // its last reaction whole.
+    @media (hover: none) {
+      --jt-rx-end: 1rem;
+      mask-image: linear-gradient(to left, transparent, #000 1rem);
+    }
+
+    .pickable-reaction {
+      flex: none;
+      justify-content: center;
+      width: var(--jt-rx-cell);
+      height: var(--jt-rx-cell);
+      margin: 0 !important;
+      padding: 0 !important;
+      border: 0 !important;
+      border-radius: var(--jt-radius-pill);
+      scroll-snap-align: start;
+
+      .emoji,
+      .d-icon {
+        width: 1.25em;
+        height: 1.25em;
+        transition: transform var(--jt-motion);
+      }
+
+      // the emoji grows, not its button, which the row would cut off
+      &:hover,
+      &.can-undo:hover {
+        transform: none;
+      }
+
+      // only under a mouse: a tap leaves :hover behind on whatever ends up
+      // under the finger once the row has opened
+      @media (hover: hover) {
+        &:hover,
+        &.can-undo:hover {
+          background: var(--jt-hover) !important;
+
+          .emoji {
+            transform: scale(1.2);
+          }
+        }
+      }
+
+      @media (hover: none) {
+        &:hover:not(.is-used) {
+          background: none !important;
+        }
+      }
+    }
+
+    .emoji-picker-trigger {
+      flex: none;
+      width: var(--jt-rx-cell);
+      height: var(--jt-rx-cell);
+    }
+  }
+
+  // Phones: while the row is open everything else in the menu steps aside
+  // but the heart, the button that opened it and Reply, so it gets the
+  // menu's width. They're back when it shuts.
+  @include viewport.until(sm) {
+    .post-controls:has(.discourse-reactions-picker.is-expanded) {
+      .reactions-actions-summary,
+      .show-replies,
+      .actions
+        > :not(
+          .discourse-reactions-actions-button-shim,
+          .post-action-menu__jt-reaction-rollout,
+          .post-action-menu__reply
+        ) {
+        display: none;
+      }
+    }
+  }
+}
+
+// The button that opens the row, for screens without a pointer to rest on
+// the heart.
+.post-action-menu__jt-reaction-rollout {
+  @media (hover: hover) {
+    display: none !important;
+  }
+}
+
+@keyframes jt-rx-roll {
+  from {
+    max-width: 0;
+    opacity: 0;
+  }
+}
+
 // ── Solved answer ─────────────────────────────────────────
 // Same specificity as the plugin (.accepted-answers.d-post-accordion) so load
 // order decides; the plugin paints the header solid green.

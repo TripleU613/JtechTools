@@ -46,6 +46,7 @@ import {
 import {
   likeState,
   mainReaction,
+  reactionRow,
   reactionsAllowed,
   reactionsOn,
   renderPost,
@@ -604,6 +605,27 @@ function wireTopic(
     if (!p || !r) return;
     if (p.yours) whoReacted(p.id, r);
     else react(p, r);
+  });
+  // The footer's react button rolls the reactions out beside it, and shuts
+  // them again; one post's row at a time.
+  s.act("react-row", (el) => {
+    const p = postFrom(el);
+    const foot = closest(el, ".post-foot");
+    if (!p || !foot) return;
+    const wasOpen = !!$(".rx-row", foot);
+    $$(".post-foot.rolled").forEach((f) => {
+      const row = $(".rx-row", f);
+      if (row) removeNode(row);
+      f.classList.remove("rolled");
+      const opener = $(".rx-open", f);
+      if (opener) opener.setAttribute("aria-expanded", "false");
+    });
+    if (wasOpen) return;
+    const row = fromHtml(reactionRow(p));
+    if (!row) return;
+    foot.insertBefore(row, el.nextSibling);
+    foot.classList.add("rolled");
+    el.setAttribute("aria-expanded", "true");
   });
   s.act("who-reacted", (el) => {
     const p = postFrom(el);

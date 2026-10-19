@@ -392,6 +392,70 @@ img.emoji.status {
   }
 }
 
+// A post's reactions rolled out in its footer beside the like (touch). The
+// footer's other buttons but Reply step aside while it's out, and the row
+// scrolls sideways, fading at its right edge while there's more. It's
+// revealed by clipping, so the opening moves no layout.
+.post-foot.rolled > .pa:not(.like):not(.rx-open):not([data-act="reply-post"]),
+.post-foot.rolled > .spacer {
+  display: none;
+}
+
+.rx-open[aria-expanded="true"] {
+  color: var(--fg);
+  background: var(--surface2);
+}
+
+.rx-row {
+  display: flex;
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0 0.25rem;
+  padding: 0 1rem 0 0.15rem;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  background: var(--surface2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  -webkit-mask-image: linear-gradient(to left, transparent, #000 1rem);
+  mask-image: linear-gradient(to left, transparent, #000 1rem);
+  animation: rx-roll 0.18s ease-out;
+}
+
+.rx-pick {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2rem;
+  border-radius: 999px;
+}
+
+.rx-pick .emoji {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+
+.rx-pick.mine {
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+@keyframes rx-roll {
+  from {
+    -webkit-clip-path: inset(0 100% 0 0);
+    clip-path: inset(0 100% 0 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rx-row {
+    animation: none;
+  }
+}
+
 .reactions {
   display: flex;
   flex-wrap: wrap;

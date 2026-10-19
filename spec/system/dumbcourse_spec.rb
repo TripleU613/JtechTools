@@ -670,6 +670,68 @@ RSpec.describe "Dumbcourse" do
     end
   end
 
+  # On a touch phone a post's footer rolls its reactions out beside the
+  # like, as many as the forum has turned on; the keypad keeps React… in the
+  # post's menu.
+  describe "reactions on a touch screen" do
+    before do
+      SiteSetting.discourse_reactions_enabled_reactions =
+        "+1|laughing|open_mouth|clap|confetti_ball|hugs|trophy|tada|fire|pray|thinking|100|eyes|rocket"
+      sign_in(bob)
+    end
+
+    let(:foot) { ".post[data-n='1'] .post-foot" }
+
+    it "rolls them out in the footer, in a row that scrolls, and picks one" do
+      resize_window(width: 360, height: 740) do
+        visit "/dumb/t/#{topic.slug}/#{topic.id}"
+        expect(page).to have_css("#{foot} .rx-open")
+        find("#{foot} .rx-open").click
+        # the heart is the like beside it, not in the row
+        expect(page).to have_css("#{foot}.rolled .rx-row .rx-pick", count: 14)
+        # the like and Reply stay, the rest step aside
+        expect(page).to have_css("#{foot} .pa.like")
+        expect(page).to have_css("#{foot} [data-act='reply-post']")
+        expect(page).to have_no_css("#{foot} [data-act='post-menu']")
+        scrolls =
+          page.evaluate_script(
+            "(() => { const r = document.querySelector(\"#{foot} .rx-row\"); return r.scrollWidth > r.clientWidth; })()",
+          )
+        expect(scrolls).to eq(true)
+        shot("reactions_row")
+
+        # a second tap shuts it
+        find("#{foot} .rx-open").click
+        expect(page).to have_no_css("#{foot} .rx-row")
+        expect(page).to have_css("#{foot} [data-act='post-menu']")
+
+        find("#{foot} .rx-open").click
+        find("#{foot} .rx-pick[data-reaction='fire']").click
+        try_until_success do
+          expect(
+            DiscourseReactions::ReactionUser.joins(:reaction).where(
+              user: bob,
+              post: op,
+              reaction: {
+                reaction_value: "fire",
+              },
+            ),
+          ).to exist
+        end
+        expect(page).to have_css(".post[data-n='1'] .rx.mine[data-reaction='fire']")
+        expect(page).to have_no_css("#{foot} .rx-row")
+      end
+    end
+
+    it "has no row on your own posts" do
+      resize_window(width: 360, height: 740) do
+        visit "/dumb/t/#{topic.slug}/#{topic.id}"
+        expect(page).to have_css(".post[data-n='2'] .post-foot")
+        expect(page).to have_no_css(".post[data-n='2'] .rx-open")
+      end
+    end
+  end
+
   describe "REQ-PM" do
     it "asks someone for their contact details from their profile" do
       sign_in(bob)

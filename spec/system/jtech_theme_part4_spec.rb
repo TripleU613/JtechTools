@@ -1017,4 +1017,134 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
     try_until_success { expect(page.evaluate_script(background)).to eq("rgb(0, 0, 0)") }
     expect_no_theme_errors
   end
+
+  # The Reactions plugin's picker as a row in the post's menu
+  # (reaction_rollout), with as many reactions as the forum might turn on.
+  describe "reactions as a row" do
+    fab!(:reader) { Fabricate(:user, username: "jt_reader", trust_level: TrustLevel[2]) }
+
+    let(:reply) { replies[1] }
+    let(:post_selector) { "#post_#{reply.post_number}" }
+    let(:open_row) { "#{post_selector} .discourse-reactions-picker.is-expanded" }
+
+    before do
+      SiteSetting.discourse_reactions_enabled_reactions =
+        "+1|laughing|open_mouth|clap|confetti_ball|hugs|trophy|tada|fire|pray|thinking|100|eyes|rocket"
+    end
+
+    def open_reply
+      sign_in(reader)
+      visit("#{topic.relative_url}/#{reply.post_number}")
+      expect(page).to have_css("#{post_selector} .discourse-reactions-reaction-button")
+      page.execute_script(
+        "document.querySelector(#{post_selector.to_json}).scrollIntoView({ block: 'center' })",
+      )
+    end
+
+    def box(selector)
+      page.evaluate_script(<<~JS)
+        (() => {
+          const r = document.querySelector(#{selector.to_json}).getBoundingClientRect();
+          return { left: Math.round(r.left), right: Math.round(r.right), top: Math.round(r.top), bottom: Math.round(r.bottom) };
+        })()
+      JS
+    end
+
+    def row_scrolls?
+      page.evaluate_script(<<~JS)
+        (() => {
+          const row = document.querySelector("#{open_row} .discourse-reactions-picker-container");
+          return row.scrollWidth > row.clientWidth;
+        })()
+      JS
+    end
+
+    it "rolls them out to the left of the heart, in the post's menu, when pointed at" do
+      open_reply
+      heart = "#{post_selector} .discourse-reactions-reaction-button"
+      before_left = box(heart)["left"]
+      find(heart).hover
+      expect(page).to have_css(open_row)
+      row = box("#{open_row} .discourse-reactions-picker-container")
+      menu = box("#{post_selector} nav.post-controls")
+      # in the menu's line, not over the post, and the heart didn't move
+      expect(row["top"]).to be >= menu["top"]
+      expect(row["bottom"]).to be <= menu["bottom"]
+      expect(row["right"]).to be <= box(heart)["left"]
+      expect(box(heart)["left"]).to eq(before_left)
+      # no button for it with a mouse
+      expect(page).to have_no_css("#{post_selector} .post-action-menu__jt-reaction-rollout")
+      shot("reactions-row")
+
+      find("#{open_row} .pickable-reaction.fire").click
+      expect(page).to have_no_css(open_row)
+      try_until_success do
+        expect(
+          DiscourseReactions::ReactionUser.joins(:reaction).where(
+            user: reader,
+            post: reply,
+            reaction: {
+              reaction_value: "fire",
+            },
+          ),
+        ).to exist
+      end
+      expect_no_theme_errors
+    end
+
+    it "scrolls a row that doesn't fit with the mouse wheel" do
+      SiteSetting.discourse_reactions_enabled_reactions +=
+        "|grinning|smiley|smile|grin|joy|wink|blush|innocent|heart_eyes|star_struck|sunglasses|nerd_face"
+      resize_window(width: 1000, height: 900) do
+        open_reply
+        find("#{post_selector} .discourse-reactions-reaction-button").hover
+        expect(page).to have_css(open_row)
+        shot("reactions-row-narrow")
+        expect(row_scrolls?).to eq(true)
+        find("#{open_row} .pickable-reaction.laughing").hover
+        page.driver.with_playwright_page { |pw| pw.mouse.wheel(0, 300) }
+        try_until_success do
+          expect(
+            page.evaluate_script(
+              "document.querySelector('#{open_row} .discourse-reactions-picker-container').scrollLeft",
+            ),
+          ).to be > 0
+        end
+      end
+    end
+
+    it "opens it with a tap on the button beside the heart on phones, on the heart's line",
+       mobile: true do
+      open_reply
+      heart = "#{post_selector} .discourse-reactions-reaction-button"
+      button = "#{post_selector} .post-action-menu__jt-reaction-rollout"
+      find(button).click
+      expect(page).to have_css(open_row)
+      row = box("#{open_row} .discourse-reactions-picker-container")
+      expect(row["top"]).to be < box(heart)["bottom"]
+      expect(row["bottom"]).to be > box(heart)["top"]
+      # the rest of the menu stepped aside, Reply stays; what doesn't fit scrolls
+      expect(page).to have_no_css("#{post_selector} .post-action-menu__copy-link")
+      expect(page).to have_css("#{post_selector} .post-action-menu__reply")
+      expect(row_scrolls?).to eq(true)
+      shot("reactions-row")
+
+      find(button).click
+      expect(page).to have_no_css(open_row)
+      expect(page).to have_css("#{post_selector} .post-action-menu__copy-link")
+      expect_no_theme_errors
+    end
+
+    it "leaves the plugin's picker over the post when switched off" do
+      jtech_theme.update_setting(:reaction_rollout, false)
+      jtech_theme.save!
+      open_reply
+      find("#{post_selector} .discourse-reactions-reaction-button").hover
+      expect(page).to have_css(open_row)
+      expect(
+        page.evaluate_script("getComputedStyle(document.querySelector('#{open_row}')).position"),
+      ).to eq("absolute")
+      expect(page).to have_no_css(".post-action-menu__jt-reaction-rollout")
+    end
+  end
 end

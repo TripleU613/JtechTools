@@ -241,3 +241,6 @@ reader_mode:
 qr_code_share:
   type: bool
   default: true
+reaction_rollout:
+  type: bool
+  default: true
