@@ -56,8 +56,19 @@ module DiscourseModElections
       }
     end
 
+    # Someone taken off the ballot (banned, anonymized, demoted or removed
+    # by an admin) drops off the page for everyone but admins, who see why
+    # in the Mod elections tab as well.
     def self.election_json(election, user, guardian)
-      candidates = election.candidates.where.not(status: :withdrawn).includes(:user).to_a
+      shown =
+        (
+          if guardian.is_admin?
+            election.candidates.where.not(status: :withdrawn)
+          else
+            election.candidates.running
+          end
+        )
+      candidates = shown.includes(:user).to_a
       {
         id: election.id,
         status: election.status,
@@ -77,7 +88,7 @@ module DiscourseModElections
         topic_url: topic_url(election, guardian),
         candidates:
           order(candidates, election, user).map do |c|
-            candidate_json(c, show_reason: user.present?)
+            candidate_json(c, show_reason: guardian.is_admin?)
           end,
         result: election.published? ? result_json(election.result) : nil,
         turnout: election.published? ? turnout(election) : nil,
@@ -124,8 +135,7 @@ module DiscourseModElections
       end
     end
 
-    # The reason an admin took someone off the ballot is for the forum's
-    # members, not for anyone (or any crawler) who opens the page.
+    # Why someone was taken off the ballot is for admins only.
     def self.candidate_json(candidate, show_reason:)
       {
         id: candidate.id,

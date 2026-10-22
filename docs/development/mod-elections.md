@@ -96,7 +96,8 @@ Every admin action goes in the staff action log through `StaffLog.log`, which pu
 | Ballot IP addresses | Admins, grouped by address, while the election is closed |
 | Weight (trust level when nominations opened) | Its voter |
 | Stage tallies, turnout, quota, seed | Everyone, once published |
-| Candidate statements, disqualification reasons | Everyone who can see the page |
+| Statements of candidates on the ballot | Everyone who can see the page |
+| Who was taken off the ballot, and why | Admins only (the admin tab, and the page for an admin); members see only who is running |
 
 Notifications carry only the election id, the step and a link. The MessageBus message carries only `{ changed: true }`. The Telegram notice when voting closes says nothing about the count (that chat can include moderators, who are candidates).
 
