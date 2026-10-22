@@ -642,6 +642,7 @@ en:
         edit: Edit statement
         withdraw: Drop out
         withdraw_confirm: Drop out of this election? You can run again until nominations close.
+        withdraw_confirm_voting: Drop out of this election? You can't come back on the ballot, and votes for you go to each voter's next choice.
         running: You're running.
         running_incumbent: You're on the ballot as a sitting moderator.
         counter: "%{count}/%{max}"

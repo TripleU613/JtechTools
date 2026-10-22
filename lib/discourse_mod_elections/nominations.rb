@@ -38,19 +38,19 @@ module DiscourseModElections
       end
     end
 
-    # Through Vote Week too, unlike running or dropping out.
+    # Through Vote Week too, unlike running.
     def self.update_statement!(user, election, statement)
-      election.change_in!(:statements) do
+      election.change_in!(:candidacy) do
         candidate = own_candidacy!(user, election)
         candidate.statement = clean(statement)
         save!(candidate)
       end
     end
 
+    # Through Vote Week too: votes for them move on to each voter's next
+    # choice. Only until nominations close can they run again.
     def self.withdraw!(user, election)
-      election.change_in!(:nominations) do
-        own_candidacy!(user, election).update!(status: :withdrawn)
-      end
+      election.change_in!(:candidacy) { own_candidacy!(user, election).update!(status: :withdrawn) }
     end
 
     # Under the election's lock, like publishing, so a count never sees a

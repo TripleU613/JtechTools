@@ -83,7 +83,7 @@ interface Election {
 interface Me {
   candidate: { id: number; status: string; statement: string } | null;
   run_blocked: string | null;
-  statement_editable: boolean;
+  candidacy_editable: boolean;
   weight: number | null;
   vote_blocked: string | null;
   ballot: {
@@ -248,7 +248,7 @@ function show(s: Screen, page: Page): void {
   let body: SafeHtml;
   if (e.status === "nominating") body = nominations(s, page, e);
   else if (e.status === "voting")
-    body = html`${statementButton(s, page, e)}${page.me && page.me.vote_blocked
+    body = html`${candidacyButtons(s, page, e)}${page.me && page.me.vote_blocked
       ? html`<p class="hint pad">${blockedText(page.me.vote_blocked, page)}</p>`
       : ""}${candidateList(e)}`;
   else if (e.status === "closed" && e.vote_skipped)
@@ -310,20 +310,7 @@ function nominations(s: Screen, page: Page, e: Election): SafeHtml {
 
   s.act("run", () => askStatement(s, page, e, true));
   s.act("edit", () => askStatement(s, page, e, false));
-  s.act("withdraw", () => {
-    void confirmDialog(
-      "Drop out of this election? You can run again until nominations close.",
-      { ok: "Drop out", danger: true }
-    ).then((yes) => {
-      if (!yes) return;
-      del<Page>(API + "/" + e.id + "/candidacy.json").then(
-        (next) => {
-          if (s.alive()) show(s, next);
-        },
-        (err: unknown) => toast(errorMessage(err), "error")
-      );
-    });
-  });
+  s.act("withdraw", () => dropOut(s, e));
 
   let mineBlock: SafeHtml | string = "";
   if (me && mine) {
@@ -386,18 +373,42 @@ function askStatement(s: Screen, page: Page, e: Election, first: boolean) {
   });
 }
 
-// In Vote Week, a candidate's way to change what they wrote.
-function statementButton(
+// Dropping out: in Vote Week too, but then there's no coming back.
+function dropOut(s: Screen, e: Election) {
+  void confirmDialog(
+    e.status === "nominating"
+      ? "Drop out of this election? You can run again until nominations close."
+      : "Drop out of this election? You can't come back on the ballot, and votes for you go to each voter's next choice.",
+    { ok: "Drop out", danger: true }
+  ).then((yes) => {
+    if (!yes) return;
+    del<Page>(API + "/" + e.id + "/candidacy.json").then(
+      (next) => {
+        if (s.alive()) show(s, next);
+      },
+      (err: unknown) => toast(errorMessage(err), "error")
+    );
+  });
+}
+
+// In Vote Week, a candidate's way to change what they wrote or drop out.
+function candidacyButtons(
   s: Screen,
   page: Page,
   e: Election
 ): SafeHtml | string {
-  if (!page.me || !page.me.statement_editable) return "";
-  if (!page.limits.statement_max_length) return "";
-  s.act("edit", () => askStatement(s, page, e, false));
+  if (!page.me || !page.me.candidacy_editable) return "";
+  const editable = !!page.limits.statement_max_length;
+  if (editable) s.act("edit", () => askStatement(s, page, e, false));
+  s.act("withdraw", () => dropOut(s, e));
   return html`<div class="pad" data-row>
-    <button type="button" class="btn" data-act="edit">
-      ${icon("edit")} Edit statement
+    ${editable
+      ? html`<button type="button" class="btn" data-act="edit">
+          ${icon("edit")} Edit statement
+        </button>`
+      : ""}
+    <button type="button" class="btn danger" data-act="withdraw">
+      Drop out
     </button>
   </div>`;
 }
@@ -414,7 +425,7 @@ function ballot(s: Screen, page: Page, e: Election, me: Me): void {
   // A candidate can't rank themselves; the server says so too, but there's
   // no need to offer it.
   const selfId = me.candidate ? me.candidate.id : 0;
-  const editStatement = statementButton(s, page, e);
+  const candidacy = candidacyButtons(s, page, e);
 
   const focusedId = (): number => {
     const el = document.activeElement;
@@ -454,7 +465,7 @@ function ballot(s: Screen, page: Page, e: Election, me: Me): void {
       </li>`;
 
     s.render(
-      html`${editStatement}
+      html`${candidacy}
         <p class="hint pad">
           Your vote counts ${String(me.weight || 0)}. On a candidate, press 1–9
           to put them in that place, 0 to take them off.

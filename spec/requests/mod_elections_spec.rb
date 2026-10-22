@@ -298,33 +298,42 @@ RSpec.describe "Mod elections endpoints" do
       expect(DiscourseModElections::Ballot.exists?(ballot.id)).to eq(false)
     end
 
-    it "lets a candidate change their statement in Vote Week, but not drop out" do
+    it "lets a candidate change their statement or drop out in Vote Week, and neither after it" do
       sign_in(member)
       get "/jtech-elections/current.json"
-      expect(response.parsed_body.dig("me", "statement_editable")).to eq(true)
+      expect(response.parsed_body.dig("me", "candidacy_editable")).to eq(true)
 
       put "/jtech-elections/#{election.id}/candidacy.json", params: { statement: "Changed" }
       expect(response.status).to eq(200)
       expect(member_candidate.reload.statement).to eq("Changed")
 
-      delete "/jtech-elections/#{election.id}/candidacy.json"
-      expect(response.parsed_body.dig("extras", "reason")).to eq("not_nominating")
-      expect(member_candidate.reload).to be_running
-
-      # Someone not running has no statement to change.
+      # Someone not running has nothing to change.
       sign_in(other)
       get "/jtech-elections/current.json"
-      expect(response.parsed_body.dig("me", "statement_editable")).to eq(false)
+      expect(response.parsed_body.dig("me", "candidacy_editable")).to eq(false)
       put "/jtech-elections/#{election.id}/candidacy.json", params: { statement: "Me too" }
       expect(response.parsed_body.dig("extras", "reason")).to eq("not_running")
+      DiscourseModElections::Voting.cast!(other, election, [member_candidate.id, mod_candidate.id])
+
+      # Out for good: votes for them move on.
+      sign_in(member)
+      delete "/jtech-elections/#{election.id}/candidacy.json"
+      expect(response.status).to eq(200)
+      expect(member_candidate.reload).to be_withdrawn
+      expect(response.parsed_body.dig("me", "candidacy_editable")).to eq(false)
+      post "/jtech-elections/#{election.id}/candidacy.json"
+      expect(response.parsed_body.dig("extras", "reason")).to eq("not_nominating")
 
       DiscourseModElections::Lifecycle.end_phase!(election, admin)
-      sign_in(member)
-      get "/jtech-elections/current.json"
-      expect(response.parsed_body.dig("me", "statement_editable")).to eq(false)
+      sign_in(moderator)
       put "/jtech-elections/#{election.id}/candidacy.json", params: { statement: "Too late" }
-      expect(response.parsed_body.dig("extras", "reason")).to eq("statements_closed")
-      expect(member_candidate.reload.statement).to eq("Changed")
+      expect(response.parsed_body.dig("extras", "reason")).to eq("candidacy_closed")
+      delete "/jtech-elections/#{election.id}/candidacy.json"
+      expect(response.parsed_body.dig("extras", "reason")).to eq("candidacy_closed")
+      expect(mod_candidate.reload).to be_running
+
+      preview = DiscourseModElections::Publisher.preview(election)
+      expect(preview[:result]["elected"]).to eq([mod_candidate.id])
     end
 
     it "doesn't let candidates vote for themselves" do

@@ -24,7 +24,8 @@ interface ModElectionsRunSignature {
 }
 
 // Nominations: run, change what you wrote, or drop out. Someone who can't
-// run sees why. In Vote Week a candidate can still change what they wrote.
+// run sees why. In Vote Week a candidate can still change what they wrote,
+// or drop out for good.
 export default class ModElectionsRun extends Component<ModElectionsRunSignature> {
   @service declare modElections: ModElectionsService;
   @service declare dialog: DialogService;
@@ -115,7 +116,11 @@ export default class ModElectionsRun extends Component<ModElectionsRunSignature>
   @action
   withdraw() {
     this.dialog.yesNoConfirm({
-      message: i18n("mod_elections.run.withdraw_confirm"),
+      message: i18n(
+        this.nominating
+          ? "mod_elections.run.withdraw_confirm"
+          : "mod_elections.run.withdraw_confirm_voting"
+      ),
       didConfirm: async () => {
         try {
           this.args.onChange(
@@ -189,7 +194,7 @@ export default class ModElectionsRun extends Component<ModElectionsRunSignature>
         </div>
         <div class="mod-elections-actions">
           {{#if this.maxLength}}
-            {{#if @me.statement_editable}}
+            {{#if @me.candidacy_editable}}
               <DButton
                 class="btn-default mod-elections-run__edit"
                 @action={{this.start}}
@@ -198,7 +203,7 @@ export default class ModElectionsRun extends Component<ModElectionsRunSignature>
               />
             {{/if}}
           {{/if}}
-          {{#if this.nominating}}
+          {{#if @me.candidacy_editable}}
             <DButton
               class="btn-flat btn-danger mod-elections-run__withdraw"
               @action={{this.withdraw}}

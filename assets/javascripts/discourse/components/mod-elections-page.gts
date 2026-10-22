@@ -360,7 +360,7 @@ export default class ModElectionsPage extends Component<ModElectionsPageSignatur
                 />
               {{/if}}
             {{else if (eq this.status "voting")}}
-              {{#if this.page.me.statement_editable}}
+              {{#if this.page.me.candidacy_editable}}
                 <ModElectionsRun
                   @election={{this.election}}
                   @limits={{this.page.limits}}
