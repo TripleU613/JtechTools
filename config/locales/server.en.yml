@@ -97,6 +97,15 @@ en:
       keeps their choice. Turning it on sets it for everyone within a few
       minutes; turning it off leaves the flairs it gave, which members can
       change.
+    jtech_badge_thresholds: Lower the top rungs of core's badge ladders to
+      what members here actually reach — likes on a post or topic (15 and 20
+      instead of 25 and 50), visitors from shared links, clicks on posted
+      links, Admired, the daily like limit, visit streaks (30 and 100 days
+      instead of 100 and 365) and solutions (3, 10 and 25 instead of 10, 50
+      and 150). Core puts its numbers back on every rebuild, so this sets them
+      again after. Turning it off takes effect on the next rebuild, and
+      badges whose numbers go back up are taken away on the next daily badge
+      run.
 
     # ── Jtech — Dislike ────────────────────────────────────────────────────
     discourse_no_likes_enabled: Turn on phantom reactions. When off, likes and
