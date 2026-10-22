@@ -269,13 +269,12 @@ RSpec.describe "Mod elections" do
     end
   end
 
-  it "lets a candidate change their statement in Vote Week" do
+  it "lets a candidate change their statement or drop out in Vote Week" do
     open_voting
     sign_in(chaim)
     visit "/elections"
 
     expect(page).to have_css(".mod-elections-ballot")
-    expect(page).to have_no_css(".mod-elections-run__withdraw")
     find(".mod-elections-run__edit").click
     find(".mod-elections-run__statement").fill_in(with: "Still answering Android questions.")
     find(".mod-elections-run__submit").click
@@ -285,6 +284,16 @@ RSpec.describe "Mod elections" do
       text: "Still answering Android questions.",
     )
     expect(candidate_for(chaim).reload.statement).to eq("Still answering Android questions.")
+
+    find(".mod-elections-run__withdraw").click
+    find(".dialog-footer .btn-primary").click
+    expect(page).to have_no_css(".mod-elections-run")
+    expect(candidate_for(chaim).reload).to be_withdrawn
+    # Still a voter, with them gone from the ballot.
+    expect(page).to have_css(".mod-elections-ballot")
+    expect(page).to have_no_css(
+      ".mod-elections-ballot [data-candidate-id='#{candidate_for(chaim).id}']",
+    )
   end
 
   it "doesn't offer a candidate their own name" do
