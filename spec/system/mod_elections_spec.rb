@@ -361,10 +361,9 @@ RSpec.describe "Mod elections" do
     visit "/admin/plugins/jtech-tools/mod-elections"
     find(".mod-elections-admin__preview").click
 
-    expect(page).to have_css(
-      ".mod-elections-admin__problems",
-      text: "#{chaim.username} is suspended.",
-    )
+    # The preview's list, not the moderators' suspensions beside it.
+    problems = ".mod-elections-admin__problems[role='alert']"
+    expect(page).to have_css(problems, text: "#{chaim.username} is suspended.")
     expect(page).to have_css(".mod-elections-admin__publish[disabled]")
 
     row = find(".mod-elections-admin__table tr[data-candidate-id='#{candidate_for(chaim).id}']")
@@ -376,7 +375,7 @@ RSpec.describe "Mod elections" do
     expect(page).to have_no_css(".mod-elections-results")
     find(".mod-elections-admin__preview").click
     expect(page).to have_css(".mod-elections-results__winner", text: dovid.username)
-    expect(page).to have_no_css(".mod-elections-admin__problems")
+    expect(page).to have_no_css(problems)
     expect(page).to have_no_css(".mod-elections-admin__publish[disabled]")
   end
 
