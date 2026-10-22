@@ -95,7 +95,9 @@ RSpec.describe "Dumbcourse app page" do
     end
 
     it "marks the posts its composer sends" do
-      sign_in(user)
+      # in the trust level groups, which may post
+      writer = Fabricate(:user, refresh_auto_groups: true)
+      sign_in(writer)
       post "/posts.json",
            params: {
              title: "Written on a flip phone",
