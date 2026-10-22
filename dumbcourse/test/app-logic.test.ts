@@ -45,6 +45,15 @@ test("REQ-PM: numbers without a country code dial as +1", () => {
   );
 });
 
+test("REQ-PM: a WhatsApp username is copy only", () => {
+  assert.equal(reqpm.actionFor(m("whatsapp", "@jtech.user"), "1"), null);
+  assert.equal(
+    reqpm.actionFor(m("whatsapp", "jtech6468201413"), "1"),
+    null,
+    "digits in a username are not a number"
+  );
+});
+
 test("REQ-PM: only safe links", () => {
   assert.equal(reqpm.actionFor(m("email", "a@b.co?cc=evil@x.com"), "1"), null);
   assert.deepEqual(reqpm.actionFor(m("email", "a@b.co"), "1"), {
