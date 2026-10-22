@@ -196,7 +196,7 @@ function watch(actions: Element) {
 }
 
 // The wheel turned over a row: it glides there rather than jumping a notch
-// at a time. At either end the page scrolls as usual.
+// at a time, and while the row can scroll at all it never scrolls the page.
 const glides = new WeakMap<
   HTMLElement,
   { target: number; pos: number; frame: number }
@@ -207,27 +207,25 @@ function glide(row: HTMLElement, wheel: WheelEvent) {
     return;
   }
   const end = row.scrollWidth - row.clientWidth;
+  // every reaction already shows: nothing to scroll, the page has the wheel
+  if (end < 1) {
+    return;
+  }
+  // Pointing at the row, the wheel is the row's, even at an end: a turn too
+  // many mustn't scroll the page out from under the reaction being aimed at.
+  wheel.preventDefault();
   const state = glides.get(row) ?? { target: 0, pos: 0, frame: 0 };
   glides.set(row, state);
   if (!state.frame) {
     state.target = state.pos = row.scrollLeft;
   }
   const step = wheel.deltaY * (wheel.deltaMode === 1 ? 16 : 1);
-  // Within a pixel of an end counts as there: at a fractional zoom a row
-  // stops short of its exact end, and the page has to get the wheel back.
-  if (
-    (step < 0 && state.target <= 1) ||
-    (step > 0 && state.target >= end - 1)
-  ) {
-    return;
-  }
-  wheel.preventDefault();
   state.target = Math.min(end, Math.max(0, state.target + step));
   if (stillMotion()) {
     row.scrollLeft = state.target;
     return;
   }
-  if (state.frame) {
+  if (state.frame || Math.abs(state.target - state.pos) < 0.5) {
     return;
   }
   let last = performance.now();
