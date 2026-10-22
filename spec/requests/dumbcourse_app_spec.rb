@@ -192,7 +192,8 @@ RSpec.describe "Dumbcourse app page" do
     before do
       SiteSetting.jtech_enabled = true
       SiteSetting.mod_elections_enabled = true
-      user.update!(trust_level: TrustLevel[2], created_at: 1.year.ago)
+      user.update!(created_at: 1.year.ago)
+      user.change_trust_level!(TrustLevel[2])
     end
 
     it "says whether they're on, and marks a vote due until it's cast" do
