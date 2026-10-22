@@ -97,6 +97,15 @@ en:
       keeps their choice. Turning it on sets it for everyone within a few
       minutes; turning it off leaves the flairs it gave, which members can
       change.
+    jtech_badge_thresholds: Lower the top rungs of core's badge ladders to
+      what members here actually reach — likes on a post or topic (15 and 20
+      instead of 25 and 50), visitors from shared links, clicks on posted
+      links, Admired, the daily like limit, visit streaks (30 and 100 days
+      instead of 100 and 365) and solutions (3, 10 and 25 instead of 10, 50
+      and 150). Core puts its numbers back on every rebuild, so this sets them
+      again after. Turning it off takes effect on the next rebuild, and
+      badges whose numbers go back up are taken away on the next daily badge
+      run.
 
     # ── Jtech — Dislike ────────────────────────────────────────────────────
     discourse_no_likes_enabled: Turn on phantom reactions. When off, likes and
@@ -1045,10 +1054,15 @@ en:
       write about themselves. 0 turns statements off.
     mod_elections_voter_min_account_age_days: How old an account has to be,
       when nominations open, to vote. The voter list is fixed at that moment,
-      and a vote counts as much as the voter's trust level then (trust level
-      0 doesn't vote). Someone suspended, silenced, anonymized or dropped to
+      and a vote counts as much as the voter's trust level then, up to 3
+      (trust level 4 counts 3, trust level 0 doesn't vote). Someone suspended, silenced, anonymized or dropped to
       trust level 0 since can't vote, and if they still can't when Vote Week
       ends, a ballot they cast is set aside.
+    mod_elections_moderators_cannot_vote: Sitting moderators don't vote. They're
+      on the ballot, so this stops them choosing who joins or replaces them.
+      With it on, they're left off the voter list when nominations open,
+      can't cast a ballot, and the ballot of anyone who is a moderator when
+      Vote Week ends is set aside (one cast before it was turned on too).
     mod_elections_former_mods_keep_tl4: Moderators who leave their seat
       (lose, step down or don't run) keep trust level 4, locked, so it marks
       people who were moderators. Trust level 4 can still edit posts and
@@ -1210,7 +1224,7 @@ en:
         They take their seats when an admin publishes the results.
       vote_skipped_nobody: "Nobody ran, so there's no Vote Week."
       voting_open: |
-        Vote Week is open until %{voting_close}. Rank the candidates on the elections page: your vote counts as much as your trust level.
+        Vote Week is open until %{voting_close}. Rank the candidates on the elections page: your vote counts as much as your trust level, up to 3.
 
         On the ballot:
         %{candidates}
@@ -1240,6 +1254,7 @@ en:
       candidacy_closed: "Vote Week is over, so candidates can't change their statement or drop out any more."
       not_allowed: "Your account can't take part right now."
       admin: "Admins don't run or vote."
+      moderator: "Sitting moderators don't vote."
       disqualified: "You were taken off the ballot for this election."
       already_running: "You're already running."
       not_running: "You're not running in this election."

@@ -39,6 +39,11 @@ jtech:
   jtech_trust_level_flair:
     default: false
     client: false
+  # Badge thresholds sized for this forum (lib/discourse_badge_thresholds.rb).
+  # On by default: with it off, every rebuild puts core's numbers back.
+  jtech_badge_thresholds:
+    default: true
+    client: false
 
 # ───────────────────────────────────────────────────────────────────────────
 # Jtech — Dislike (phantom reactions in restricted categories)
@@ -1511,6 +1516,12 @@ jtech_mod_elections:
     client: false
     min: 0
     max: 3650
+    depends_on:
+      - "mod_elections_enabled"
+  # Sitting moderators are on the ballot; with this on they don't vote.
+  mod_elections_moderators_cannot_vote:
+    default: false
+    client: false
     depends_on:
       - "mod_elections_enabled"
 
