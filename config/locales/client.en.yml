@@ -853,6 +853,7 @@ en:
           problems:
             title: "These winners can't take a seat now. Take them off the ballot and preview again; the count gives the seat to the next in line."
             deleted: "%{username} was deleted."
+            anonymized: "%{username} was anonymized."
             admin: "%{username} is an admin now."
             suspended: "%{username} is suspended."
             silenced: "%{username} is silenced."

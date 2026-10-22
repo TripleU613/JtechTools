@@ -5,7 +5,7 @@ module DiscourseModElections
   # the voter's trust level at that moment, so trust level 0 isn't on it.
   # Admins aren't either: they don't vote. Nor is anyone who can't open the
   # elections page then. A trust level that drops later lowers the vote or
-  # takes it away (TrustDrop).
+  # takes it away (Standing).
   module Roll
     def self.snapshot!(election, now: Time.zone.now)
       DB.exec(<<~SQL, election_id: election.id, cutoff: now - min_age, now: now)
@@ -22,6 +22,7 @@ module DiscourseModElections
           AND (u.silenced_till IS NULL OR u.silenced_till <= :now)
           AND NOT EXISTS (SELECT 1 FROM anonymous_users a WHERE a.user_id = u.id)
           AND #{can_view_sql("u")}
+          AND NOT #{Standing.anonymized_sql("u")}
         ON CONFLICT (election_id, user_id) DO NOTHING
       SQL
     end

@@ -371,6 +371,7 @@ module DiscourseModElections
     def self.problem_reason(user)
       return "deleted" if user.nil?
       return "admin" if user.admin?
+      return "anonymized" if Standing.anonymized?(user)
       return "suspended" if user.suspended?
       return "silenced" if user.silenced?
       "inactive"

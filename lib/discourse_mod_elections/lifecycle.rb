@@ -8,6 +8,7 @@ module DiscourseModElections
       return unless DiscourseModElections.enabled?
       schedule!(now)
       Election.unfinished.order(:id).each { |election| advance!(election, now) }
+      Election.where(status: %i[nominating voting]).order(:id).each { |e| Standing.check!(e) }
     end
 
     # Creates the election the calendar says should be running, unless

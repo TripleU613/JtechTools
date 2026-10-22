@@ -55,7 +55,7 @@ require_relative "../lib/discourse_mod_elections/disteleplus"
 require_relative "../lib/discourse_mod_elections/announcer"
 require_relative "../lib/discourse_mod_elections/nominations"
 require_relative "../lib/discourse_mod_elections/voting"
-require_relative "../lib/discourse_mod_elections/trust_drop"
+require_relative "../lib/discourse_mod_elections/standing"
 require_relative "../lib/discourse_mod_elections/tally"
 require_relative "../lib/discourse_mod_elections/seats"
 require_relative "../lib/discourse_mod_elections/publisher"
@@ -85,12 +85,21 @@ after_initialize do
     include_condition: -> { DiscourseModElections.enabled? },
   ) { DiscourseModElections::Eligibility.can_view?(object) }
 
-  # Core fires this for drops too.
+  # Core fires this for drops too, before it moves the user out of the
+  # trust level groups, so the check waits for the change to be saved.
+  # Standing.check! runs every minute anyway; this is so it happens at once.
   on(:user_promoted) do |args|
     next unless DiscourseModElections.enabled?
     next if args[:new_trust_level].to_i >= args[:old_trust_level].to_i
-    user = User.find_by(id: args[:user_id])
-    DiscourseModElections::TrustDrop.apply!(user, args[:new_trust_level].to_i) if user
+    DB.after_commit do
+      user = User.find_by(id: args[:user_id])
+      DiscourseModElections::Standing.check_user!(user) if user
+    end
+  end
+
+  on(:user_anonymized) do |args|
+    next unless DiscourseModElections.enabled?
+    DiscourseModElections::Standing.check_user!(args[:user])
   end
 
   # By now the account's candidacies have no user (the foreign key nulls

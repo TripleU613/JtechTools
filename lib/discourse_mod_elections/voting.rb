@@ -17,7 +17,7 @@ module DiscourseModElections
         raise Error.new(:self_vote) if ids.any? { |id| running[id] == user.id }
 
         ballot = Ballot.find_or_initialize_by(election_id: election.id, user_id: user.id)
-        # Never more than the voter's trust level now (TrustDrop)
+        # Never more than the voter's trust level now (Standing)
         weight = [voter.weight, user.trust_level].min
         ballot.update!(ranking: ids, weight: weight, ip_address: ip_address)
         ballot

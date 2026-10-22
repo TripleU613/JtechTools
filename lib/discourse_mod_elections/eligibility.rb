@@ -7,7 +7,7 @@ module DiscourseModElections
     def self.member?(user)
       return false if user.nil? || user.id.to_i <= 0
       return false if user.staged? || !user.active? || user.suspended? || user.silenced?
-      !user.anonymous?
+      !user.anonymous? && !Standing.anonymized?(user)
     end
 
     # Someone who may hold a seat: a member in good standing who isn't an
@@ -48,8 +48,8 @@ module DiscourseModElections
 
     def self.vote_blocked_reason(user, election, voter, now: Time.zone.now)
       return :not_voting unless election.taking_votes?(now)
-      # A drop below trust level 1 takes the voter off the list
-      # (TrustDrop); checked here too in case that was missed.
+      # Standing takes such voters off the list; checked here too for the
+      # minute before it does.
       return :not_allowed unless member?(user) && can_view?(user) && user.trust_level > 0
       return :admin if user.admin?
       return :not_on_roll if voter.nil?
@@ -72,6 +72,7 @@ module DiscourseModElections
           .where("users.silenced_till IS NULL OR users.silenced_till <= ?", now)
           .where.not(id: on_ballot)
           .where(Roll.can_view_sql("users"))
+          .where("NOT #{Standing.anonymized_sql("users")}")
       min_age = SiteSetting.mod_elections_candidate_min_account_age_days.days
       qualified =
         members.where(

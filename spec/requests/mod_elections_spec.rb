@@ -397,6 +397,29 @@ RSpec.describe "Mod elections endpoints" do
       )
     end
 
+    it "takes an anonymized account off the ballot and the voter list" do
+      DiscourseModElections::Voting.cast!(member, election, [mod_candidate.id])
+      UserAnonymizer.make_anonymous(member, admin)
+
+      expect(member_candidate.reload.status).to eq("withdrawn")
+      expect(DiscourseModElections::Voter.where(election: election, user: member)).to be_empty
+      expect(DiscourseModElections::Ballot.where(election: election, user: member)).to be_empty
+      expect(DiscourseModElections::Eligibility.member?(member.reload)).to eq(false)
+    end
+
+    it "catches up every minute with anyone already below the bar" do
+      member.update_columns(trust_level: TrustLevel[1])
+      other.update_columns(trust_level: TrustLevel[2])
+      newbie.update_columns(trust_level: TrustLevel[0])
+
+      DiscourseModElections::Lifecycle.tick
+
+      expect(member_candidate.reload.status).to eq("disqualified")
+      expect(DiscourseModElections::Voter.find_by(election: election, user: other).weight).to eq(2)
+      expect(DiscourseModElections::Voter.where(election: election, user: newbie)).to be_empty
+      expect(mod_candidate.reload.status).to eq("running")
+    end
+
     it "changes nothing once voting has closed" do
       DiscourseModElections::Voting.cast!(newbie, election, [mod_candidate.id])
       DiscourseModElections::Lifecycle.end_phase!(election, admin)
