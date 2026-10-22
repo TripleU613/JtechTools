@@ -806,11 +806,18 @@ RSpec.describe "Mod elections endpoints" do
       expect(response.status).to eq(200)
     end
 
-    it "follows mod_elections_view_allowed_groups, staff aside" do
+    it "follows mod_elections_view_allowed_groups, staff and the voter list aside" do
       SiteSetting.mod_elections_view_allowed_groups = Group::AUTO_GROUPS[:trust_level_3].to_s
-      sign_in(newbie)
+      # Too new for the voter list, so only the setting decides
+      late = Fabricate(:user, trust_level: TrustLevel[2], refresh_auto_groups: true)
+      sign_in(late)
       get "/jtech-elections/current.json"
       expect(response.status).to eq(403)
+
+      # On the list made when nominations opened: the setting changed since
+      sign_in(newbie)
+      get "/jtech-elections/current.json"
+      expect(response.status).to eq(200)
 
       sign_in(other)
       get "/jtech-elections/current.json"
@@ -820,6 +827,52 @@ RSpec.describe "Mod elections endpoints" do
       sign_in(moderator)
       get "/jtech-elections/current.json"
       expect(response.status).to eq(200)
+    end
+
+    it "stays open to voters and candidates whose trust level drops during the election" do
+      election = DiscourseModElections::Election.last
+      DiscourseModElections::Nominations.run!(member, election, "")
+      open_voting(election)
+      candidate = election.candidates.find_by(user: member)
+      newbie.change_trust_level!(TrustLevel[0])
+      member.change_trust_level!(TrustLevel[0])
+
+      sign_in(newbie)
+      get "/session/current.json"
+      expect(response.parsed_body.dig("current_user", "can_view_mod_elections")).to eq(true)
+      expect(response.parsed_body.dig("current_user", "mod_election", "voter")).to eq(true)
+      get "/jtech-elections/current.json"
+      expect(response.status).to eq(200)
+      expect(response.parsed_body.dig("me", "weight")).to eq(1)
+      put "/jtech-elections/#{election.id}/ballot.json", params: { ranking: [candidate.id] }
+      expect(response.status).to eq(200)
+      expect(DiscourseModElections::Ballot.find_by(user: newbie).weight).to eq(1)
+
+      sign_in(member)
+      get "/jtech-elections/current.json"
+      expect(response.status).to eq(200)
+      expect(response.parsed_body.dig("me", "candidate", "status")).to eq("running")
+
+      # Someone who was never on the list still can't get in.
+      sign_in(visitor)
+      get "/jtech-elections/current.json"
+      expect(response.status).to eq(403)
+    end
+
+    it "only lists voters and takes candidates who could open the page" do
+      DiscourseModElections::Publisher.cancel!(DiscourseModElections::Election.last, admin)
+      SiteSetting.mod_elections_view_allowed_groups = Group::AUTO_GROUPS[:trust_level_3].to_s
+      election = start_election
+      expect(election.voters.pluck(:user_id)).to contain_exactly(moderator.id, other.id)
+      expect(DiscourseModElections::Eligibility.could_run(election)).not_to include(member)
+      expect(DiscourseModElections::Eligibility.run_blocked_reason(member, election)).to eq(
+        :not_allowed,
+      )
+      expect(DiscourseModElections::Eligibility.run_blocked_reason(other, election)).to be_nil
+
+      sign_in(member)
+      get "/jtech-elections/current.json"
+      expect(response.status).to eq(403)
     end
 
     it "tells the browser who may open it" do
