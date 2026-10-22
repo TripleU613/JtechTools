@@ -55,6 +55,7 @@ require_relative "../lib/discourse_mod_elections/disteleplus"
 require_relative "../lib/discourse_mod_elections/announcer"
 require_relative "../lib/discourse_mod_elections/nominations"
 require_relative "../lib/discourse_mod_elections/voting"
+require_relative "../lib/discourse_mod_elections/trust_drop"
 require_relative "../lib/discourse_mod_elections/tally"
 require_relative "../lib/discourse_mod_elections/seats"
 require_relative "../lib/discourse_mod_elections/publisher"
@@ -83,6 +84,14 @@ after_initialize do
     :can_view_mod_elections,
     include_condition: -> { DiscourseModElections.enabled? },
   ) { DiscourseModElections::Eligibility.can_view?(object) }
+
+  # Core fires this for drops too.
+  on(:user_promoted) do |args|
+    next unless DiscourseModElections.enabled?
+    next if args[:new_trust_level].to_i >= args[:old_trust_level].to_i
+    user = User.find_by(id: args[:user_id])
+    DiscourseModElections::TrustDrop.apply!(user, args[:new_trust_level].to_i) if user
+  end
 
   # By now the account's candidacies have no user (the foreign key nulls
   # it); take them off any ballot still open.

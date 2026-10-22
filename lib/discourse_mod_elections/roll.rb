@@ -3,9 +3,9 @@
 module DiscourseModElections
   # The voter list, fixed when nominations open. A vote counts as much as
   # the voter's trust level at that moment, so trust level 0 isn't on it.
-  # Admins aren't either: they don't vote. Only people who can open the
-  # elections page then are on it; being on it keeps the page open to them
-  # for the rest of the election (Eligibility.can_view?).
+  # Admins aren't either: they don't vote. Nor is anyone who can't open the
+  # elections page then. A trust level that drops later lowers the vote or
+  # takes it away (TrustDrop).
   module Roll
     def self.snapshot!(election, now: Time.zone.now)
       DB.exec(<<~SQL, election_id: election.id, cutoff: now - min_age, now: now)

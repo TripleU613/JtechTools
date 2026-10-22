@@ -16,24 +16,13 @@ module DiscourseModElections
       member?(user) && !user.admin?
     end
 
-    # Who can open the elections page: staff, members of
-    # mod_elections_view_allowed_groups (trust level 1 by default), and
-    # anyone on the voter list or the ballot of the election under way. The
-    # list is fixed when nominations open, so a trust level that drops since
-    # (or a group they leave) mustn't take away the vote they were given.
-    # Never a visitor.
+    # Who can open the elections page: staff, and members of
+    # mod_elections_view_allowed_groups (trust level 1 by default). Never a
+    # visitor.
     def self.can_view?(user)
       return false if user.nil? || user.id.to_i <= 0
       return true if user.staff?
-      return true if user.in_any_groups?(SiteSetting.mod_elections_view_allowed_groups_map)
-      taking_part?(user)
-    end
-
-    def self.taking_part?(user)
-      active = State.active
-      return false if active.nil?
-      Voter.where(election_id: active[:id], user_id: user.id).exists? ||
-        Candidate.where(election_id: active[:id], user_id: user.id).exists?
+      user.in_any_groups?(SiteSetting.mod_elections_view_allowed_groups_map)
     end
 
     def self.run_blocked_reason(user, election, now: Time.zone.now)
@@ -59,7 +48,9 @@ module DiscourseModElections
 
     def self.vote_blocked_reason(user, election, voter, now: Time.zone.now)
       return :not_voting unless election.taking_votes?(now)
-      return :not_allowed unless member?(user)
+      # A drop below trust level 1 takes the voter off the list
+      # (TrustDrop); checked here too in case that was missed.
+      return :not_allowed unless member?(user) && can_view?(user) && user.trust_level > 0
       return :admin if user.admin?
       return :not_on_roll if voter.nil?
       nil

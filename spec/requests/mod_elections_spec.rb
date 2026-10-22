@@ -337,6 +337,77 @@ RSpec.describe "Mod elections endpoints" do
     end
   end
 
+  describe "a trust level that drops during the election" do
+    let!(:election) { start_election }
+    let(:mod_candidate) { election.candidates.find_by(user: moderator) }
+    let!(:member_candidate) { DiscourseModElections::Nominations.run!(member, election, "") }
+
+    before { open_voting(election) }
+
+    it "lowers the vote to the new level, ballot included" do
+      DiscourseModElections::Voting.cast!(other, election, [mod_candidate.id])
+      other.change_trust_level!(TrustLevel[2])
+
+      expect(DiscourseModElections::Voter.find_by(election: election, user: other).weight).to eq(2)
+      expect(DiscourseModElections::Ballot.find_by(election: election, user: other).weight).to eq(2)
+    end
+
+    it "takes the vote away below trust level 1" do
+      DiscourseModElections::Voting.cast!(newbie, election, [mod_candidate.id])
+      newbie.change_trust_level!(TrustLevel[0])
+
+      expect(DiscourseModElections::Voter.where(election: election, user: newbie)).to be_empty
+      expect(DiscourseModElections::Ballot.where(election: election, user: newbie)).to be_empty
+      sign_in(newbie)
+      get "/session/current.json"
+      expect(response.parsed_body.dig("current_user", "mod_election", "voter")).to eq(false)
+      put "/jtech-elections/#{election.id}/ballot.json", params: { ranking: [mod_candidate.id] }
+      expect(response.status).to eq(403).or eq(422)
+      expect(DiscourseModElections::Ballot.where(election: election, user: newbie)).to be_empty
+    end
+
+    it "takes the vote away when the new level can't open the page" do
+      SiteSetting.mod_elections_view_allowed_groups = Group::AUTO_GROUPS[:trust_level_2].to_s
+      other.change_trust_level!(TrustLevel[1])
+      expect(DiscourseModElections::Voter.where(election: election, user: other)).to be_empty
+    end
+
+    it "takes a candidate below the level to run off the ballot, and says why" do
+      member.change_trust_level!(TrustLevel[1])
+
+      expect(member_candidate.reload.status).to eq("disqualified")
+      expect(member_candidate.disqualified_reason).to eq(
+        I18n.t("mod_elections.reasons.trust_level"),
+      )
+      expect(Notification.where(user: member).last.data_hash[:mod_election_kind]).to eq(
+        "trust_level_dropped",
+      )
+      expect(DiscourseModElections::Voter.find_by(election: election, user: member).weight).to eq(1)
+    end
+
+    it "leaves sitting moderators on the ballot, and rises alone" do
+      moderator.change_trust_level!(TrustLevel[1])
+      expect(mod_candidate.reload.status).to eq("running")
+
+      newbie.change_trust_level!(TrustLevel[3])
+      expect(DiscourseModElections::Voter.find_by(election: election, user: newbie).weight).to eq(1)
+      DiscourseModElections::Voting.cast!(newbie, election, [mod_candidate.id])
+      expect(DiscourseModElections::Ballot.find_by(election: election, user: newbie).weight).to eq(
+        1,
+      )
+    end
+
+    it "changes nothing once voting has closed" do
+      DiscourseModElections::Voting.cast!(newbie, election, [mod_candidate.id])
+      DiscourseModElections::Lifecycle.end_phase!(election, admin)
+      member.change_trust_level!(TrustLevel[0])
+      newbie.change_trust_level!(TrustLevel[0])
+
+      expect(member_candidate.reload.status).to eq("running")
+      expect(DiscourseModElections::Ballot.where(election: election, user: newbie)).to exist
+    end
+  end
+
   describe "the admin tab" do
     let!(:election) { start_election(seats: 1) }
 
@@ -806,18 +877,11 @@ RSpec.describe "Mod elections endpoints" do
       expect(response.status).to eq(200)
     end
 
-    it "follows mod_elections_view_allowed_groups, staff and the voter list aside" do
+    it "follows mod_elections_view_allowed_groups, staff aside" do
       SiteSetting.mod_elections_view_allowed_groups = Group::AUTO_GROUPS[:trust_level_3].to_s
-      # Too new for the voter list, so only the setting decides
-      late = Fabricate(:user, trust_level: TrustLevel[2], refresh_auto_groups: true)
-      sign_in(late)
-      get "/jtech-elections/current.json"
-      expect(response.status).to eq(403)
-
-      # On the list made when nominations opened: the setting changed since
       sign_in(newbie)
       get "/jtech-elections/current.json"
-      expect(response.status).to eq(200)
+      expect(response.status).to eq(403)
 
       sign_in(other)
       get "/jtech-elections/current.json"
@@ -827,36 +891,6 @@ RSpec.describe "Mod elections endpoints" do
       sign_in(moderator)
       get "/jtech-elections/current.json"
       expect(response.status).to eq(200)
-    end
-
-    it "stays open to voters and candidates whose trust level drops during the election" do
-      election = DiscourseModElections::Election.last
-      DiscourseModElections::Nominations.run!(member, election, "")
-      open_voting(election)
-      candidate = election.candidates.find_by(user: member)
-      newbie.change_trust_level!(TrustLevel[0])
-      member.change_trust_level!(TrustLevel[0])
-
-      sign_in(newbie)
-      get "/session/current.json"
-      expect(response.parsed_body.dig("current_user", "can_view_mod_elections")).to eq(true)
-      expect(response.parsed_body.dig("current_user", "mod_election", "voter")).to eq(true)
-      get "/jtech-elections/current.json"
-      expect(response.status).to eq(200)
-      expect(response.parsed_body.dig("me", "weight")).to eq(1)
-      put "/jtech-elections/#{election.id}/ballot.json", params: { ranking: [candidate.id] }
-      expect(response.status).to eq(200)
-      expect(DiscourseModElections::Ballot.find_by(user: newbie).weight).to eq(1)
-
-      sign_in(member)
-      get "/jtech-elections/current.json"
-      expect(response.status).to eq(200)
-      expect(response.parsed_body.dig("me", "candidate", "status")).to eq("running")
-
-      # Someone who was never on the list still can't get in.
-      sign_in(visitor)
-      get "/jtech-elections/current.json"
-      expect(response.status).to eq(403)
     end
 
     it "only lists voters and takes candidates who could open the page" do

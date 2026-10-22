@@ -18,6 +18,7 @@ module DiscourseModElections
       closed
       results
       disqualified
+      trust_level_dropped
       seat_filled
       schedule_blocked
     ].freeze

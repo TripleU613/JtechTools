@@ -1012,9 +1012,7 @@ en:
       (the candidates, their statements, the ballot and the results) and get
       its sidebar link, banner and Dumbcourse menu entry. Trust level 1 by
       default. Logged-out visitors are sent to log in. Admins and moderators
-      always can, and so can anyone on the current election's voter list or
-      ballot, whatever happens to their trust level until the results are
-      published. Only people who can open the page are put on the voter list
+      always can. Only people who can open the page are put on the voter list
       or can run. Running and voting have their own rules below.
     mod_elections_schedule_months: Months an election starts in. Nominations
       open at midnight on the 1st, in the time zone below.
@@ -1185,6 +1183,7 @@ en:
       closed: "Voting has closed. Check the ballots and publish the results."
       results: "The results are in."
       disqualified: "An admin took you off the ballot. The reason is on the elections page."
+      trust_level_dropped: "Your trust level dropped below what running needs, so you're off the ballot for this election."
       seat_filled: "A seat opened up and the count gave it to you. You're a moderator."
       schedule_blocked: "The next scheduled election can't start while this one is unfinished. Publish or cancel it, or that election is skipped."
     topic:
@@ -1265,6 +1264,7 @@ en:
       module_off: "Mod elections are off. Turn them on in the settings below first."
     reasons:
       removed: "Removed as a moderator."
+      trust_level: "Their trust level dropped below what running needs."
     telegram:
       closed: "Voting has closed. <a href=\"%{url}\">Check the ballots and publish the results</a>."
       vote_skipped: "There are no more candidates than seats, so there's no Vote Week. <a href=\"%{url}\">Publish the results</a>."
