@@ -60,6 +60,11 @@
 }
 
 .badge-card {
+  // The card's inset and title size, shared with the earned check below
+  --jt-badge-pad-y: var(--space-4);
+  --jt-badge-pad-x: var(--space-5);
+  --jt-badge-title: var(--jt-text-body);
+  --jt-badge-check: 1.125rem;
   background: var(--jt-surface-raised);
   border: 1px solid var(--jt-border);
   border-radius: var(--jt-radius-lg);
@@ -75,7 +80,7 @@
 
   .badge-contents {
     gap: var(--space-4);
-    padding: var(--space-4) var(--space-5);
+    padding: var(--jt-badge-pad-y) var(--jt-badge-pad-x);
 
     .badge-icon {
       --badge-icon-size: 2.75rem;
@@ -83,7 +88,7 @@
 
     .badge-info h3 {
       margin: 0;
-      font-size: var(--jt-text-body);
+      font-size: var(--jt-badge-title);
       font-weight: 600;
       line-height: 1.3;
       letter-spacing: var(--jt-tracking-ui);
@@ -130,18 +135,44 @@
     border-radius: var(--jt-radius-md) 0 var(--jt-radius-lg) 0;
   }
 
+  // "You have this badge": core's green success dot in the theme's accent,
+  // centred on the title's first line at the card's inset, not 5px into
+  // the corner; the title keeps clear of it
+  > .check-display.status-checked {
+    top: calc(
+      var(--jt-badge-pad-y) +
+        (var(--jt-badge-title) * 1.3 - var(--jt-badge-check)) / 2
+    );
+    right: var(--jt-badge-pad-x);
+    width: var(--jt-badge-check);
+    height: var(--jt-badge-check);
+    background: var(--jt-accent);
+    border-radius: 50%;
+
+    .d-icon {
+      font-size: calc(var(--jt-badge-check) * 0.55);
+      color: var(--jt-on-accent);
+    }
+  }
+
+  &:has(> .check-display) .badge-info {
+    padding-right: calc(var(--jt-badge-check) + var(--space-2));
+  }
+
   // The badge's own page: its card bigger, its description whole
   &.--badge-large {
+    --jt-badge-pad-y: var(--space-5);
+    --jt-badge-pad-x: var(--space-6);
+    --jt-badge-title: var(--jt-text-xl);
+
     .badge-contents {
       gap: var(--space-5);
-      padding: var(--space-5) var(--space-6);
 
       .badge-icon {
         --badge-icon-size: 4rem;
       }
 
       h3 {
-        font-size: var(--jt-text-xl);
         font-weight: 700;
         letter-spacing: var(--jt-tracking-heading);
       }
