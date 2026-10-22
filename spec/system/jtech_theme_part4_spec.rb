@@ -1095,6 +1095,12 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
     it "scrolls a row that doesn't fit with the mouse wheel" do
       SiteSetting.discourse_reactions_enabled_reactions +=
         "|grinning|smiley|smile|grin|joy|wink|blush|innocent|heart_eyes|star_struck|sunglasses|nerd_face"
+      # already reacted to: the plugin's count comes before the heart
+      DiscourseReactions::ReactionManager.new(
+        reaction_value: "fire",
+        user: Fabricate(:user),
+        post: reply,
+      ).toggle!
       resize_window(width: 1000, height: 900) do
         open_reply
         find("#{post_selector} .discourse-reactions-reaction-button").hover
@@ -1102,6 +1108,7 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
         shot("reactions-row-narrow")
         expect(row_scrolls?).to eq(true)
         find("#{open_row} .pickable-reaction.laughing").hover
+        scrolled = page.evaluate_script("window.scrollY")
         page.driver.with_playwright_page { |pw| pw.mouse.wheel(0, 300) }
         try_until_success do
           expect(
@@ -1110,6 +1117,8 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
             ),
           ).to be > 0
         end
+        # the row's, not the page's
+        expect(page.evaluate_script("window.scrollY")).to eq(scrolled)
       end
     end
 

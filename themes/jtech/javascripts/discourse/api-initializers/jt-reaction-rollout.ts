@@ -265,10 +265,13 @@ function glide(row: HTMLElement, wheel: WheelEvent) {
 // anywhere in its menu.
 function pointedAt(event: PointerEvent) {
   const target = event.target as Element | null;
-  // anywhere in the menu: on touch screens the theme's own button opens it
+  // anywhere in the menu: on touch screens the theme's own button opens it.
+  // The heart's own: a post with reactions has the plugin's count first,
+  // in reactions of its own that never open.
   const actions = target
     ?.closest?.(".post-controls")
-    ?.querySelector(".discourse-reactions-actions");
+    ?.querySelector(".discourse-reactions-reaction-button")
+    ?.closest(".discourse-reactions-actions");
   if (actions) {
     watch(actions);
   }
