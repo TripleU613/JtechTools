@@ -13,7 +13,7 @@ module DiscourseReqpm
     PRESETS = {
       "phone" => :phone,
       "sms" => :phone,
-      "whatsapp" => :phone,
+      "whatsapp" => :handle_or_phone,
       "email" => :email,
       "website" => :url,
       "telegram" => :handle_or_phone,

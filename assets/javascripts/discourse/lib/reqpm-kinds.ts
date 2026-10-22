@@ -45,7 +45,12 @@ export interface ReqpmAction {
 export const KINDS: ReqpmKindInfo[] = [
   { id: "phone", icon: "phone", input: "tel", inputmode: "tel" },
   { id: "sms", icon: "comment-sms", input: "tel", inputmode: "tel" },
-  { id: "whatsapp", icon: "fab-whatsapp", input: "tel", inputmode: "tel" },
+  {
+    id: "whatsapp",
+    icon: "fab-whatsapp",
+    input: "text",
+    inputmode: "text",
+  },
   { id: "email", icon: "envelope", input: "email", inputmode: "email" },
   { id: "website", icon: "globe", input: "url", inputmode: "url" },
   { id: "telegram", icon: "fab-telegram", input: "text", inputmode: "text" },
@@ -141,8 +146,12 @@ export function actionFor(
     case "sms":
       return { href: `sms:${dialable(value, defaultCode)}`, label: "text" };
     case "whatsapp": {
-      // wa.me needs the full international number; no guessing.
-      const intl = internationalDigits(value, defaultCode);
+      // wa.me needs the full international number; no guessing. A username
+      // has no link to build, so it is copy only — and its digits must not
+      // be read as a number.
+      const intl = looksLikePhone(value)
+        ? internationalDigits(value, defaultCode)
+        : null;
       return intl && intl.length >= 8
         ? { href: `https://wa.me/${intl}`, label: "chat" }
         : null;

@@ -180,10 +180,10 @@ en:
           short: Text
           placeholder: "(718) 555-0100"
         whatsapp:
-          field: WhatsApp number
+          field: Number or username
           name: WhatsApp
           short: WhatsApp
-          placeholder: "(718) 555-0100"
+          placeholder: "(718) 555-0100 or @username"
         email:
           field: Address
           name: Email

@@ -171,7 +171,9 @@ export function actionFor(
     case "sms":
       return { href: "sms:" + dial(), label: "Text" };
     case "whatsapp": {
-      const intl = internationalDigits(value, defaultCode);
+      const intl = looksLikePhone(value)
+        ? internationalDigits(value, defaultCode)
+        : null;
       return intl && intl.length >= 8
         ? { href: "https://wa.me/" + intl, label: "WhatsApp" }
         : null;
@@ -576,7 +578,7 @@ function renderCard(
 }
 
 function editMethod(m: Method | null, kind: string, done: () => void): void {
-  const tel = kind === "phone" || kind === "sms" || kind === "whatsapp";
+  const tel = kind === "phone" || kind === "sms";
   const askLabel = (): Promise<string | null> =>
     kind === "custom"
       ? promptDialog("What is it called?", {

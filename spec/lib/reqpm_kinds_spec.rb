@@ -110,6 +110,13 @@ RSpec.describe DiscourseReqpm::Kinds do
       expect(normalize(kind: "discord", value: "someone#1234")[:value]).to eq("someone#1234")
     end
 
+    it "accepts a username or a number for whatsapp" do
+      expect(normalize(kind: "whatsapp", value: "@jtech.user")[:value]).to eq("@jtech.user")
+      expect(normalize(kind: "whatsapp", value: "jtech_user2026")[:value]).to eq("jtech_user2026")
+      expect(normalize(kind: "whatsapp", value: "646-820-1413")[:value]).to eq("+1 646-820-1413")
+      expect(reason_for(kind: "whatsapp", value: "two words")).to eq(%i[value handle])
+    end
+
     it "rejects spaces and markup" do
       expect(reason_for(kind: "discord", value: "<b>x</b>")).to eq(%i[value handle])
       expect(reason_for(kind: "telegram", value: "two words")).to eq(%i[value handle])
