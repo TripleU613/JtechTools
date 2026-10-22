@@ -115,6 +115,17 @@ function open(row: HTMLElement, actions: Element) {
     },
     { passive: true }
   );
+  // On as the row appears, not when the pointer first comes over it: a
+  // wheel turned before that would scroll the page instead.
+  row.addEventListener(
+    "wheel",
+    (e) => {
+      if (rolling()) {
+        glide(row, e as WheelEvent);
+      }
+    },
+    { passive: false }
+  );
 
   if (!stillMotion()) {
     const timing = { duration: SLIDE_MS, easing: EASE };
@@ -250,10 +261,8 @@ function glide(row: HTMLElement, wheel: WheelEvent) {
   state.frame = requestAnimationFrame(frame);
 }
 
-// A row is only ever on screen while someone points at it, so this is where
-// its picker starts being watched and its wheel listener goes on.
-const wheeled = new WeakSet<Element>();
-
+// Each post's reactions are watched from the first time someone points
+// anywhere in its menu.
 function pointedAt(event: PointerEvent) {
   const target = event.target as Element | null;
   // anywhere in the menu: on touch screens the theme's own button opens it
@@ -263,24 +272,6 @@ function pointedAt(event: PointerEvent) {
   if (actions) {
     watch(actions);
   }
-
-  if (event.pointerType !== "mouse") {
-    return;
-  }
-  const row = target?.closest?.(`.${ROW}`) as HTMLElement | null | undefined;
-  if (!row || wheeled.has(row)) {
-    return;
-  }
-  wheeled.add(row);
-  row.addEventListener(
-    "wheel",
-    (e) => {
-      if (rolling()) {
-        glide(row, e as WheelEvent);
-      }
-    },
-    { passive: false }
-  );
 }
 
 // The Reactions plugin's picker as a row that rolls out sideways beside the
