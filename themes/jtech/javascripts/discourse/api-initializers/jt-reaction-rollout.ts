@@ -144,7 +144,7 @@ function open(row: HTMLElement, actions: Element) {
 
 // The plugin has just taken the picker away, row and all: a copy takes its
 // place and slides shut, and the buttons beside it slide back with it.
-function shut(picker: HTMLElement, parent: Node, next: Node | null) {
+function shut(picker: HTMLElement, parent: Element) {
   const row = picker.querySelector<HTMLElement>(`.${ROW}`);
   const state = row && shown.get(row);
   if (!state || stillMotion() || !parent.isConnected) {
@@ -160,7 +160,13 @@ function shut(picker: HTMLElement, parent: Node, next: Node | null) {
   copy.style.pointerEvents = "none";
   const ghost = copy.querySelector<HTMLElement>(`.${ROW}`)!;
   ghost.classList.add(GHOST);
-  parent.insertBefore(copy, next?.parentNode === parent ? next : null);
+  // Where the row was, before the heart. Not beside what was beside it: the
+  // plugin has taken that away with it by now, and a copy after the heart
+  // would push it aside and slide it back under the pointer.
+  parent.insertBefore(
+    copy,
+    parent.querySelector(":scope > .discourse-reactions-reaction-button")
+  );
   ghost.scrollLeft = state.scroll;
   const timing: KeyframeAnimationOptions = {
     duration: SLIDE_MS,
@@ -203,7 +209,7 @@ function watch(actions: Element) {
           node.classList.contains("discourse-reactions-picker") &&
           !node.inert
         ) {
-          shut(node, record.target, record.nextSibling);
+          shut(node, actions);
         }
       });
     }
