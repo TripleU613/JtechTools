@@ -336,6 +336,22 @@ RSpec.describe "Mod elections endpoints" do
       expect(preview[:result]["elected"]).to eq([mod_candidate.id])
     end
 
+    it "turns sitting moderators away, and sets aside their ballots, once moderators don't vote" do
+      # cast while they still could, as in an election under way when it's turned on
+      DiscourseModElections::Voting.cast!(moderator, election, [member_candidate.id])
+      SiteSetting.mod_elections_moderators_cannot_vote = true
+
+      sign_in(moderator)
+      put "/jtech-elections/#{election.id}/ballot.json", params: { ranking: [member_candidate.id] }
+      expect(response.status).to eq(422)
+      expect(response.parsed_body.dig("extras", "reason")).to eq("moderator")
+
+      DiscourseModElections::Lifecycle.end_phase!(election, admin)
+      ballot = DiscourseModElections::Ballot.find_by(election: election, user: moderator)
+      expect(ballot).to be_voided
+      expect(ballot.void_reason).to eq(I18n.t("mod_elections.reasons.cannot_vote"))
+    end
+
     it "doesn't let candidates vote for themselves" do
       sign_in(member)
       put "/jtech-elections/#{election.id}/ballot.json", params: { ranking: [member_candidate.id] }
