@@ -1237,6 +1237,7 @@ en:
       own_session_only: "Elections only work from your own signed-in session."
       not_nominating: "Nominations aren't open."
       not_voting: "Vote Week isn't open."
+      statements_closed: "Vote Week is over, so statements can't change any more."
       not_allowed: "Your account can't take part right now."
       admin: "Admins don't run or vote."
       disqualified: "You were taken off the ballot for this election."
