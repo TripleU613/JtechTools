@@ -138,9 +138,9 @@ RSpec.describe "Mod elections endpoints" do
   end
 
   describe "a candidate taken off the ballot" do
-    it "shows why to signed-in members, not to anyone who opens the page" do
+    it "drops off the page for everyone but admins" do
       election = start_election
-      candidate = DiscourseModElections::Nominations.run!(member, election, "")
+      candidate = DiscourseModElections::Nominations.run!(member, election, "Vote for me")
       DiscourseModElections::Nominations.disqualify!(
         candidate,
         "Alt account of a banned user",
@@ -148,11 +148,20 @@ RSpec.describe "Mod elections endpoints" do
       )
       row = ->(body) { body.dig("election", "candidates").find { |c| c["id"] == candidate.id } }
 
-      get "/jtech-elections/current.json"
-      expect(response.status).to eq(403)
-      expect(response.body).not_to include("Alt account")
+      [nil, other, moderator].each do |who|
+        sign_in(who) if who
+        get "/jtech-elections/current.json"
+        expect(response.body).not_to include("Alt account")
+        expect(response.body).not_to include("Vote for me")
+      end
 
-      sign_in(other)
+      # They still see that they were taken off.
+      sign_in(member)
+      get "/jtech-elections/current.json"
+      expect(row.call(response.parsed_body)).to be_nil
+      expect(response.parsed_body.dig("me", "candidate", "status")).to eq("disqualified")
+
+      sign_in(admin)
       get "/jtech-elections/current.json"
       expect(row.call(response.parsed_body)["disqualified_reason"]).to eq(
         "Alt account of a banned user",
@@ -377,15 +386,10 @@ RSpec.describe "Mod elections endpoints" do
 
       sign_in(voter)
       get "/jtech-elections/current.json"
-      shown =
-        response
-          .parsed_body
-          .dig("election", "candidates")
-          .find { |c| c["id"] == member_candidate.id }
-      expect(shown).to include(
-        "status" => "disqualified",
-        "disqualified_reason" => I18n.t("mod_elections.reasons.ineligible"),
+      expect(response.parsed_body.dig("election", "candidates").map { |c| c["id"] }).to eq(
+        [mod_candidate.id],
       )
+      expect(response.body).not_to include(other.reload.username)
       put "/jtech-elections/#{election.id}/ballot.json", params: { ranking: [member_candidate.id] }
       expect(response.parsed_body.dig("extras", "reason")).to eq("invalid_ballot")
       put "/jtech-elections/#{election.id}/ballot.json", params: { ranking: [mod_candidate.id] }
