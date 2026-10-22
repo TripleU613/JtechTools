@@ -17,6 +17,11 @@ updates:
     labels:
       - "dependencies"
       - "frontend"
+    ignore:
+      # TypeScript 7 (the native compiler) has no compiler API: Dumbcourse's
+      # build compiles to ES5 through it (dumbcourse/build.ts). Move by hand.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
