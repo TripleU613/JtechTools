@@ -82,6 +82,33 @@ RSpec.describe "Dumbcourse app page" do
     end
   end
 
+  describe "use, for its badges" do
+    before { SiteSetting.jtech_enabled = true }
+
+    it "counts the day a signed-in member opens it, once, and not for its files" do
+      sign_in(user)
+      get "/dumb/"
+      get "/dumb/latest"
+      get "/dumb/dumbcourse.js", params: { v: "abc" }
+
+      expect(user.reload.custom_fields[DiscourseDumbcourse::Usage::DAYS_FIELD].to_i).to eq(1)
+    end
+
+    it "marks the posts its composer sends" do
+      sign_in(user)
+      post "/posts.json",
+           params: {
+             title: "Written on a flip phone",
+             raw: "Typed on the keypad, one letter at a time.",
+             dumbcourse: true,
+           }
+
+      expect(response.status).to eq(200)
+      post = Post.find(response.parsed_body["id"])
+      expect(post.custom_fields[DiscourseDumbcourse::Usage::POST_FIELD]).to eq(true)
+    end
+  end
+
   describe "signed-out visitors" do
     it "go to sign in, remembering where they were headed" do
       get "/dumb/t/some-topic/12"

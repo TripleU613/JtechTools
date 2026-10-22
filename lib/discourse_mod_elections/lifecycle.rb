@@ -92,6 +92,11 @@ module DiscourseModElections
 
       State.changed! if (steps - [:reminder]).any?
       steps.each { |step| follow_up(election, step, incumbents: incumbents) }
+      # Candidates and those who stepped aside get their badges once the
+      # ballot is settled, not at the next daily badge run
+      if steps.intersect?(%i[voting_open vote_skipped])
+        DiscourseJtechBadges.backfill_later(:elections)
+      end
       election
     end
 

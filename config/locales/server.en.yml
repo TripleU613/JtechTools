@@ -1277,3 +1277,88 @@ en:
       closed: "Voting has closed. <a href=\"%{url}\">Check the ballots and publish the results</a>."
       vote_skipped: "There are no more candidates than seats, so there's no Vote Week. <a href=\"%{url}\">Publish the results</a>."
       results: "The results are published. Elected: %{winners}. <a href=\"%{url}\">The count</a>"
+  badges:
+    constituent:
+      name: "Constituent"
+      description: "Voted in a moderator election"
+      long_description: "This badge is granted when your ballot is counted in a moderator election. It shows that you voted, never how."
+    civic_duty:
+      name: "Civic Duty"
+      description: "Voted in 3 moderator elections"
+      long_description: "This badge is granted when your ballot has been counted in three moderator elections. There's one every few months, so it takes about a year."
+    candidate:
+      name: "Candidate"
+      description: "Ran for moderator"
+      long_description: "This badge is granted when nominations close and you're on the ballot in a moderator election, whether you stay in the race or not."
+    stepped_aside:
+      name: "Stepped Aside"
+      description: "Dropped out of a moderator election"
+      long_description: "This badge is granted when you drop out of a moderator election you were running in."
+    runner-up:
+      name: "Runner-up"
+      description: "Ran to the end of a moderator election without winning a seat"
+      long_description: "This badge is granted when an election's results are published and you were still on the ballot but didn't win a seat. Thanks for running."
+    elected:
+      name: "Elected"
+      description: "Won a seat in a moderator election"
+      long_description: "This badge is granted when you win a seat in a moderator election."
+    re-elected:
+      name: "Re-elected"
+      description: "Won seats in two moderator elections"
+      long_description: "This badge is granted when you've won a seat in two moderator elections."
+    former_moderator:
+      name: "Former Moderator"
+      description: "Served as a moderator"
+      long_description: "This badge is granted to members who were moderators, elected or appointed, and aren't any more."
+    business_card:
+      name: "Business Card"
+      description: "Filled in a REQ-PM contact card"
+      long_description: "This badge is granted when you add a way to reach you to your REQ-PM card, so members can ask for it instead of sending a message."
+    connected:
+      name: "Connected"
+      description: "Shared contact details through REQ-PM"
+      long_description: "This badge is granted the first time you share your contact details with someone through REQ-PM. Nobody can see who with."
+    networker:
+      name: "Networker"
+      description: "Shared contact details with 5 people through REQ-PM"
+      long_description: "This badge is granted when you've shared your contact details with five different people through REQ-PM."
+    seller:
+      name: "Seller"
+      description: "Posted a listing in the for-sale thread"
+      long_description: "This badge is granted when you post your first listing in the for-sale thread."
+    first_sale:
+      name: "First Sale"
+      description: "Marked a listing sold"
+      long_description: "This badge is granted when one of your listings in the for-sale thread is marked sold."
+    merchant:
+      name: "Merchant"
+      description: "Posted 5 listings in the for-sale thread"
+      long_description: "This badge is granted when you've posted five listings in the for-sale thread."
+    trader:
+      name: "Trader"
+      description: "Posted 10 listings in the for-sale thread"
+      long_description: "This badge is granted when you've posted ten listings in the for-sale thread."
+    flip_phone:
+      name: "Flip Phone"
+      description: "Used Dumbcourse, the forum for flip phones"
+      long_description: "This badge is granted the first time you open Dumbcourse, the light version of the forum for flip phones and old browsers, while signed in."
+    keypad_regular:
+      name: "Keypad Regular"
+      description: "Used Dumbcourse on 30 days"
+      long_description: "This badge is granted when you've opened Dumbcourse while signed in on thirty different days."
+    t9_typist:
+      name: "T9 Typist"
+      description: "Posted from Dumbcourse"
+      long_description: "This badge is granted when you write your first post or topic in Dumbcourse."
+    t9_master:
+      name: "T9 Master"
+      description: "Posted 100 times from Dumbcourse"
+      long_description: "This badge is granted when you've written a hundred posts in Dumbcourse."
+    heads_up:
+      name: "Heads Up"
+      description: "Turned on desktop pop-ups"
+      long_description: "This badge is granted when you turn on desktop pop-ups under Preferences → Account, so each new notification shows as a small card."
+    power_user:
+      name: "Power User"
+      description: "Used every JTech tool"
+      long_description: "This badge is granted when you hold Constituent, Business Card, Seller, Flip Phone and Heads Up: you've voted in an election, made a REQ-PM card, posted a listing, used Dumbcourse and turned on pop-ups."
