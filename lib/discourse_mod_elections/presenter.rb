@@ -163,7 +163,7 @@ module DiscourseModElections
               incumbent: candidate.incumbent,
             },
         run_blocked: election.nominating? ? Eligibility.run_blocked_reason(user, election) : nil,
-        statement_editable: !!candidate&.running? && election.taking_statements?,
+        candidacy_editable: !!candidate&.running? && election.open_to_candidates?,
         weight: voter&.weight,
         vote_blocked:
           election.voting? ? Eligibility.vote_blocked_reason(user, election, voter) : nil,
