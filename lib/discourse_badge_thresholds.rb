@@ -7,21 +7,24 @@
 # rebuild, so this sets them again afterwards (db/fixtures) and when the
 # setting is turned on. Each rung reuses core's own query builder.
 module ::DiscourseBadgeThresholds
-  QUERIES = {
-    Badge::GoodPost => -> { BadgeQueries.like_badge(15, false) },
-    Badge::GreatPost => -> { BadgeQueries.like_badge(20, false) },
-    Badge::GoodTopic => -> { BadgeQueries.like_badge(15, true) },
-    Badge::GreatTopic => -> { BadgeQueries.like_badge(20, true) },
-    Badge::GoodShare => -> { BadgeQueries.sharing_badge(100) },
-    Badge::GreatShare => -> { BadgeQueries.sharing_badge(300) },
-    Badge::HotLink => -> { BadgeQueries.linking_badge(100) },
-    Badge::FamousLink => -> { BadgeQueries.linking_badge(300) },
-    Badge::Admired => -> { BadgeQueries.liked_posts(100, 5) },
-    Badge::HigherLove => -> { BadgeQueries.like_rate_limit(3) },
-    Badge::CrazyInLove => -> { BadgeQueries.like_rate_limit(10) },
-    Badge::Aficionado => -> { BadgeQueries.consecutive_visits(30) },
-    Badge::Devotee => -> { BadgeQueries.consecutive_visits(100) },
-  }.freeze
+  # Built when called: Badge isn't loaded yet when plugins load.
+  def self.queries
+    {
+      Badge::GoodPost => BadgeQueries.like_badge(15, false),
+      Badge::GreatPost => BadgeQueries.like_badge(20, false),
+      Badge::GoodTopic => BadgeQueries.like_badge(15, true),
+      Badge::GreatTopic => BadgeQueries.like_badge(20, true),
+      Badge::GoodShare => BadgeQueries.sharing_badge(100),
+      Badge::GreatShare => BadgeQueries.sharing_badge(300),
+      Badge::HotLink => BadgeQueries.linking_badge(100),
+      Badge::FamousLink => BadgeQueries.linking_badge(300),
+      Badge::Admired => BadgeQueries.liked_posts(100, 5),
+      Badge::HigherLove => BadgeQueries.like_rate_limit(3),
+      Badge::CrazyInLove => BadgeQueries.like_rate_limit(10),
+      Badge::Aficionado => BadgeQueries.consecutive_visits(30),
+      Badge::Devotee => BadgeQueries.consecutive_visits(100),
+    }
+  end
 
   # Solved builds its queries inside its fixture; only the count differs per
   # rung, so that's all this changes.
@@ -34,7 +37,7 @@ module ::DiscourseBadgeThresholds
   def self.apply!
     return unless enabled?
 
-    QUERIES.each { |id, query| Badge.where(id: id).update_all(query: query.call) }
+    queries.each { |id, query| Badge.where(id: id).update_all(query: query) }
     Badge
       .where(name: SOLUTIONS.keys)
       .each do |badge|

@@ -22,7 +22,7 @@ RSpec.describe DiscourseBadgeThresholds do
   it "only builds queries the badge granter accepts" do
     described_class.apply!
 
-    described_class::QUERIES.each_key do |id|
+    described_class.queries.each_key do |id|
       badge = Badge.find(id)
       result =
         BadgeGranter.preview(
