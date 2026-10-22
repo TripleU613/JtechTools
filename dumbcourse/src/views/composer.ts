@@ -643,6 +643,7 @@ ${text}</textarea
         reply_to_post_number: o.replyTo ? o.replyTo.postNumber : undefined,
         archetype: "regular",
         nested_post: true,
+        dumbcourse: true,
       });
     } else if (o.kind === "edit") {
       const edits: Array<Promise<unknown>> = [
@@ -676,6 +677,7 @@ ${text}</textarea
         category: cat,
         tags: o.tags && o.tags.length ? o.tags : undefined,
         archetype: "regular",
+        dumbcourse: true,
       });
     } else {
       const t = titleEl ? titleEl.value.replace(/^\s+|\s+$/g, "") : "";

@@ -48,6 +48,7 @@ module DiscourseModElections
       Announcer.results(election)
       Notifier.notify(election.candidates.running.pluck(:user_id), election, "results")
       Disteleplus.results(election)
+      DiscourseJtechBadges.backfill_later(:elections)
       election
     end
 

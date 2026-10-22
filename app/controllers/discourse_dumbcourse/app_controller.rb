@@ -30,6 +30,7 @@ module DiscourseDumbcourse
       file = static_file
       return serve_static(file) if file
 
+      Usage.visit!(current_user) if current_user
       html = page_html
       response.headers["Cache-Control"] = "no-store"
       render html: html.html_safe, content_type: "text/html"
