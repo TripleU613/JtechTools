@@ -54,7 +54,7 @@ module DiscourseModElections
 
     # Under the election's lock, like publishing, so a count never sees a
     # candidate halfway on or off the ballot.
-    def self.disqualify!(candidate, reason, actor)
+    def self.disqualify!(candidate, reason, actor, notice: "disqualified")
       reason = reason.to_s.strip
       raise Error.new(:reason_required) if reason.blank?
       candidate
@@ -73,7 +73,35 @@ module DiscourseModElections
         election_id: candidate.election_id,
         reason: reason,
       )
-      Notifier.notify([candidate.user_id].compact, candidate.election, "disqualified")
+      Notifier.notify([candidate.user_id].compact, candidate.election, notice)
+    end
+
+    # Someone who can't run any more comes off every ballot not yet
+    # published, in Vote Week and after it too: a trust level taken away, an
+    # admin's suspension or silence, an account anonymized, deactivated or
+    # made an admin. Votes for them move on to the next choice. The tick
+    # checks everyone every minute; suspending, silencing, anonymizing and
+    # changing someone's trust level check them at once.
+    def self.drop_ineligible!(user_ids: nil, now: Time.zone.now)
+      candidates =
+        Candidate
+          .running
+          .where.not(user_id: nil)
+          .where(election_id: Election.unfinished.select(:id))
+      candidates = candidates.where(user_id: user_ids) if user_ids
+      candidates = candidates.includes(:user, :election).to_a
+      Eligibility
+        .cannot_stay(candidates, now: now)
+        .each do |candidate|
+          disqualify!(
+            candidate,
+            I18n.t("mod_elections.reasons.ineligible"),
+            Discourse.system_user,
+            notice: "ineligible",
+          )
+        rescue Error
+          # Published or cancelled in the meantime: that ballot is final.
+        end
     end
 
     def self.reinstate!(candidate, actor)
@@ -81,6 +109,8 @@ module DiscourseModElections
         .election
         .change_in!(:unfinished) do
           raise Error.new(:not_found) unless candidate.reload.disqualified?
+          # Back on, they'd only come off again at the next check.
+          raise Error.new(:cannot_run) if Eligibility.cannot_stay([candidate]).any?
           candidate.update!(status: :running, disqualified_reason: nil, disqualified_by: nil)
         end
       StaffLog.log(

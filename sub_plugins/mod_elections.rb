@@ -89,4 +89,17 @@ after_initialize do
   on(:user_destroyed) do |_user|
     DiscourseModElections::Nominations.drop_deleted! if DiscourseModElections.enabled?
   end
+
+  # Someone who can't run any more comes off the ballot at once, not at the
+  # next tick (which catches everything else: deactivated, made an admin).
+  check_candidacy = ->(user_id) do
+    if user_id && DiscourseModElections.enabled?
+      DiscourseModElections::Lifecycle.drop_ineligible!(user_ids: [user_id])
+    end
+  end
+  %i[user_suspended user_silenced user_anonymized].each do |event|
+    on(event) { |args| check_candidacy.call(args[:user]&.id) }
+  end
+  on(:user_promoted) { |args| check_candidacy.call(args[:user_id]) }
+  on(:user_removed_from_group) { |user, _group| check_candidacy.call(user&.id) }
 end

@@ -7,7 +7,17 @@ module DiscourseModElections
     def self.tick(now = Time.zone.now)
       return unless DiscourseModElections.enabled?
       schedule!(now)
+      # Before the steps, so nominations close on the ballot as it really is.
+      drop_ineligible!(now)
       Election.unfinished.order(:id).each { |election| advance!(election, now) }
+    end
+
+    # Rescued: neither the tick nor the suspension or demotion that set this
+    # off may fail over it.
+    def self.drop_ineligible!(now = Time.zone.now, user_ids: nil)
+      Nominations.drop_ineligible!(user_ids: user_ids, now: now)
+    rescue StandardError => e
+      Rails.logger.warn("#{DiscourseModElections::LOG_TAG} ineligible check failed: #{e.message}")
     end
 
     # Creates the election the calendar says should be running, unless
@@ -75,6 +85,7 @@ module DiscourseModElections
         end
         if election.voting? && now >= election.voting_close_at
           election.update!(status: :closed, seed: draw_seed)
+          Voting.set_aside_ineligible!(election, now)
           steps << :closed
         end
       end

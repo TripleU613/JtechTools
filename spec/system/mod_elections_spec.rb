@@ -349,16 +349,21 @@ RSpec.describe "Mod elections" do
       [candidate_for(dovid).id, candidate_for(chaim).id],
     )
     DiscourseModElections::Lifecycle.end_phase!(election, admin)
-    chaim.update!(suspended_till: 1.month.from_now, suspended_at: Time.zone.now)
+    # A moderator's suspension doesn't take anyone off the ballot by itself.
+    UserSuspender.new(
+      chaim,
+      suspended_till: 1.month.from_now,
+      reason: "campaigning",
+      by_user: moderator,
+    ).suspend
 
     sign_in(admin)
     visit "/admin/plugins/jtech-tools/mod-elections"
     find(".mod-elections-admin__preview").click
 
-    expect(page).to have_css(
-      ".mod-elections-admin__problems",
-      text: "#{chaim.username} is suspended.",
-    )
+    # The preview's list, not the moderators' suspensions beside it.
+    problems = ".mod-elections-admin__problems[role='alert']"
+    expect(page).to have_css(problems, text: "#{chaim.username} is suspended.")
     expect(page).to have_css(".mod-elections-admin__publish[disabled]")
 
     row = find(".mod-elections-admin__table tr[data-candidate-id='#{candidate_for(chaim).id}']")
@@ -370,7 +375,7 @@ RSpec.describe "Mod elections" do
     expect(page).to have_no_css(".mod-elections-results")
     find(".mod-elections-admin__preview").click
     expect(page).to have_css(".mod-elections-results__winner", text: dovid.username)
-    expect(page).to have_no_css(".mod-elections-admin__problems")
+    expect(page).to have_no_css(problems)
     expect(page).to have_no_css(".mod-elections-admin__publish[disabled]")
   end
 

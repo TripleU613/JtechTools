@@ -6,8 +6,10 @@ RSpec.describe DiscourseModElections::Seats do
   fab!(:admin)
   fab!(:sitting) { Fabricate(:moderator, trust_level: TrustLevel[3]) }
   fab!(:stepping_down) { Fabricate(:moderator, trust_level: TrustLevel[3]) }
-  fab!(:newcomer) { Fabricate(:user, trust_level: TrustLevel[2]) }
-  fab!(:runner_up) { Fabricate(:user, trust_level: TrustLevel[2]) }
+  # Old enough to run: previewing and publishing take anyone who can't run
+  # any more off the ballot first.
+  fab!(:newcomer) { Fabricate(:user, trust_level: TrustLevel[2], created_at: 1.year.ago) }
+  fab!(:runner_up) { Fabricate(:user, trust_level: TrustLevel[2], created_at: 1.year.ago) }
   fab!(:voter) { Fabricate(:user, trust_level: TrustLevel[3]) }
 
   let(:election) do
@@ -260,7 +262,13 @@ RSpec.describe DiscourseModElections::Seats do
     end
 
     it "holds publishing until an admin takes them off, then the count moves on" do
-      newcomer.update!(suspended_till: 1.week.from_now, suspended_at: Time.zone.now)
+      # A moderator's suspension doesn't take anyone off the ballot by itself.
+      UserSuspender.new(
+        newcomer,
+        suspended_till: 1.week.from_now,
+        reason: "campaigning",
+        by_user: sitting,
+      ).suspend
 
       preview = DiscourseModElections::Publisher.preview(election)
       expect(preview[:plan][:problems]).to eq([c_new])
@@ -276,9 +284,17 @@ RSpec.describe DiscourseModElections::Seats do
       expect(newcomer).not_to be_moderator
     end
 
-    it "never makes an admin a moderator" do
+    it "takes a winner made an admin since off the ballot, and the count moves on" do
       newcomer.update!(admin: true)
-      expect(DiscourseModElections::Publisher.preview(election)[:plan][:problems]).to eq([c_new])
+
+      preview = DiscourseModElections::Publisher.preview(election)
+      expect(c_new.reload).to be_disqualified
+      expect(preview[:plan][:problems]).to be_empty
+      expect(preview[:result]["elected"]).to eq([c_runner_up.id])
+
+      publish
+      expect(runner_up).to be_moderator
+      expect(newcomer).not_to be_moderator
     end
 
     it "lets an admin take a deleted winner off the ballot" do

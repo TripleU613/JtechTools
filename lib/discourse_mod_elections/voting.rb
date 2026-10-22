@@ -69,6 +69,31 @@ module DiscourseModElections
       )
     end
 
+    # When voting closes, the ballot of anyone who couldn't vote any more
+    # (suspended, silenced, anonymized, deactivated, made an admin, dropped
+    # to trust level 0 or out of the groups that can open the page) is set
+    # aside, before anyone sees a count. Someone who could vote again by the
+    # close keeps theirs. An admin can put one back until the first preview
+    # (one a moderator's suspension set aside, say). Nothing goes in the
+    # staff log, which moderators can read: it would say who voted.
+    def self.set_aside_ineligible!(election, now)
+      DB.exec(
+        <<~SQL,
+          UPDATE jtech_election_ballots b
+          SET voided_at = :now, voided_by_id = :by, void_reason = :reason, updated_at = :now
+          FROM users u
+          WHERE b.election_id = :election_id
+            AND b.user_id = u.id
+            AND b.voided_at IS NULL
+            AND NOT (#{Roll.can_vote_sql("u")})
+        SQL
+        election_id: election.id,
+        now: now,
+        by: Discourse::SYSTEM_USER_ID,
+        reason: I18n.t("mod_elections.reasons.cannot_vote"),
+      )
+    end
+
     # Ballots are set aside, or put back, between the close of voting (so
     # nobody learns during Vote Week who has voted) and the first preview
     # of the count (after which a difference between two previews would

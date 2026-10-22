@@ -5,9 +5,29 @@ module DiscourseModElections
   module Eligibility
     # A real, active member in good standing right now.
     def self.member?(user)
+      return false unless account?(user)
+      !user.suspended? && !user.silenced? && !anonymized?(user)
+    end
+
+    # A real, active account: not a visitor, staged or an anonymous-mode
+    # shadow.
+    def self.account?(user)
       return false if user.nil? || user.id.to_i <= 0
-      return false if user.staged? || !user.active? || user.suspended? || user.silenced?
+      return false if user.staged? || !user.active?
       !user.anonymous?
+    end
+
+    # Anonymizing leaves an account active, so the staff log is what says.
+    def self.anonymized?(user)
+      anonymized_ids([user.id]).any?
+    end
+
+    def self.anonymized_ids(user_ids)
+      UserHistory
+        .where(action: UserHistory.actions[:anonymize_user], target_user_id: user_ids)
+        .distinct
+        .pluck(:target_user_id)
+        .to_set
     end
 
     # Someone who may hold a seat: a member in good standing who isn't an
@@ -16,24 +36,13 @@ module DiscourseModElections
       member?(user) && !user.admin?
     end
 
-    # Who can open the elections page: staff, members of
-    # mod_elections_view_allowed_groups (trust level 1 by default), and
-    # anyone on the voter list or the ballot of the election under way. The
-    # list is fixed when nominations open, so a trust level that drops since
-    # (or a group they leave) mustn't take away the vote they were given.
-    # Never a visitor.
+    # Who can open the elections page: staff, and members of
+    # mod_elections_view_allowed_groups (trust level 1 by default). Never a
+    # visitor.
     def self.can_view?(user)
       return false if user.nil? || user.id.to_i <= 0
       return true if user.staff?
-      return true if user.in_any_groups?(SiteSetting.mod_elections_view_allowed_groups_map)
-      taking_part?(user)
-    end
-
-    def self.taking_part?(user)
-      active = State.active
-      return false if active.nil?
-      Voter.where(election_id: active[:id], user_id: user.id).exists? ||
-        Candidate.where(election_id: active[:id], user_id: user.id).exists?
+      user.in_any_groups?(SiteSetting.mod_elections_view_allowed_groups_map)
     end
 
     def self.run_blocked_reason(user, election, now: Time.zone.now)
@@ -57,12 +66,66 @@ module DiscourseModElections
       nil
     end
 
+    # Being on the voter list isn't enough: a voter has to qualify for it
+    # still, so one suspended, anonymized, made an admin or dropped to trust
+    # level 0 (or out of the groups that can open the page) since can't vote.
     def self.vote_blocked_reason(user, election, voter, now: Time.zone.now)
       return :not_voting unless election.taking_votes?(now)
-      return :not_allowed unless member?(user)
+      return :not_allowed unless member?(user) && can_view?(user)
       return :admin if user.admin?
       return :not_on_roll if voter.nil?
+      return :not_allowed if user.trust_level < TrustLevel[1]
       nil
+    end
+
+    # vote_blocked_reason's rules for the account alone, for someone on the
+    # voter list.
+    def self.can_vote?(user)
+      member?(user) && can_view?(user) && !user.admin? && user.trust_level >= TrustLevel[1]
+    end
+
+    # The candidates (users loaded) who couldn't stay on the ballot now,
+    # for many at once: run_blocked_reason's rules for someone already
+    # running. Only an admin's suspension or silence counts (the system's
+    # automatic ones are an admin's too): sitting moderators are candidates,
+    # and a moderator mustn't be able to knock a rival off the ballot. The
+    # admin's preview still won't seat someone a moderator suspended.
+    def self.cannot_stay(candidates, now: Time.zone.now)
+      ids = candidates.filter_map(&:user_id)
+      return [] if ids.empty?
+      anonymized = anonymized_ids(ids)
+      viewers = User.where(id: ids).where(Roll.can_view_sql("users")).pluck(:id).to_set
+      days = SiteSetting.mod_elections_candidate_clean_record_days
+      punished =
+        if days > 0
+          recent_punishments(now, days).where(target_user_id: ids).distinct.pluck(:target_user_id)
+        else
+          []
+        end
+      min_trust_level = SiteSetting.mod_elections_candidate_min_trust_level.to_i
+      min_age = SiteSetting.mod_elections_candidate_min_account_age_days.days
+
+      candidates.select do |candidate|
+        user = candidate.user
+        next false if user.nil?
+        next true if !account?(user) || user.admin? || anonymized.include?(user.id)
+        next true if punished_by_admin?(user) || viewers.exclude?(user.id)
+        next false if user.moderator? || candidate.incumbent
+        user.trust_level < min_trust_level || user.created_at > now - min_age ||
+          punished.include?(user.id)
+      end
+    end
+
+    # Suspended or silenced now, by anyone but a moderator. With no staff
+    # log entry (set from the console, say) it counts.
+    def self.punished_by_admin?(user)
+      (user.suspended? && !by_moderator?(user.suspend_record)) ||
+        (user.silenced? && !by_moderator?(user.silenced_record))
+    end
+
+    def self.by_moderator?(entry)
+      actor = entry&.acting_user
+      actor.present? && !actor.admin?
     end
 
     # Everyone who could run now and has no place on this ballot yet (on it,
@@ -71,6 +134,11 @@ module DiscourseModElections
     def self.could_run(election, now: Time.zone.now)
       # Without the NULLs (deleted accounts), or NOT IN would match nobody.
       on_ballot = election.candidates.where.not(user_id: nil).select(:user_id)
+      anonymized =
+        UserHistory
+          .where(action: UserHistory.actions[:anonymize_user])
+          .where.not(target_user_id: nil)
+          .select(:target_user_id)
       members =
         User
           .real
@@ -80,6 +148,7 @@ module DiscourseModElections
           .where("users.suspended_till IS NULL OR users.suspended_till <= ?", now)
           .where("users.silenced_till IS NULL OR users.silenced_till <= ?", now)
           .where.not(id: on_ballot)
+          .where.not(id: anonymized)
           .where(Roll.can_view_sql("users"))
       min_age = SiteSetting.mod_elections_candidate_min_account_age_days.days
       qualified =
