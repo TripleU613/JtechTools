@@ -2,17 +2,20 @@
 
 module DiscourseModElections
   # The voter list, fixed when nominations open. A vote counts as much as
-  # the voter's trust level at that moment, so trust level 0 isn't on it.
+  # the voter's trust level at that moment, up to MAX_WEIGHT (trust level 4
+  # counts 3), so trust level 0 isn't on it.
   # Admins aren't either: they don't vote. Nor are sitting moderators with
   # mod_elections_moderators_cannot_vote on. Only people who can open the
   # elections page then are on it. Someone who stops qualifying during the
   # election loses their vote (Eligibility.vote_blocked_reason and
   # Voting.set_aside_ineligible!).
   module Roll
+    MAX_WEIGHT = 3
+
     def self.snapshot!(election, now: Time.zone.now)
       DB.exec(<<~SQL, election_id: election.id, cutoff: now - min_age, now: now)
         INSERT INTO jtech_election_voters (election_id, user_id, weight)
-        SELECT :election_id, u.id, u.trust_level
+        SELECT :election_id, u.id, LEAST(u.trust_level, #{MAX_WEIGHT})
         FROM users u
         WHERE #{can_vote_sql("u")}
           AND u.created_at <= :cutoff

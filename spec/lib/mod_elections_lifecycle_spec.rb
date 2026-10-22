@@ -91,6 +91,7 @@ RSpec.describe DiscourseModElections::Lifecycle do
     old = 40.days.ago
     tl1 = Fabricate(:user, trust_level: TrustLevel[1], created_at: old)
     tl3 = Fabricate(:user, trust_level: TrustLevel[3], created_at: old)
+    tl4 = Fabricate(:user, trust_level: TrustLevel[4], created_at: old)
     tl0 = Fabricate(:user, trust_level: TrustLevel[0], created_at: old)
     too_new = Fabricate(:user, trust_level: TrustLevel[2], created_at: 10.days.ago)
     suspended =
@@ -103,7 +104,8 @@ RSpec.describe DiscourseModElections::Lifecycle do
 
     roll =
       DiscourseModElections::Voter.where(election_id: election.id).pluck(:user_id, :weight).to_h
-    expect(roll).to include(tl1.id => 1, tl3.id => 3, moderator.id => 3)
+    # Trust level 4 counts no more than 3
+    expect(roll).to include(tl1.id => 1, tl3.id => 3, tl4.id => 3, moderator.id => 3)
     expect(roll.keys).not_to include(
       tl0.id,
       too_new.id,

@@ -1045,8 +1045,8 @@ en:
       write about themselves. 0 turns statements off.
     mod_elections_voter_min_account_age_days: How old an account has to be,
       when nominations open, to vote. The voter list is fixed at that moment,
-      and a vote counts as much as the voter's trust level then (trust level
-      0 doesn't vote). Someone suspended, silenced, anonymized or dropped to
+      and a vote counts as much as the voter's trust level then, up to 3
+      (trust level 4 counts 3, trust level 0 doesn't vote). Someone suspended, silenced, anonymized or dropped to
       trust level 0 since can't vote, and if they still can't when Vote Week
       ends, a ballot they cast is set aside.
     mod_elections_moderators_cannot_vote: Sitting moderators don't vote. They're
@@ -1215,7 +1215,7 @@ en:
         They take their seats when an admin publishes the results.
       vote_skipped_nobody: "Nobody ran, so there's no Vote Week."
       voting_open: |
-        Vote Week is open until %{voting_close}. Rank the candidates on the elections page: your vote counts as much as your trust level.
+        Vote Week is open until %{voting_close}. Rank the candidates on the elections page: your vote counts as much as your trust level, up to 3.
 
         On the ballot:
         %{candidates}
