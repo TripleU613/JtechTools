@@ -197,20 +197,28 @@ function watch(actions: Element) {
 
 // The wheel turned over a row: it glides there rather than jumping a notch
 // at a time. At either end the page scrolls as usual.
-const glides = new WeakMap<HTMLElement, { target: number; frame: number }>();
+const glides = new WeakMap<
+  HTMLElement,
+  { target: number; pos: number; frame: number }
+>();
 
 function glide(row: HTMLElement, wheel: WheelEvent) {
   if (Math.abs(wheel.deltaY) <= Math.abs(wheel.deltaX)) {
     return;
   }
   const end = row.scrollWidth - row.clientWidth;
-  const state = glides.get(row) ?? { target: row.scrollLeft, frame: 0 };
+  const state = glides.get(row) ?? { target: 0, pos: 0, frame: 0 };
   glides.set(row, state);
   if (!state.frame) {
-    state.target = row.scrollLeft;
+    state.target = state.pos = row.scrollLeft;
   }
   const step = wheel.deltaY * (wheel.deltaMode === 1 ? 16 : 1);
-  if ((step < 0 && state.target <= 0) || (step > 0 && state.target >= end)) {
+  // Within a pixel of an end counts as there: at a fractional zoom a row
+  // stops short of its exact end, and the page has to get the wheel back.
+  if (
+    (step < 0 && state.target <= 1) ||
+    (step > 0 && state.target >= end - 1)
+  ) {
     return;
   }
   wheel.preventDefault();
@@ -223,17 +231,19 @@ function glide(row: HTMLElement, wheel: WheelEvent) {
     return;
   }
   let last = performance.now();
+  // The position is kept here, not read back: the browser rounds
+  // scrollLeft, and a glide reading it back can stall short of its target.
   const frame = (now: number) => {
     const share = 1 - Math.pow(1 - GLIDE, (now - last) / (1000 / 60));
     last = now;
-    const left = state.target - row.scrollLeft;
-    if (Math.abs(left) < 0.5 || !row.isConnected) {
-      row.scrollLeft = state.target;
+    state.pos += (state.target - state.pos) * share;
+    if (Math.abs(state.target - state.pos) < 0.5 || !row.isConnected) {
+      state.pos = state.target;
       state.frame = 0;
-      return;
+    } else {
+      state.frame = requestAnimationFrame(frame);
     }
-    row.scrollLeft += left * share;
-    state.frame = requestAnimationFrame(frame);
+    row.scrollLeft = state.pos;
   };
   state.frame = requestAnimationFrame(frame);
 }
@@ -299,7 +309,13 @@ export default apiInitializer((api) => {
     }
   );
 
-  document.addEventListener("pointerover", pointedAt, { passive: true });
+  // Capturing: the plugin renders its row in a microtask right after its own
+  // pointerover handler, before the event would bubble up to here, and the
+  // row has to be watched before it appears to slide open.
+  document.addEventListener("pointerover", pointedAt, {
+    capture: true,
+    passive: true,
+  });
   document.addEventListener(
     "pointerdown",
     (event) => {
