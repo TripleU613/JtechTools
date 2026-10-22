@@ -1046,7 +1046,8 @@ RSpec.describe "Mod elections endpoints" do
       DiscourseModElections::Publisher.cancel!(DiscourseModElections::Election.last, admin)
       SiteSetting.mod_elections_view_allowed_groups = Group::AUTO_GROUPS[:trust_level_3].to_s
       election = start_election
-      expect(election.voters.pluck(:user_id)).to contain_exactly(moderator.id, other.id)
+      # The sitting moderator can open the page but doesn't vote
+      expect(election.voters.pluck(:user_id)).to contain_exactly(other.id)
       expect(DiscourseModElections::Eligibility.could_run(election)).not_to include(member)
       expect(DiscourseModElections::Eligibility.run_blocked_reason(member, election)).to eq(
         :not_allowed,

@@ -365,13 +365,19 @@ RSpec.describe "Mod elections" do
     shot("06_results")
   end
 
+  # Sitting moderators don't vote: a member on the voter list in their place.
+  def another_voter
+    Fabricate(:user, trust_level: TrustLevel[3], created_at: 1.year.ago, refresh_auto_groups: true)
+  end
+
   it "holds publishing while a winner can't take the seat, until an admin takes them off" do
+    yaakov = another_voter
     open_voting
     election.update!(seats: 1)
     DiscourseModElections::Voting.cast!(voter, election, [candidate_for(chaim).id])
     DiscourseModElections::Voting.cast!(dovid, election, [candidate_for(chaim).id])
     DiscourseModElections::Voting.cast!(
-      moderator,
+      yaakov,
       election,
       [candidate_for(dovid).id, candidate_for(chaim).id],
     )
@@ -407,11 +413,12 @@ RSpec.describe "Mod elections" do
   end
 
   it "shows every tie the count broke, and how" do
+    yaakov = another_voter
     open_voting
     # One seat, two level candidates, nothing between them at any stage.
     election.update!(seats: 1)
     DiscourseModElections::Voting.cast!(voter, election, [candidate_for(chaim).id])
-    DiscourseModElections::Voting.cast!(moderator, election, [candidate_for(dovid).id])
+    DiscourseModElections::Voting.cast!(yaakov, election, [candidate_for(dovid).id])
     DiscourseModElections::Lifecycle.end_phase!(election, admin)
     DiscourseModElections::Publisher.publish!(election, admin)
 
