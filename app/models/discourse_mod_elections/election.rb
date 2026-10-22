@@ -38,6 +38,11 @@ module DiscourseModElections
       voting? && now >= voting_open_at && now < voting_close_at
     end
 
+    # Candidates can change their statement through Vote Week, not after.
+    def taking_statements?(now = Time.zone.now)
+      taking_nominations?(now) || taking_votes?(now)
+    end
+
     def before_close?
       BEFORE_CLOSE.include?(status.to_sym)
     end
@@ -58,12 +63,15 @@ module DiscourseModElections
     end
 
     # Raises the reason a change can't happen in this phase, if it can't:
-    # :nominations and :votes go by the clock too; :closed is after Vote
-    # Week and before publishing; :unfinished is anything not yet over.
+    # :nominations, :statements and :votes go by the clock too; :closed is
+    # after Vote Week and before publishing; :unfinished is anything not yet
+    # over.
     def check_phase!(phase, now = Time.zone.now)
       case phase
       when :nominations
         raise Error.new(:not_nominating) unless taking_nominations?(now)
+      when :statements
+        raise Error.new(:statements_closed) unless taking_statements?(now)
       when :votes
         raise Error.new(:not_voting) unless taking_votes?(now)
       when :closed

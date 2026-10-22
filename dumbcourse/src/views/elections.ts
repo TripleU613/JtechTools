@@ -83,6 +83,7 @@ interface Election {
 interface Me {
   candidate: { id: number; status: string; statement: string } | null;
   run_blocked: string | null;
+  statement_editable: boolean;
   weight: number | null;
   vote_blocked: string | null;
   ballot: {
@@ -247,7 +248,7 @@ function show(s: Screen, page: Page): void {
   let body: SafeHtml;
   if (e.status === "nominating") body = nominations(s, page, e);
   else if (e.status === "voting")
-    body = html`${page.me && page.me.vote_blocked
+    body = html`${statementButton(s, page, e)}${page.me && page.me.vote_blocked
       ? html`<p class="hint pad">${blockedText(page.me.vote_blocked, page)}</p>`
       : ""}${candidateList(e)}`;
   else if (e.status === "closed" && e.vote_skipped)
@@ -307,34 +308,8 @@ function nominations(s: Screen, page: Page, e: Election): SafeHtml {
   const mine = me && me.candidate && me.candidate.status === "running";
   const max = page.limits.statement_max_length;
 
-  const save = (statement: string, first: boolean) =>
-    (first
-      ? post<Page>(API + "/" + e.id + "/candidacy.json", { statement })
-      : put<Page>(API + "/" + e.id + "/candidacy.json", { statement })
-    ).then(
-      (next) => {
-        toast(first ? "You're running." : "Saved.", "success");
-        if (s.alive()) show(s, next);
-      },
-      (err: unknown) => toast(errorMessage(err), "error")
-    );
-
-  const ask = (first: boolean) => {
-    if (!max) return void save("", first);
-    void promptDialog("About you", {
-      title: "Run for mod",
-      multiline: true,
-      value: (me && me.candidate && me.candidate.statement) || "",
-      placeholder: "What would you do as a moderator?",
-      hint: "Up to " + max + " characters.",
-      ok: first ? "Run" : "Save",
-    }).then((text) => {
-      if (text !== null) void save(text, first);
-    });
-  };
-
-  s.act("run", () => ask(true));
-  s.act("edit", () => ask(false));
+  s.act("run", () => askStatement(s, page, e, true));
+  s.act("edit", () => askStatement(s, page, e, false));
   s.act("withdraw", () => {
     void confirmDialog(
       "Drop out of this election? You can run again until nominations close.",
@@ -383,6 +358,50 @@ function nominations(s: Screen, page: Page, e: Election): SafeHtml {
   return html`${extended}${mineBlock}${candidateList(e)}`;
 }
 
+// Running, or changing what you wrote: nominations, and Vote Week too.
+function askStatement(s: Screen, page: Page, e: Election, first: boolean) {
+  const me = page.me;
+  const max = page.limits.statement_max_length;
+  const save = (statement: string) =>
+    (first
+      ? post<Page>(API + "/" + e.id + "/candidacy.json", { statement })
+      : put<Page>(API + "/" + e.id + "/candidacy.json", { statement })
+    ).then(
+      (next) => {
+        toast(first ? "You're running." : "Saved.", "success");
+        if (s.alive()) show(s, next);
+      },
+      (err: unknown) => toast(errorMessage(err), "error")
+    );
+  if (!max) return void save("");
+  void promptDialog("About you", {
+    title: first ? "Run for mod" : "Edit statement",
+    multiline: true,
+    value: (me && me.candidate && me.candidate.statement) || "",
+    placeholder: "What would you do as a moderator?",
+    hint: "Up to " + max + " characters.",
+    ok: first ? "Run" : "Save",
+  }).then((text) => {
+    if (text !== null) void save(text);
+  });
+}
+
+// In Vote Week, a candidate's way to change what they wrote.
+function statementButton(
+  s: Screen,
+  page: Page,
+  e: Election
+): SafeHtml | string {
+  if (!page.me || !page.me.statement_editable) return "";
+  if (!page.limits.statement_max_length) return "";
+  s.act("edit", () => askStatement(s, page, e, false));
+  return html`<div class="pad" data-row>
+    <button type="button" class="btn" data-act="edit">
+      ${icon("edit")} Edit statement
+    </button>
+  </div>`;
+}
+
 // ── Ballot ──────────────────────────────────────────────────────────────
 
 function ballot(s: Screen, page: Page, e: Election, me: Me): void {
@@ -395,6 +414,7 @@ function ballot(s: Screen, page: Page, e: Election, me: Me): void {
   // A candidate can't rank themselves; the server says so too, but there's
   // no need to offer it.
   const selfId = me.candidate ? me.candidate.id : 0;
+  const editStatement = statementButton(s, page, e);
 
   const focusedId = (): number => {
     const el = document.activeElement;
@@ -434,7 +454,8 @@ function ballot(s: Screen, page: Page, e: Election, me: Me): void {
       </li>`;
 
     s.render(
-      html`<p class="hint pad">
+      html`${editStatement}
+        <p class="hint pad">
           Your vote counts ${String(me.weight || 0)}. On a candidate, press 1–9
           to put them in that place, 0 to take them off.
         </p>

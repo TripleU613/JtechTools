@@ -24,7 +24,7 @@ interface ModElectionsRunSignature {
 }
 
 // Nominations: run, change what you wrote, or drop out. Someone who can't
-// run sees why.
+// run sees why. In Vote Week a candidate can still change what they wrote.
 export default class ModElectionsRun extends Component<ModElectionsRunSignature> {
   @service declare modElections: ModElectionsService;
   @service declare dialog: DialogService;
@@ -42,8 +42,12 @@ export default class ModElectionsRun extends Component<ModElectionsRunSignature>
     return this.args.limits.statement_max_length;
   }
 
+  get nominating(): boolean {
+    return this.args.election.status === "nominating";
+  }
+
   get canRun(): boolean {
-    return !this.candidacy && !this.args.me.run_blocked;
+    return this.nominating && !this.candidacy && !this.args.me.run_blocked;
   }
 
   // Why not, in words. "already_running" never shows: the candidacy does.
@@ -128,7 +132,11 @@ export default class ModElectionsRun extends Component<ModElectionsRunSignature>
     <section class="mod-elections-panel mod-elections-run">
       {{#if this.editing}}
         <form class="mod-elections-run__form">
-          <h2>{{i18n "mod_elections.run.title"}}</h2>
+          <h2>{{if
+              this.candidacy
+              (i18n "mod_elections.run.edit")
+              (i18n "mod_elections.run.title")
+            }}</h2>
           {{#if this.maxLength}}
             <label
               class="mod-elections-run__label"
@@ -181,18 +189,22 @@ export default class ModElectionsRun extends Component<ModElectionsRunSignature>
         </div>
         <div class="mod-elections-actions">
           {{#if this.maxLength}}
+            {{#if @me.statement_editable}}
+              <DButton
+                class="btn-default mod-elections-run__edit"
+                @action={{this.start}}
+                @icon="pencil"
+                @label="mod_elections.run.edit"
+              />
+            {{/if}}
+          {{/if}}
+          {{#if this.nominating}}
             <DButton
-              class="btn-default mod-elections-run__edit"
-              @action={{this.start}}
-              @icon="pencil"
-              @label="mod_elections.run.edit"
+              class="btn-flat btn-danger mod-elections-run__withdraw"
+              @action={{this.withdraw}}
+              @label="mod_elections.run.withdraw"
             />
           {{/if}}
-          <DButton
-            class="btn-flat btn-danger mod-elections-run__withdraw"
-            @action={{this.withdraw}}
-            @label="mod_elections.run.withdraw"
-          />
         </div>
       {{else if this.canRun}}
         <DButton

@@ -119,6 +119,8 @@ export interface ModElectionMe {
     incumbent: boolean;
   } | null;
   run_blocked: string | null;
+  // Running, and nominations or Vote Week still open.
+  statement_editable: boolean;
   weight: number | null;
   vote_blocked: string | null;
   ballot: ModElectionBallot | null;

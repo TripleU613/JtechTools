@@ -38,8 +38,9 @@ module DiscourseModElections
       end
     end
 
+    # Through Vote Week too, unlike running or dropping out.
     def self.update_statement!(user, election, statement)
-      election.change_in!(:nominations) do
+      election.change_in!(:statements) do
         candidate = own_candidacy!(user, election)
         candidate.statement = clean(statement)
         save!(candidate)

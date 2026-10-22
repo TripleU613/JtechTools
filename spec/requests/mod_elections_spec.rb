@@ -298,6 +298,35 @@ RSpec.describe "Mod elections endpoints" do
       expect(DiscourseModElections::Ballot.exists?(ballot.id)).to eq(false)
     end
 
+    it "lets a candidate change their statement in Vote Week, but not drop out" do
+      sign_in(member)
+      get "/jtech-elections/current.json"
+      expect(response.parsed_body.dig("me", "statement_editable")).to eq(true)
+
+      put "/jtech-elections/#{election.id}/candidacy.json", params: { statement: "Changed" }
+      expect(response.status).to eq(200)
+      expect(member_candidate.reload.statement).to eq("Changed")
+
+      delete "/jtech-elections/#{election.id}/candidacy.json"
+      expect(response.parsed_body.dig("extras", "reason")).to eq("not_nominating")
+      expect(member_candidate.reload).to be_running
+
+      # Someone not running has no statement to change.
+      sign_in(other)
+      get "/jtech-elections/current.json"
+      expect(response.parsed_body.dig("me", "statement_editable")).to eq(false)
+      put "/jtech-elections/#{election.id}/candidacy.json", params: { statement: "Me too" }
+      expect(response.parsed_body.dig("extras", "reason")).to eq("not_running")
+
+      DiscourseModElections::Lifecycle.end_phase!(election, admin)
+      sign_in(member)
+      get "/jtech-elections/current.json"
+      expect(response.parsed_body.dig("me", "statement_editable")).to eq(false)
+      put "/jtech-elections/#{election.id}/candidacy.json", params: { statement: "Too late" }
+      expect(response.parsed_body.dig("extras", "reason")).to eq("statements_closed")
+      expect(member_candidate.reload.statement).to eq("Changed")
+    end
+
     it "doesn't let candidates vote for themselves" do
       sign_in(member)
       put "/jtech-elections/#{election.id}/ballot.json", params: { ranking: [member_candidate.id] }
