@@ -1,7 +1,7 @@
 {
   "private": true,
   "devDependencies": {
-    "@discourse/lint-configs": "3.8.1",
+    "@discourse/lint-configs": "3.8.2",
     "@glint/ember-tsc": "1.11.6",
     "@types/node": "^26.6.5",
     "concurrently": "^10.0.6",
@@ -10,7 +10,7 @@
     "eslint": "10.6.0",
     "espree": "11.2.0",
     "jiti": "^2.7.0",
-    "lucide-static": "1.58.0",
+    "lucide-static": "1.59.0",
     "playwright-core": "1.64.1",
     "postcss": "8.5.30",
     "prettier": "3.8.1",

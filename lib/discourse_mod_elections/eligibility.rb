@@ -16,18 +16,29 @@ module DiscourseModElections
       member?(user) && !user.admin?
     end
 
-    # Who can open the elections page: staff, and members of
-    # mod_elections_view_allowed_groups (trust level 1 by default). Never a
-    # visitor.
+    # Who can open the elections page: staff, members of
+    # mod_elections_view_allowed_groups (trust level 1 by default), and
+    # anyone on the voter list or the ballot of the election under way. The
+    # list is fixed when nominations open, so a trust level that drops since
+    # (or a group they leave) mustn't take away the vote they were given.
+    # Never a visitor.
     def self.can_view?(user)
       return false if user.nil? || user.id.to_i <= 0
       return true if user.staff?
-      user.in_any_groups?(SiteSetting.mod_elections_view_allowed_groups_map)
+      return true if user.in_any_groups?(SiteSetting.mod_elections_view_allowed_groups_map)
+      taking_part?(user)
+    end
+
+    def self.taking_part?(user)
+      active = State.active
+      return false if active.nil?
+      Voter.where(election_id: active[:id], user_id: user.id).exists? ||
+        Candidate.where(election_id: active[:id], user_id: user.id).exists?
     end
 
     def self.run_blocked_reason(user, election, now: Time.zone.now)
       return :not_nominating unless election.taking_nominations?(now)
-      return :not_allowed unless member?(user)
+      return :not_allowed unless member?(user) && can_view?(user)
       return :admin if user.admin?
 
       candidate = election.candidates.find_by(user_id: user.id)
@@ -69,6 +80,7 @@ module DiscourseModElections
           .where("users.suspended_till IS NULL OR users.suspended_till <= ?", now)
           .where("users.silenced_till IS NULL OR users.silenced_till <= ?", now)
           .where.not(id: on_ballot)
+          .where(Roll.can_view_sql("users"))
       min_age = SiteSetting.mod_elections_candidate_min_account_age_days.days
       qualified =
         members.where(
