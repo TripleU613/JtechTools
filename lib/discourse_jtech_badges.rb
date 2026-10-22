@@ -156,15 +156,17 @@ module ::DiscourseJtechBadges
       .each { |id| Jobs.enqueue(:backfill_badge, badge_id: id) }
   end
 
-  # Published elections where the voter's ballot was counted. After
-  # publishing, ballots no longer say whose they were; the voter's roll
-  # entry keeps that it was counted (Publisher.unlink_ballots!).
+  # Published elections the member voted in. After publishing, ballots no
+  # longer say whose they were; the voter's roll entry keeps a receipt
+  # (Publisher.unlink_ballots!). Counted or set aside alike: whether a ballot
+  # was set aside is the voter's own business, and a missing badge would
+  # show it.
   def self.voted(times)
     <<~SQL
       SELECT v.user_id, MAX(e.published_at) granted_at
       FROM jtech_election_voters v
       JOIN jtech_elections e ON e.id = v.election_id
-      WHERE e.status = #{election_status(:published)} AND v.receipt = 'counted'
+      WHERE e.status = #{election_status(:published)} AND v.receipt IS NOT NULL
         AND v.user_id IS NOT NULL
       GROUP BY v.user_id
       HAVING COUNT(DISTINCT e.id) >= #{times}

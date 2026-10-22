@@ -67,7 +67,7 @@ RSpec.describe DiscourseJtechBadges do
       )
     end
 
-    it "grants from the published results, and Constituent only for a counted ballot" do
+    it "grants from the published results, and Constituent for any ballot cast" do
       dave = Fabricate(:user)
       published = election(:published, published_at: 6.days.ago)
       candidate(published, alice, elected: true)
@@ -91,7 +91,8 @@ RSpec.describe DiscourseJtechBadges do
       expect(holders("Runner-up")).to eq([bob.id])
       expect(holders("Stepped Aside")).to eq([carol.id])
       expect(holders("Candidate")).to contain_exactly(alice.id, bob.id, carol.id)
-      expect(holders("Constituent")).to eq([bob.id])
+      # Set aside or not: a missing badge would show which
+      expect(holders("Constituent")).to contain_exactly(bob.id, dave.id)
       expect(holders("Re-elected")).to be_empty
     end
 

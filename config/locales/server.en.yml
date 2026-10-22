@@ -1281,11 +1281,11 @@ en:
     constituent:
       name: "Constituent"
       description: "Voted in a moderator election"
-      long_description: "This badge is granted when your ballot is counted in a moderator election. It shows that you voted, never how."
+      long_description: "This badge is granted when the results of a moderator election you voted in are published. It shows that you voted, never how."
     civic_duty:
       name: "Civic Duty"
       description: "Voted in 3 moderator elections"
-      long_description: "This badge is granted when your ballot has been counted in three moderator elections. There's one every few months, so it takes about a year."
+      long_description: "This badge is granted when you've voted in three moderator elections. There's one every few months, so it takes about a year."
     candidate:
       name: "Candidate"
       description: "Ran for moderator"

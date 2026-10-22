@@ -8,14 +8,14 @@ They're seeded like core's (by name, on every rebuild), so rename or reword one 
 
 | Badge | Tier | Granted for |
 | --- | --- | --- |
-| Constituent | Bronze | Your ballot was counted in a moderator election. It shows that you voted, never how. |
-| Civic Duty | Silver | Your ballot was counted in three elections. |
+| Constituent | Bronze | You voted in a moderator election, once its results are published. It shows that you voted, never how, and not whether your ballot was set aside. |
+| Civic Duty | Silver | You voted in three elections. |
 | Candidate | Bronze | You were on the ballot when nominations closed, whether you stayed in or not. |
 | Stepped Aside | Bronze | You dropped out of an election. |
 | Runner-up | Bronze | You were on the ballot at the published count but didn't win a seat. |
 | Elected | Gold | You won a seat. |
 | Re-elected | Gold | You won seats in two elections. |
-| Former Moderator | Silver | The staff log shows you were made a moderator, elected or appointed, and you aren't one now. Taken back if you become a moderator again. |
+| Former Moderator | Silver | The staff log shows you were made a moderator, elected or appointed, and you aren't one now. Taken back if you become a moderator again. Moderators are public while they serve (the about page, their flair), so this shows nothing that wasn't. |
 
 Nobody taken off a ballot gets Candidate, and only published results count towards Runner-up and Elected.
 
