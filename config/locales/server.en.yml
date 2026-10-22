@@ -1049,6 +1049,11 @@ en:
       0 doesn't vote). Someone suspended, silenced, anonymized or dropped to
       trust level 0 since can't vote, and if they still can't when Vote Week
       ends, a ballot they cast is set aside.
+    mod_elections_moderators_cannot_vote: Sitting moderators don't vote. They're
+      on the ballot, so this stops them choosing who joins or replaces them.
+      With it on, they're left off the voter list when nominations open,
+      can't cast a ballot, and the ballot of anyone who is a moderator when
+      Vote Week ends is set aside (one cast before it was turned on too).
     mod_elections_former_mods_keep_tl4: Moderators who leave their seat
       (lose, step down or don't run) keep trust level 4, locked, so it marks
       people who were moderators. Trust level 4 can still edit posts and

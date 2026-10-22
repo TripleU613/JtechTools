@@ -1,6 +1,6 @@
 # Mod elections: the forum picks its moderators
 
-Every few months the forum elects its moderators. Anyone in good standing can run, members rank the candidates, and the count is published stage by stage so anyone can follow how each seat was won. Admins stay as they are: they never run and never vote. Sitting moderators are on the ballot and don't vote.
+Every few months the forum elects its moderators. Anyone in good standing can run, members rank the candidates, and the count is published stage by stage so anyone can follow how each seat was won. Admins stay as they are: they never run and never vote. Sitting moderators are on the ballot, and vote too unless `mod_elections_moderators_cannot_vote` is on.
 
 ![A ballot during Vote Week: three candidates ranked, three more to pick from](../images/mod-elections.png)
 
@@ -25,7 +25,7 @@ If a category is set, each election gets a topic there: the schedule when nomina
 ## Who can run and who can vote
 
 - **Running:** trust level 2 or higher, an account at least 90 days old, and no suspension or silence from an admin in the last 180 days (a moderator's don't count: sitting moderators are candidates too, and the tab lists any suspension or silence a moderator gives a candidate or a voter during the election). Sitting moderators can always run. Admins can't. Someone who stops qualifying during the election comes off the ballot at once, even in Vote Week or after it, and votes for them move on to the next choice: dropped below the trust level, suspended or silenced by an admin, anonymized, deactivated, made an admin, or out of the groups that can open the page. A moderator's suspension or silence doesn't take anyone off (the preview still won't seat someone suspended). An admin can take a candidate off the ballot, but has to give a reason. Anyone taken off disappears from the elections page; only admins see them, and why, in the Mod elections tab. An admin can put someone back once they qualify again.
-- **Voting:** the voter list is fixed when nominations open. It has every account at least 30 days old at trust level 1 or higher that can open the elections page, not suspended, silenced or staged, and not an admin or a moderator. **A vote counts as much as the voter's trust level** at that moment, so trust level 3 counts 3 and trust level 0 doesn't vote. New accounts and level-ups during the election change nothing. Someone on the list who stops qualifying (suspended, silenced, anonymized, made an admin or a moderator, dropped to trust level 0 or out of `mod_elections_view_allowed_groups`) can't vote and isn't reminded to, and if they still can't when Vote Week ends, the ballot they cast is set aside, with the reason shown to them. An admin can put it back before the first preview. Someone whose trust level drops but who still qualifies keeps their vote at the weight it had. Candidates who aren't moderators vote too, just not for themselves.
+- **Voting:** the voter list is fixed when nominations open. It has every account at least 30 days old at trust level 1 or higher that can open the elections page, not suspended, silenced or staged, and not an admin (nor a moderator, with `mod_elections_moderators_cannot_vote` on). **A vote counts as much as the voter's trust level** at that moment, so trust level 3 counts 3 and trust level 0 doesn't vote. New accounts and level-ups during the election change nothing. Someone on the list who stops qualifying (suspended, silenced, anonymized, made an admin or, with `mod_elections_moderators_cannot_vote` on, a moderator, dropped to trust level 0 or out of `mod_elections_view_allowed_groups`) can't vote and isn't reminded to, and if they still can't when Vote Week ends, the ballot they cast is set aside, with the reason shown to them. An admin can put it back before the first preview. Someone whose trust level drops but who still qualifies keeps their vote at the weight it had. Candidates vote too, just not for themselves.
 
 All of these are settings.
 
@@ -81,6 +81,7 @@ Admin → Plugins → Jtech Tools → **Mod elections**. The full text of each s
 | `mod_elections_candidate_clean_record_days` | `180` | Accounts an admin suspended or silenced within this many days can't run. |
 | `mod_elections_statement_max_length` | `1000` | Longest statement a candidate can write about themselves. |
 | `mod_elections_voter_min_account_age_days` | `30` | How old an account has to be, when nominations open, to vote. |
+| `mod_elections_moderators_cannot_vote` | `false` | Sitting moderators don't vote: off the voter list, ballots refused, and any cast set aside at the close. |
 | `mod_elections_former_mods_keep_tl4` | `true` | Moderators who leave their seat keep trust level 4, locked. |
 | `mod_elections_strikes_before_tl3` | `2` | At this many strikes a former moderator goes back to trust level 3. |
 | `mod_elections_category` | (blank) | Category for each election's topic. |

@@ -1513,6 +1513,12 @@ jtech_mod_elections:
     max: 3650
     depends_on:
       - "mod_elections_enabled"
+  # Sitting moderators are on the ballot; with this on they don't vote.
+  mod_elections_moderators_cannot_vote:
+    default: false
+    client: false
+    depends_on:
+      - "mod_elections_enabled"
 
   # Former moderators.
   mod_elections_former_mods_keep_tl4:

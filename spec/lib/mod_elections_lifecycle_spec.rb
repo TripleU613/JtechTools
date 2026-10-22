@@ -103,10 +103,8 @@ RSpec.describe DiscourseModElections::Lifecycle do
 
     roll =
       DiscourseModElections::Voter.where(election_id: election.id).pluck(:user_id, :weight).to_h
-    expect(roll).to include(tl1.id => 1, tl3.id => 3)
-    # Sitting moderators are on the ballot, not the voter list
+    expect(roll).to include(tl1.id => 1, tl3.id => 3, moderator.id => 3)
     expect(roll.keys).not_to include(
-      moderator.id,
       tl0.id,
       too_new.id,
       suspended.id,
@@ -118,6 +116,17 @@ RSpec.describe DiscourseModElections::Lifecycle do
     # Levelling up during the election changes nothing.
     tl1.change_trust_level!(TrustLevel[4])
     expect(DiscourseModElections::Voter.find_by(election: election, user: tl1).weight).to eq(1)
+  end
+
+  it "leaves sitting moderators off the voter list when moderators don't vote" do
+    SiteSetting.mod_elections_moderators_cannot_vote = true
+    member = Fabricate(:user, trust_level: TrustLevel[2], created_at: 1.year.ago)
+
+    tick_at(2027, 1, 1, 0, 5)
+
+    roll = DiscourseModElections::Voter.where(election_id: election.id).pluck(:user_id)
+    expect(roll).to include(member.id)
+    expect(roll).not_to include(moderator.id)
   end
 
   it "puts the sitting moderators on the ballot and tells them" do
