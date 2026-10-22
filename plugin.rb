@@ -44,6 +44,7 @@ enabled_site_setting :jtech_enabled
   jtech_theme
   mod_elections
   trust_level_flair
+  badge_thresholds
   jtech_badges
 ].each do |sub|
   path = File.expand_path("sub_plugins/#{sub}.rb", __dir__)
