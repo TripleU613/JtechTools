@@ -817,7 +817,7 @@ en:
             disqualified: Taken off
           moderator: Moderator
           disqualify: Take off ballot
-          disqualify_prompt: Why? The candidate and signed-in members see this reason on the elections page.
+          disqualify_prompt: Why? Only admins see this, here and in the staff log.
           reinstate: Put back
         turnout:
           title: Turnout
