@@ -4,32 +4,45 @@ module DiscourseModElections
   # The voter list, fixed when nominations open. A vote counts as much as
   # the voter's trust level at that moment, so trust level 0 isn't on it.
   # Admins aren't either: they don't vote. Only people who can open the
-  # elections page then are on it; being on it keeps the page open to them
-  # for the rest of the election (Eligibility.can_view?).
+  # elections page then are on it. Someone who stops qualifying during the
+  # election loses their vote (Eligibility.vote_blocked_reason and
+  # Voting.set_aside_ineligible!).
   module Roll
     def self.snapshot!(election, now: Time.zone.now)
       DB.exec(<<~SQL, election_id: election.id, cutoff: now - min_age, now: now)
         INSERT INTO jtech_election_voters (election_id, user_id, weight)
         SELECT :election_id, u.id, u.trust_level
         FROM users u
-        WHERE u.id > 0
-          AND u.active
-          AND NOT u.staged
-          AND NOT u.admin
-          AND u.trust_level > 0
+        WHERE #{can_vote_sql("u")}
           AND u.created_at <= :cutoff
-          AND (u.suspended_till IS NULL OR u.suspended_till <= :now)
-          AND (u.silenced_till IS NULL OR u.silenced_till <= :now)
-          AND NOT EXISTS (SELECT 1 FROM anonymous_users a WHERE a.user_id = u.id)
-          AND #{can_view_sql("u")}
         ON CONFLICT (election_id, user_id) DO NOTHING
       SQL
     end
 
-    # Eligibility.can_view? as SQL, for `users` under the given alias,
-    # before anyone is on the list: a moderator, or a member of
-    # mod_elections_view_allowed_groups. Group ids are integers from the
-    # setting, so they're safe to inline.
+    # Who can vote right now, as SQL for `users` under the given alias (bind
+    # :now): what the voter list asks of an account, its age aside.
+    def self.can_vote_sql(users)
+      <<~SQL.squish
+        #{users}.id > 0
+        AND #{users}.active
+        AND NOT #{users}.staged
+        AND NOT #{users}.admin
+        AND #{users}.trust_level > 0
+        AND (#{users}.suspended_till IS NULL OR #{users}.suspended_till <= :now)
+        AND (#{users}.silenced_till IS NULL OR #{users}.silenced_till <= :now)
+        AND NOT EXISTS (SELECT 1 FROM anonymous_users a WHERE a.user_id = #{users}.id)
+        AND NOT EXISTS (
+          SELECT 1 FROM user_histories h
+          WHERE h.target_user_id = #{users}.id
+            AND h.action = #{UserHistory.actions[:anonymize_user].to_i}
+        )
+        AND #{can_view_sql(users)}
+      SQL
+    end
+
+    # Eligibility.can_view? as SQL, for `users` under the given alias: a
+    # moderator, or a member of mod_elections_view_allowed_groups. Group ids
+    # are integers from the setting, so they're safe to inline.
     def self.can_view_sql(users)
       ids = SiteSetting.mod_elections_view_allowed_groups_map.map(&:to_i)
       return "TRUE" if ids.include?(Group::AUTO_GROUPS[:everyone])

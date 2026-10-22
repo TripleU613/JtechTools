@@ -7,6 +7,9 @@ module DiscourseModElections
     # preview fixes the ballots: one set aside between two previews would
     # show, in the difference, what was on it.
     def self.preview(election)
+      # The tick does this every minute; this catches anyone who stopped
+      # qualifying since.
+      Nominations.drop_ineligible!
       election.change_in!(:closed) do
         election.update!(previewed_at: Time.zone.now) if election.previewed_at.nil?
       end
@@ -15,6 +18,7 @@ module DiscourseModElections
     end
 
     def self.publish!(election, actor)
+      Nominations.drop_ineligible!
       election.change_in!(:closed) do
         result = Tally.count(election)
         # Nobody voted in a contested election: publishing would only remove

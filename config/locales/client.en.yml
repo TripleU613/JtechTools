@@ -739,6 +739,7 @@ en:
         closed: Voting has closed. Check the ballots and publish the results.
         results: The results are in.
         disqualified: An admin took you off the ballot.
+        ineligible: You can't run any more, so you're off the ballot.
         seat_filled: A seat opened up and the count gave it to you.
         schedule_blocked: The next scheduled election can't start while this one is unfinished.
     jtech_tools:

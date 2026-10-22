@@ -3,8 +3,8 @@
 require "rails_helper"
 
 RSpec.describe DiscourseModElections::Notifier do
-  fab!(:alice, :user)
-  fab!(:bob, :user)
+  fab!(:alice) { Fabricate(:user, trust_level: TrustLevel[1]) }
+  fab!(:bob) { Fabricate(:user, trust_level: TrustLevel[1]) }
 
   let(:election) do
     DiscourseModElections::Election.create!(

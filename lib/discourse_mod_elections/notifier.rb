@@ -18,6 +18,7 @@ module DiscourseModElections
       closed
       results
       disqualified
+      ineligible
       seat_filled
       schedule_blocked
     ].freeze
@@ -25,7 +26,7 @@ module DiscourseModElections
     ADMIN_KINDS = %w[closed vote_skipped schedule_blocked].freeze
     # Being taken off the ballot can happen twice (taken off, put back,
     # taken off again); everything else happens once per election.
-    REPEATABLE = %w[disqualified].freeze
+    REPEATABLE = %w[disqualified ineligible].freeze
     PAGE = "/elections"
     BATCH = 500
 
@@ -79,8 +80,14 @@ module DiscourseModElections
       Jobs.enqueue(:mod_elections_invite_candidates, election_id: election.id, kind: kind)
     end
 
+    # Only those who can still vote: nobody suspended or dropped to trust
+    # level 0 since is asked to.
     def self.voter_ids(election, kind)
-      ids = Voter.where(election_id: election.id).where.not(user_id: nil)
+      ids =
+        Voter
+          .where(election_id: election.id)
+          .joins(:user)
+          .where(Roll.can_vote_sql("users"), now: Time.zone.now)
       if kind == "reminder"
         # Without the NULLs (deleted accounts), or NOT IN would match nobody.
         voted = Ballot.where(election_id: election.id).where.not(user_id: nil).select(:user_id)

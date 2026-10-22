@@ -1012,10 +1012,10 @@ en:
       (the candidates, their statements, the ballot and the results) and get
       its sidebar link, banner and Dumbcourse menu entry. Trust level 1 by
       default. Logged-out visitors are sent to log in. Admins and moderators
-      always can, and so can anyone on the current election's voter list or
-      ballot, whatever happens to their trust level until the results are
-      published. Only people who can open the page are put on the voter list
-      or can run. Running and voting have their own rules below.
+      always can. Only people who can open the page are put on the voter list
+      or can run, and someone who leaves these groups during an election
+      loses their vote and their place on the ballot. Running and voting have
+      their own rules below.
     mod_elections_schedule_months: Months an election starts in. Nominations
       open at midnight on the 1st, in the time zone below.
     mod_elections_timezone: Time zone the calendar runs in, as a name like
@@ -1033,7 +1033,8 @@ en:
     mod_elections_voting_days: How long Vote Week lasts, starting when
       nominations close. Voters can change their ballot until it ends.
     mod_elections_candidate_min_trust_level: Lowest trust level that can
-      run. Sitting moderators can always run.
+      run. Sitting moderators can always run. A candidate who drops below it
+      during the election, even in Vote Week, comes off the ballot.
     mod_elections_candidate_min_account_age_days: How old an account has to
       be to run.
     mod_elections_candidate_clean_record_days: Accounts an admin suspended
@@ -1045,7 +1046,9 @@ en:
     mod_elections_voter_min_account_age_days: How old an account has to be,
       when nominations open, to vote. The voter list is fixed at that moment,
       and a vote counts as much as the voter's trust level then (trust level
-      0 doesn't vote). Suspended and silenced accounts can't vote.
+      0 doesn't vote). Someone suspended, silenced, anonymized or dropped to
+      trust level 0 since can't vote, and if they still can't when Vote Week
+      ends, a ballot they cast is set aside.
     mod_elections_former_mods_keep_tl4: Moderators who leave their seat
       (lose, step down or don't run) keep trust level 4, locked, so it marks
       people who were moderators. Trust level 4 can still edit posts and
@@ -1185,6 +1188,7 @@ en:
       closed: "Voting has closed. Check the ballots and publish the results."
       results: "The results are in."
       disqualified: "An admin took you off the ballot. The reason is on the elections page."
+      ineligible: "You can't run any more, so you're off the ballot."
       seat_filled: "A seat opened up and the count gave it to you. You're a moderator."
       schedule_blocked: "The next scheduled election can't start while this one is unfinished. Publish or cancel it, or that election is skipped."
     topic:
@@ -1229,6 +1233,7 @@ en:
       deleted_user: "(deleted account)"
     errors:
       not_found: "That election isn't there any more."
+      cannot_run: "They can't run any more (their trust level, a suspension or their account), so they'd come straight off again. Fix that first, then put them back."
       own_session_only: "Elections only work from your own signed-in session."
       not_nominating: "Nominations aren't open."
       not_voting: "Vote Week isn't open."
@@ -1265,6 +1270,8 @@ en:
       module_off: "Mod elections are off. Turn them on in the settings below first."
     reasons:
       removed: "Removed as a moderator."
+      ineligible: "Can't run any more."
+      cannot_vote: "Your account couldn't vote any more when Vote Week ended."
     telegram:
       closed: "Voting has closed. <a href=\"%{url}\">Check the ballots and publish the results</a>."
       vote_skipped: "There are no more candidates than seats, so there's no Vote Week. <a href=\"%{url}\">Publish the results</a>."

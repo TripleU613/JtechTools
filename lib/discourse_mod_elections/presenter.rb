@@ -187,7 +187,7 @@ module DiscourseModElections
       summary = active.dup
       if active[:status] == "voting"
         weight = Voter.where(election_id: active[:id], user_id: user.id).pick(:weight)
-        summary[:voter] = weight.present? && !user.admin?
+        summary[:voter] = weight.present? && Eligibility.can_vote?(user)
         summary[:voted] = weight.present? &&
           Ballot.where(election_id: active[:id], user_id: user.id).exists?
       end

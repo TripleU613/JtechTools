@@ -349,7 +349,13 @@ RSpec.describe "Mod elections" do
       [candidate_for(dovid).id, candidate_for(chaim).id],
     )
     DiscourseModElections::Lifecycle.end_phase!(election, admin)
-    chaim.update!(suspended_till: 1.month.from_now, suspended_at: Time.zone.now)
+    # A moderator's suspension doesn't take anyone off the ballot by itself.
+    UserSuspender.new(
+      chaim,
+      suspended_till: 1.month.from_now,
+      reason: "campaigning",
+      by_user: moderator,
+    ).suspend
 
     sign_in(admin)
     visit "/admin/plugins/jtech-tools/mod-elections"

@@ -337,6 +337,166 @@ RSpec.describe "Mod elections endpoints" do
     end
   end
 
+  describe "someone who stops qualifying during the election" do
+    fab!(:voter) do
+      Fabricate(
+        :user,
+        trust_level: TrustLevel[2],
+        created_at: 1.year.ago,
+        refresh_auto_groups: true,
+      )
+    end
+    let!(:election) { start_election }
+    let(:mod_candidate) { election.candidates.find_by(user: moderator) }
+    let!(:member_candidate) { DiscourseModElections::Nominations.run!(member, election, "") }
+    let!(:other_candidate) { DiscourseModElections::Nominations.run!(other, election, "") }
+
+    before { open_voting(election) }
+
+    def suspend(user, by)
+      UserSuspender.new(user, suspended_till: 1.year.from_now, reason: "spam", by_user: by).suspend
+    end
+
+    it "takes a candidate an admin bans or anonymizes off the ballot in Vote Week" do
+      suspend(member, admin)
+      expect(member_candidate.reload).to be_disqualified
+      expect(member_candidate.disqualified_reason).to eq(I18n.t("mod_elections.reasons.ineligible"))
+      expect(member_candidate.disqualified_by_id).to eq(Discourse::SYSTEM_USER_ID)
+      expect(
+        UserHistory.where(
+          custom_type: "mod_election_disqualify",
+          target_user_id: member.id,
+          acting_user_id: Discourse::SYSTEM_USER_ID,
+        ),
+      ).to exist
+      note = Notification.where(user: member, notification_type: Notification.types[:custom]).last
+      expect(JSON.parse(note.data)).to include("mod_election_kind" => "ineligible")
+
+      UserAnonymizer.make_anonymous(other, admin)
+      expect(other_candidate.reload).to be_disqualified
+
+      sign_in(voter)
+      get "/jtech-elections/current.json"
+      shown =
+        response
+          .parsed_body
+          .dig("election", "candidates")
+          .find { |c| c["id"] == member_candidate.id }
+      expect(shown).to include(
+        "status" => "disqualified",
+        "disqualified_reason" => I18n.t("mod_elections.reasons.ineligible"),
+      )
+      put "/jtech-elections/#{election.id}/ballot.json", params: { ranking: [member_candidate.id] }
+      expect(response.parsed_body.dig("extras", "reason")).to eq("invalid_ballot")
+      put "/jtech-elections/#{election.id}/ballot.json", params: { ranking: [mod_candidate.id] }
+      expect(response.status).to eq(200)
+    end
+
+    it "takes off a candidate whose trust level drops below the minimum, but not a sitting moderator" do
+      member.change_trust_level!(TrustLevel[1])
+      expect(member_candidate.reload).to be_disqualified
+
+      # Sitting moderators can always run.
+      moderator.change_trust_level!(TrustLevel[1])
+      expect(mod_candidate.reload).to be_running
+      suspend(moderator, admin)
+      expect(mod_candidate.reload).to be_disqualified
+    end
+
+    it "leaves a candidate a moderator suspends or silences on the ballot" do
+      suspend(member, moderator)
+      UserSilencer.new(other, moderator, reason: "campaigning").silence
+
+      expect(member_candidate.reload).to be_running
+      expect(other_candidate.reload).to be_running
+      DiscourseModElections::Lifecycle.tick
+      expect(member_candidate.reload).to be_running
+    end
+
+    it "catches at the next tick what no event announces" do
+      member.update!(active: false)
+      other.update!(admin: true)
+      expect(member_candidate.reload).to be_running
+
+      DiscourseModElections::Lifecycle.tick
+      expect(member_candidate.reload).to be_disqualified
+      expect(other_candidate.reload).to be_disqualified
+      expect(mod_candidate.reload).to be_running
+    end
+
+    it "takes them off after voting closes too, so the count moves on" do
+      DiscourseModElections::Voting.cast!(voter, election, [member_candidate.id, mod_candidate.id])
+      DiscourseModElections::Lifecycle.end_phase!(election, admin)
+      expect(election.reload).to be_closed
+
+      member.change_trust_level!(TrustLevel[1])
+      expect(member_candidate.reload).to be_disqualified
+      preview = DiscourseModElections::Publisher.preview(election)
+      expect(preview[:result]["elected"]).to eq([mod_candidate.id])
+    end
+
+    it "refuses to put back someone who'd only come off again" do
+      member.change_trust_level!(TrustLevel[1])
+      sign_in(admin)
+
+      post "/jtech-elections/admin/elections/#{election.id}/candidates/#{member_candidate.id}/reinstate.json"
+      expect(response.status).to eq(422)
+      expect(response.parsed_body.dig("extras", "reason")).to eq("cannot_run")
+      expect(member_candidate.reload).to be_disqualified
+
+      member.change_trust_level!(TrustLevel[2])
+      post "/jtech-elections/admin/elections/#{election.id}/candidates/#{member_candidate.id}/reinstate.json"
+      expect(response.status).to eq(200)
+      expect(member_candidate.reload).to be_running
+    end
+
+    it "takes away the vote, and sets the ballot aside if they still can't vote when Vote Week ends" do
+      DiscourseModElections::Voting.cast!(newbie, election, [member_candidate.id])
+      DiscourseModElections::Voting.cast!(voter, election, [mod_candidate.id])
+      newbie.change_trust_level!(TrustLevel[0])
+      suspend(voter, admin)
+
+      expect(DiscourseModElections::Notifier.voter_ids(election, "reminder")).not_to include(
+        newbie.id,
+        voter.id,
+      )
+      sign_in(newbie)
+      get "/session/current.json"
+      expect(response.parsed_body.dig("current_user", "can_view_mod_elections")).to eq(false)
+      expect(response.parsed_body.dig("current_user", "mod_election", "voter")).to eq(false)
+      put "/jtech-elections/#{election.id}/ballot.json", params: { ranking: [mod_candidate.id] }
+      expect(response.status).to eq(422)
+      expect(response.parsed_body.dig("extras", "reason")).to eq("not_allowed")
+      expect(DiscourseModElections::Ballot.find_by(user: newbie).ranking).to eq(
+        [member_candidate.id],
+      )
+
+      # Back in good standing before the close: their ballot stands.
+      voter.update!(suspended_till: nil, suspended_at: nil)
+      DiscourseModElections::Lifecycle.end_phase!(election, admin)
+
+      set_aside = DiscourseModElections::Ballot.find_by(user: newbie)
+      expect(set_aside).to be_voided
+      expect(set_aside.void_reason).to eq(I18n.t("mod_elections.reasons.cannot_vote"))
+      expect(DiscourseModElections::Ballot.find_by(user: voter)).not_to be_voided
+      expect(DiscourseModElections::Presenter.me_json(election.reload, newbie)[:receipt]).to eq(
+        counted: false,
+        reason: I18n.t("mod_elections.reasons.cannot_vote"),
+      )
+
+      # The admin can put it back until the first preview.
+      DiscourseModElections::Voting.restore!(set_aside, admin)
+      expect(set_aside.reload).not_to be_voided
+    end
+
+    it "leaves anonymized accounts off the next voter list" do
+      DiscourseModElections::Publisher.cancel!(election, admin)
+      UserAnonymizer.make_anonymous(newbie, admin)
+
+      expect(start_election.voters.pluck(:user_id)).not_to include(newbie.id)
+    end
+  end
+
   describe "the admin tab" do
     let!(:election) { start_election(seats: 1) }
 
@@ -806,18 +966,12 @@ RSpec.describe "Mod elections endpoints" do
       expect(response.status).to eq(200)
     end
 
-    it "follows mod_elections_view_allowed_groups, staff and the voter list aside" do
+    it "follows mod_elections_view_allowed_groups, staff aside" do
       SiteSetting.mod_elections_view_allowed_groups = Group::AUTO_GROUPS[:trust_level_3].to_s
-      # Too new for the voter list, so only the setting decides
-      late = Fabricate(:user, trust_level: TrustLevel[2], refresh_auto_groups: true)
-      sign_in(late)
-      get "/jtech-elections/current.json"
-      expect(response.status).to eq(403)
-
-      # On the list made when nominations opened: the setting changed since
+      # On the voter list from when nominations opened: that's no way in.
       sign_in(newbie)
       get "/jtech-elections/current.json"
-      expect(response.status).to eq(200)
+      expect(response.status).to eq(403)
 
       sign_in(other)
       get "/jtech-elections/current.json"
@@ -827,36 +981,6 @@ RSpec.describe "Mod elections endpoints" do
       sign_in(moderator)
       get "/jtech-elections/current.json"
       expect(response.status).to eq(200)
-    end
-
-    it "stays open to voters and candidates whose trust level drops during the election" do
-      election = DiscourseModElections::Election.last
-      DiscourseModElections::Nominations.run!(member, election, "")
-      open_voting(election)
-      candidate = election.candidates.find_by(user: member)
-      newbie.change_trust_level!(TrustLevel[0])
-      member.change_trust_level!(TrustLevel[0])
-
-      sign_in(newbie)
-      get "/session/current.json"
-      expect(response.parsed_body.dig("current_user", "can_view_mod_elections")).to eq(true)
-      expect(response.parsed_body.dig("current_user", "mod_election", "voter")).to eq(true)
-      get "/jtech-elections/current.json"
-      expect(response.status).to eq(200)
-      expect(response.parsed_body.dig("me", "weight")).to eq(1)
-      put "/jtech-elections/#{election.id}/ballot.json", params: { ranking: [candidate.id] }
-      expect(response.status).to eq(200)
-      expect(DiscourseModElections::Ballot.find_by(user: newbie).weight).to eq(1)
-
-      sign_in(member)
-      get "/jtech-elections/current.json"
-      expect(response.status).to eq(200)
-      expect(response.parsed_body.dig("me", "candidate", "status")).to eq("running")
-
-      # Someone who was never on the list still can't get in.
-      sign_in(visitor)
-      get "/jtech-elections/current.json"
-      expect(response.status).to eq(403)
     end
 
     it "only lists voters and takes candidates who could open the page" do
