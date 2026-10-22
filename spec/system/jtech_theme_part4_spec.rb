@@ -1036,8 +1036,10 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
       sign_in(reader)
       visit("#{topic.relative_url}/#{reply.post_number}")
       expect(page).to have_css("#{post_selector} .discourse-reactions-reaction-button")
+      # The menu in the middle, not the post: a reaction on the window's edge
+      # gets scrolled to when hovered, and the page moves out from under it.
       page.execute_script(
-        "document.querySelector(#{post_selector.to_json}).scrollIntoView({ block: 'center' })",
+        "document.querySelector(#{"#{post_selector} .post-controls".to_json}).scrollIntoView({ block: 'center' })",
       )
     end
 
