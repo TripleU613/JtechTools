@@ -295,72 +295,76 @@ nav.post-controls {
 // ── Reactions ─────────────────────────────────────────────
 // The plugin paints hover/used states with --love-low / --primary-low, which
 // come out as a mid-grey slab in this palette. Re-point them in its container.
-.discourse-reactions-actions {
-  --love: var(--jt-text);
-  --love-low: var(--jt-hover);
-  --primary-low: var(--jt-hover);
-  --primary-low-mid: var(--jt-text-muted);
-}
-
-.discourse-reactions-counter {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45em;
-  height: 2rem;
-  padding: 0 0.7em 0 0.45em;
-  background: var(--jt-fill);
-  border: 1px solid var(--jt-border);
-  border-radius: var(--jt-radius-control); // as Me too beside it
-  transition:
-    border-color var(--jt-motion),
-    background-color var(--jt-motion);
-
-  &:hover {
-    background: var(--jt-hover);
-    border-color: var(--jt-border-strong);
+// Only in the theme's own look: under a Discourse palette (jt-vanilla) the
+// plugin's picker, counter and list are stock.
+html:not(.jt-vanilla) {
+  .discourse-reactions-actions {
+    --love: var(--jt-text);
+    --love-low: var(--jt-hover);
+    --primary-low: var(--jt-hover);
+    --primary-low-mid: var(--jt-text-muted);
   }
 
-  .reactions-counter {
-    font-size: var(--jt-text-sm);
-    font-weight: 500;
-    color: var(--jt-text);
-    font-variant-numeric: tabular-nums;
-  }
-}
-
-.discourse-reactions-list {
-  .reactions .discourse-reactions-list-emoji {
-    margin-right: -0.3em;
-    padding: 1px;
-    background: var(--jt-surface-raised);
-    box-shadow: 0 0 0 1.5px var(--jt-surface);
-    border-radius: 50%;
-  }
-}
-
-.discourse-reactions-actions.has-reacted .discourse-reactions-counter {
-  border-color: var(--jt-text-subtle);
-}
-
-.discourse-reactions-picker .discourse-reactions-picker-container {
-  background: var(--jt-surface-raised);
-  border: 1px solid var(--jt-border);
-  border-radius: var(--jt-radius-lg);
-  box-shadow: var(--jt-shadow-menu);
-
-  .pickable-reaction {
-    border-radius: var(--jt-radius-control);
+  .discourse-reactions-counter {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    height: 2rem;
+    padding: 0 0.7em 0 0.45em;
+    background: var(--jt-fill);
+    border: 1px solid var(--jt-border);
+    border-radius: var(--jt-radius-control); // as Me too beside it
     transition:
-      background-color var(--jt-motion),
-      transform var(--jt-motion);
+      border-color var(--jt-motion),
+      background-color var(--jt-motion);
 
     &:hover {
       background: var(--jt-hover);
-      transform: scale(1.12);
+      border-color: var(--jt-border-strong);
     }
 
-    &.is-used {
-      background: var(--d-selected);
+    .reactions-counter {
+      font-size: var(--jt-text-sm);
+      font-weight: 500;
+      color: var(--jt-text);
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  .discourse-reactions-list {
+    .reactions .discourse-reactions-list-emoji {
+      margin-right: -0.3em;
+      padding: 1px;
+      background: var(--jt-surface-raised);
+      box-shadow: 0 0 0 1.5px var(--jt-surface);
+      border-radius: 50%;
+    }
+  }
+
+  .discourse-reactions-actions.has-reacted .discourse-reactions-counter {
+    border-color: var(--jt-text-subtle);
+  }
+
+  .discourse-reactions-picker .discourse-reactions-picker-container {
+    background: var(--jt-surface-raised);
+    border: 1px solid var(--jt-border);
+    border-radius: var(--jt-radius-lg);
+    box-shadow: var(--jt-shadow-menu);
+
+    .pickable-reaction {
+      border-radius: var(--jt-radius-control);
+      transition:
+        background-color var(--jt-motion),
+        transform var(--jt-motion);
+
+      &:hover {
+        background: var(--jt-hover);
+        transform: scale(1.12);
+      }
+
+      &.is-used {
+        background: var(--d-selected);
+      }
     }
   }
 }
@@ -369,10 +373,16 @@ nav.post-controls {
 // The picker leaves its box over the post and opens in the post's menu, a
 // row rolling out to the left of the heart: in the row of buttons, so the
 // space it takes pushes what's beside it along rather than covering it. It
-// takes the room there is and scrolls the rest. Only its width moves, once,
-// as it opens; nothing is drawn over the page, and nothing runs while it sits.
-html.jt-reaction-rollout {
-  --jt-rx-cell: 2.25rem;
+// takes the room there is in whole reactions and scrolls the rest.
+// api-initializers/jt-reaction-rollout slides it open to that width and
+// shut again (a copy, .jt-rx-ghost, since the plugin removes the row the
+// moment it closes) and glides the wheel; nothing runs while it sits. Not
+// under a Discourse palette (jt-vanilla): the plugin's own picker there.
+html.jt-reaction-rollout:not(.jt-vanilla) {
+  // a reaction's cell, and the row's inset around the cells: the hover
+  // sits inside the row, its corners following the row's
+  --jt-rx-cell: 2rem;
+  --jt-rx-inset: 2px;
 
   // Flex all the way down to the row, so each box can narrow below its
   // content: a block (the plugin's shim, on computers) sizes an inline box
@@ -386,8 +396,9 @@ html.jt-reaction-rollout {
   }
 
   // one line: the row narrows and scrolls rather than push the buttons
-  // onto a line of their own
-  .post-controls:has(.discourse-reactions-picker.is-expanded) .actions {
+  // onto a line of their own, also while it slides shut
+  .post-controls:has(.discourse-reactions-picker.is-expanded, .jt-rx-ghost)
+    .actions {
     flex-wrap: nowrap;
     min-width: 0;
 
@@ -396,48 +407,70 @@ html.jt-reaction-rollout {
     }
   }
 
+  // The picker is the row's frame; the row inside it scrolls and fades at
+  // an edge with more to scroll to, the frame staying crisp
   .post-controls .discourse-reactions-picker {
     position: static;
+    display: flex;
+    flex: 0 1 auto;
     width: auto;
     min-width: 0;
+    margin: 0 var(--space-1) 0 0;
     padding: 0;
+    overflow: hidden;
     visibility: visible;
+    background: var(--jt-fill);
+    border: 1px solid var(--jt-border);
+    border-radius: var(--jt-radius-control);
   }
 
   .discourse-reactions-picker .discourse-reactions-picker-container {
+    --jt-rx-end: var(--jt-rx-inset);
     display: flex;
+    flex: 0 1 auto;
     gap: 0;
-
-    --jt-rx-end: 0.125rem;
+    box-sizing: border-box;
+    min-width: 0;
     max-width: calc(
-      var(--jt-rx-count, 7) * var(--jt-rx-cell) + 0.125rem + var(--jt-rx-end) +
-        2px
+      var(--jt-rx-count, 7) * var(--jt-rx-cell) + var(--jt-rx-inset) +
+        var(--jt-rx-end)
     );
-    margin: 0 var(--space-1) 0 0;
-    padding: 0 var(--jt-rx-end) 0 0.125rem;
+    margin: 0;
+    padding: var(--jt-rx-inset) var(--jt-rx-end) var(--jt-rx-inset)
+      var(--jt-rx-inset);
     overflow: auto hidden;
     overscroll-behavior-x: contain;
-    scroll-snap-type: x proximity;
     scrollbar-width: none;
-    background: var(--jt-fill);
-    border-radius: var(--jt-radius-pill);
+    background: none;
+    border: 0;
+    border-radius: 0;
     box-shadow: none;
-    animation: jt-rx-roll var(--jt-motion) both;
 
     &::-webkit-scrollbar {
       display: none;
     }
 
-    @media (prefers-reduced-motion: reduce) {
-      animation: none;
+    // more to scroll to on a side: that edge fades
+    &[data-jt-more="end"] {
+      mask-image: linear-gradient(to left, transparent, #000 1rem);
     }
 
-    // With no mouse to point at it, a fade at the right edge says there are
-    // more to swipe to. It covers the end padding, so a row that fits shows
-    // its last reaction whole.
-    @media (hover: none) {
-      --jt-rx-end: 1rem;
-      mask-image: linear-gradient(to left, transparent, #000 1rem);
+    &[data-jt-more="start"] {
+      mask-image: linear-gradient(to right, transparent, #000 1rem);
+    }
+
+    &[data-jt-more="both"] {
+      mask-image: linear-gradient(
+        to right,
+        transparent,
+        #000 1rem calc(100% - 1rem),
+        transparent
+      );
+    }
+
+    // the copy that slides shut: seen, never used
+    &.jt-rx-ghost {
+      pointer-events: none;
     }
 
     .pickable-reaction {
@@ -448,8 +481,7 @@ html.jt-reaction-rollout {
       margin: 0 !important;
       padding: 0 !important;
       border: 0 !important;
-      border-radius: var(--jt-radius-pill);
-      scroll-snap-align: start;
+      border-radius: calc(var(--jt-radius-control) - var(--jt-rx-inset) - 1px);
 
       .emoji,
       .d-icon {
@@ -472,7 +504,7 @@ html.jt-reaction-rollout {
           background: var(--jt-hover) !important;
 
           .emoji {
-            transform: scale(1.2);
+            transform: scale(1.15);
           }
         }
       }
@@ -495,7 +527,7 @@ html.jt-reaction-rollout {
   // but the heart, the button that opened it and Reply, so it gets the
   // menu's width. They're back when it shuts.
   @include viewport.until(sm) {
-    .post-controls:has(.discourse-reactions-picker.is-expanded) {
+    .post-controls:has(.discourse-reactions-picker.is-expanded, .jt-rx-ghost) {
       .reactions-actions-summary,
       .show-replies,
       .actions
@@ -511,17 +543,14 @@ html.jt-reaction-rollout {
 }
 
 // The button that opens the row, for screens without a pointer to rest on
-// the heart.
+// the heart, and only with the row.
 .post-action-menu__jt-reaction-rollout {
   @media (hover: hover) {
     display: none !important;
   }
-}
 
-@keyframes jt-rx-roll {
-  from {
-    max-width: 0;
-    opacity: 0;
+  html.jt-vanilla & {
+    display: none !important;
   }
 }
 
