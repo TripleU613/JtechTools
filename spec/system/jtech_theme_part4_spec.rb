@@ -1103,6 +1103,10 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
       ).toggle!
       resize_window(width: 1000, height: 900) do
         open_reply
+        expect(page).to have_css(
+          "#{post_selector} .post-controls .discourse-reactions-actions",
+          count: 2,
+        )
         find("#{post_selector} .discourse-reactions-reaction-button").hover
         expect(page).to have_css(open_row)
         shot("reactions-row-narrow")
