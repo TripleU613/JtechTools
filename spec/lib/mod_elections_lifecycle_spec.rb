@@ -103,8 +103,10 @@ RSpec.describe DiscourseModElections::Lifecycle do
 
     roll =
       DiscourseModElections::Voter.where(election_id: election.id).pluck(:user_id, :weight).to_h
-    expect(roll).to include(tl1.id => 1, tl3.id => 3, moderator.id => 3)
+    expect(roll).to include(tl1.id => 1, tl3.id => 3)
+    # Sitting moderators are on the ballot, not the voter list
     expect(roll.keys).not_to include(
+      moderator.id,
       tl0.id,
       too_new.id,
       suspended.id,

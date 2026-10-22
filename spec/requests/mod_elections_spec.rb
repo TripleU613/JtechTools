@@ -355,6 +355,12 @@ RSpec.describe "Mod elections endpoints" do
       put "/jtech-elections/#{election.id}/ballot.json", params: { ranking: [mod_candidate.id] }
       expect(response.parsed_body.dig("extras", "reason")).to eq("admin")
 
+      sign_in(moderator)
+      put "/jtech-elections/#{election.id}/ballot.json", params: { ranking: [member_candidate.id] }
+      expect(response.status).to eq(422)
+      expect(response.parsed_body.dig("extras", "reason")).to eq("moderator")
+      expect(DiscourseModElections::Ballot.exists?(user: moderator)).to eq(false)
+
       sign_in(other)
       put "/jtech-elections/#{election.id}/ballot.json",
           params: {
@@ -490,6 +496,17 @@ RSpec.describe "Mod elections endpoints" do
       post "/jtech-elections/admin/elections/#{election.id}/candidates/#{member_candidate.id}/reinstate.json"
       expect(response.status).to eq(200)
       expect(member_candidate.reload).to be_running
+    end
+
+    it "sets aside the ballot of someone made a moderator before Vote Week ends" do
+      DiscourseModElections::Voting.cast!(other, election, [member_candidate.id])
+      other.update!(moderator: true)
+
+      DiscourseModElections::Lifecycle.end_phase!(election, admin)
+
+      ballot = DiscourseModElections::Ballot.find_by(election: election, user: other)
+      expect(ballot).to be_voided
+      expect(ballot.void_reason).to eq(I18n.t("mod_elections.reasons.cannot_vote"))
     end
 
     it "takes away the vote, and sets the ballot aside if they still can't vote when Vote Week ends" do

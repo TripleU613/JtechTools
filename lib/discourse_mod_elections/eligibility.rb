@@ -67,12 +67,14 @@ module DiscourseModElections
     end
 
     # Being on the voter list isn't enough: a voter has to qualify for it
-    # still, so one suspended, anonymized, made an admin or dropped to trust
-    # level 0 (or out of the groups that can open the page) since can't vote.
+    # still, so one suspended, anonymized, made an admin or a moderator or
+    # dropped to trust level 0 (or out of the groups that can open the page)
+    # since can't vote. Sitting moderators don't vote: they're on the ballot.
     def self.vote_blocked_reason(user, election, voter, now: Time.zone.now)
       return :not_voting unless election.taking_votes?(now)
       return :not_allowed unless member?(user) && can_view?(user)
       return :admin if user.admin?
+      return :moderator if user.moderator?
       return :not_on_roll if voter.nil?
       return :not_allowed if user.trust_level < TrustLevel[1]
       nil
@@ -81,7 +83,8 @@ module DiscourseModElections
     # vote_blocked_reason's rules for the account alone, for someone on the
     # voter list.
     def self.can_vote?(user)
-      member?(user) && can_view?(user) && !user.admin? && user.trust_level >= TrustLevel[1]
+      member?(user) && can_view?(user) && !user.admin? && !user.moderator? &&
+        user.trust_level >= TrustLevel[1]
     end
 
     # The candidates (users loaded) who couldn't stay on the ballot now,

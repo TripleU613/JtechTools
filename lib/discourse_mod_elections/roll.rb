@@ -3,7 +3,8 @@
 module DiscourseModElections
   # The voter list, fixed when nominations open. A vote counts as much as
   # the voter's trust level at that moment, so trust level 0 isn't on it.
-  # Admins aren't either: they don't vote. Only people who can open the
+  # Admins and sitting moderators aren't either: they don't vote (the
+  # moderators are on the ballot). Only people who can open the
   # elections page then are on it. Someone who stops qualifying during the
   # election loses their vote (Eligibility.vote_blocked_reason and
   # Voting.set_aside_ineligible!).
@@ -27,6 +28,7 @@ module DiscourseModElections
         AND #{users}.active
         AND NOT #{users}.staged
         AND NOT #{users}.admin
+        AND NOT #{users}.moderator
         AND #{users}.trust_level > 0
         AND (#{users}.suspended_till IS NULL OR #{users}.suspended_till <= :now)
         AND (#{users}.silenced_till IS NULL OR #{users}.silenced_till <= :now)

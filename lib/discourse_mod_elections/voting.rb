@@ -70,9 +70,9 @@ module DiscourseModElections
     end
 
     # When voting closes, the ballot of anyone who couldn't vote any more
-    # (suspended, silenced, anonymized, deactivated, made an admin, dropped
-    # to trust level 0 or out of the groups that can open the page) is set
-    # aside, before anyone sees a count. Someone who could vote again by the
+    # (suspended, silenced, anonymized, deactivated, made an admin or a
+    # moderator, dropped to trust level 0 or out of the groups that can open
+    # the page) is set aside, before anyone sees a count. Someone who could vote again by the
     # close keeps theirs. An admin can put one back until the first preview
     # (one a moderator's suspension set aside, say). Nothing goes in the
     # staff log, which moderators can read: it would say who voted.

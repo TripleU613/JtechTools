@@ -651,6 +651,7 @@ en:
         account_age: "Candidates need an account at least %{days} days old."
         record: "Accounts an admin suspended or silenced in the last %{days} days can't run."
         admin: Admins don't run or vote.
+        moderator: Sitting moderators don't vote.
         disqualified: You were taken off the ballot for this election.
         not_allowed: Your account can't take part right now.
         not_on_roll: "You weren't on the voter list when nominations opened. Voters need trust level 1 and an account at least %{days} days old by then."

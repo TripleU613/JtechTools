@@ -141,6 +141,8 @@ function blockedText(reason: string, page: Page): string {
       );
     case "admin":
       return "Admins don't run or vote.";
+    case "moderator":
+      return "Sitting moderators don't vote.";
     case "disqualified":
       return "You were taken off the ballot for this election.";
     case "not_on_roll":
