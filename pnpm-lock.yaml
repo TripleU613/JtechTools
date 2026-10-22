@@ -12,8 +12,8 @@ importers:
         specifier: 3.8.2
         version: 3.8.2(eslint@10.6.0(jiti@2.7.0))(postcss@8.5.31)(prettier@3.8.1)(stylelint@17.5.0(typescript@5.9.3))
       '@glint/ember-tsc':
-        specifier: 1.11.6
-        version: 1.11.6(typescript@5.9.3)
+        specifier: 1.13.0
+        version: 1.13.0(typescript@5.9.3)
       '@types/node':
         specifier: ^26.6.5
         version: 26.6.5
@@ -600,8 +600,8 @@ packages:
   '@glimmer/wire-format@0.94.8':
     resolution: {integrity: sha512-A+Cp5m6vZMAEu0Kg/YwU2dJZXyYxVJs2zI57d3CP6NctmX7FsT8WjViiRUmt5abVmMmRH5b8BUovqY6GSMAdrw==}
 
-  '@glint/ember-tsc@1.11.6':
-    resolution: {integrity: sha512-+UEkP71/fCijNBd2teUm3fjlnY9A22ZY20VNSYVnMf+i+TO4Zp91Ws4zJpjjAFc2TMppjscMluQLrbKrUHn/BQ==}
+  '@glint/ember-tsc@1.13.0':
+    resolution: {integrity: sha512-QBVVCrJr59tGEMbFWO8MbCwqxDWxgZi5PlbBI+ndw7C/GQKqajgDKVjEmfzdsMF5QS9mHcGnGbKRpjJRGB+PeA==}
     hasBin: true
     peerDependencies:
       ember-source: '>=3.28.0'
@@ -610,11 +610,11 @@ packages:
       ember-source:
         optional: true
 
-  '@glint/template@1.9.0':
-    resolution: {integrity: sha512-AoLE/VeDcCI3vroIwP3uTjc33+44JYJbARbswRxe8/Jz7P+dWlhO+ycmigsT2WdVI051+HF9jZLsSwUXv0JxwQ==}
+  '@glint/template@1.10.0':
+    resolution: {integrity: sha512-MbzHy3zMxMMdtRNuK853Zr2lH4qir9+f6uR5r58NJdll0q1M+J0kMTRCt+xrbMiWIa/63cI8n3zSXM7ms48YVg==}
 
-  '@handlebars/parser@2.2.2':
-    resolution: {integrity: sha512-n/SZW+12rwikx/f8YcSv9JCi5p9vn1Bnts9ZtVvfErG4h0gbjHI1H1ZMhVUnaOC7yzFc6PtsCKIK8XeTnL90Gw==}
+  '@handlebars/parser@2.2.4':
+    resolution: {integrity: sha512-/h1xCfa032pytotQCcvL6TROzLK7KUjnzCYk17ZfFCSP5Shp+k0E8JMnwgz+DqlqbRGZMyk2kFYXtx+wYkx/eA==}
     engines: {node: ^18 || ^20 || ^22 || >=24}
 
   '@humanfs/core@0.19.2':
@@ -833,8 +833,8 @@ packages:
   '@microsoft/tsdoc@0.17.1':
     resolution: {integrity: sha512-VHyYyyoH63jFoO3shpw9Zfijk5v/9p/VrClW35z0/q6ooK7sSmxpzOkS4iZPxs3vO4XtBW4H38HRAKkAMIK7DA==}
 
-  '@napi-rs/wasm-runtime@1.2.4':
-    resolution: {integrity: sha512-AJxoUD2/15ESHbvpcyjU274nsAPLuOtPHCk0vKJM5pj//Fg/B1FXNWjPnXTT9PymCYYiHo4zPj0ZomXBKhoy7g==}
+  '@napi-rs/wasm-runtime@1.2.5':
+    resolution: {integrity: sha512-HshSvXzmBxNzqejd3k/KemgQ3hdREUYFRRrgxOZ+gPljDIsO2SDZrVZMd4Z/HsxudQbE62OVyVFE8z9BCurfjA==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=23.5.0}
     peerDependencies:
       '@emnapi/core': ^1.7.1 || ^2.0.0-alpha.4
@@ -1329,9 +1329,6 @@ packages:
     resolution: {integrity: sha512-qgICXXFp2/3nAebRLmxcINKEXM1mLK3ij/y31P02VTs/KIkddIeC05n73DxOXsXMB9LFSqNU1/na3lDlOhcbIw==}
     engines: {node: '>=22'}
     hasBin: true
-
-  content-tag@4.2.0:
-    resolution: {integrity: sha512-f/o+F3qSa4gg23I7RWy6cMDxP2nPo99YWusxw2bjne7ZC6Acqqf4uB/+87AekOq1ehTocHH7b7nMd2X4S3NHVw==}
 
   content-tag@4.2.1:
     resolution: {integrity: sha512-DZwqYmBVGfCrybcMpXv5y5wkbicXZ5zlktIy4hH4EE3q/Sk3W2SRENJa3re+Ak8aegoKgOPCGZSuFmbQQ+h+GQ==}
@@ -2884,7 +2881,7 @@ snapshots:
       '@glimmer/interfaces': 0.94.6
       '@glimmer/util': 0.94.8
       '@glimmer/wire-format': 0.94.8
-      '@handlebars/parser': 2.2.2
+      '@handlebars/parser': 2.2.4
       simple-html-tokenizer: 0.5.11
 
   '@glimmer/util@0.94.8':
@@ -2895,10 +2892,10 @@ snapshots:
     dependencies:
       '@glimmer/interfaces': 0.94.6
 
-  '@glint/ember-tsc@1.11.6(typescript@5.9.3)':
+  '@glint/ember-tsc@1.13.0(typescript@5.9.3)':
     dependencies:
       '@glimmer/syntax': 0.95.0
-      '@glint/template': 1.9.0
+      '@glint/template': 1.10.0
       '@volar/kit': 2.4.28(typescript@5.9.3)
       '@volar/language-core': 2.4.28
       '@volar/language-server': 2.4.28
@@ -2906,7 +2903,7 @@ snapshots:
       '@volar/source-map': 2.4.28
       '@volar/test-utils': 2.4.28
       '@volar/typescript': 2.4.28
-      content-tag: 4.2.0
+      content-tag: 4.2.1
       ember-estree: 0.8.1
       silent-error: 1.1.1
       typescript: 5.9.3
@@ -2918,9 +2915,9 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@glint/template@1.9.0': {}
+  '@glint/template@1.10.0': {}
 
-  '@handlebars/parser@2.2.2': {}
+  '@handlebars/parser@2.2.4': {}
 
   '@humanfs/core@0.19.2':
     dependencies:
@@ -3085,7 +3082,7 @@ snapshots:
 
   '@microsoft/tsdoc@0.17.1': {}
 
-  '@napi-rs/wasm-runtime@1.2.4(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
+  '@napi-rs/wasm-runtime@1.2.5(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)':
     dependencies:
       '@emnapi/core': 1.10.0
       '@emnapi/runtime': 1.10.0
@@ -3158,7 +3155,7 @@ snapshots:
     dependencies:
       '@emnapi/core': 1.10.0
       '@emnapi/runtime': 1.10.0
-      '@napi-rs/wasm-runtime': 1.2.4(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
+      '@napi-rs/wasm-runtime': 1.2.5(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
     optional: true
 
   '@oxc-parser/binding-win32-arm64-msvc@0.130.0':
@@ -3551,8 +3548,6 @@ snapshots:
       tree-kill: 1.2.2
       yargs: 18.0.0
 
-  content-tag@4.2.0: {}
-
   content-tag@4.2.1: {}
 
   convert-source-map@2.0.0: {}
@@ -3634,7 +3629,7 @@ snapshots:
     dependencies:
       '@glimmer/env': 0.1.7
       '@glimmer/syntax': 0.95.0
-      content-tag: 4.2.0
+      content-tag: 4.2.1
       oxc-parser: 0.130.0
 
   ember-rfc176-data@0.3.18: {}
