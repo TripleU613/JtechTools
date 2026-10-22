@@ -143,6 +143,10 @@ function shut(picker: HTMLElement, parent: Node, next: Node | null) {
   copy.classList.remove("is-expanded");
   copy.setAttribute("aria-hidden", "true");
   copy.inert = true;
+  // Never under the pointer: a pointer resting where the row was would land
+  // on the copy, and the plugin would take that as pointing at its
+  // reactions and open them again, right after one was picked.
+  copy.style.pointerEvents = "none";
   const ghost = copy.querySelector<HTMLElement>(`.${ROW}`)!;
   ghost.classList.add(GHOST);
   parent.insertBefore(copy, next?.parentNode === parent ? next : null);
