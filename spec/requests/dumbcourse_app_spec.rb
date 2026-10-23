@@ -75,6 +75,21 @@ RSpec.describe "Dumbcourse app page" do
       expect(category).to be_present
     end
 
+    it "says which categories need tags and whether the user can tag" do
+      SiteSetting.tagging_enabled = true
+      category = Fabricate(:category, minimum_required_tags: 2)
+      # In the trust level groups, which tagging goes by.
+      sign_in(Fabricate(:user, trust_level: TrustLevel[1]))
+      get "/dumb/"
+
+      data = boot_data
+      expect(data["categories"].find { |c| c["id"] == category.id }).to include(
+        "minimum_required_tags" => 2,
+        "required_tag_groups" => [],
+      )
+      expect(data["currentUser"]).to include("can_tag_topics" => true, "can_create_tag" => false)
+    end
+
     it "has no user for signed-out visitors" do
       get "/dumb/"
       expect(response.status).to eq(200)

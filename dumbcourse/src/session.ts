@@ -73,6 +73,10 @@ export function fromCurrentUser(cu: Record<string, unknown>): BootUser {
     moderator: !!cu.moderator,
     trust_level: (cu.trust_level as number) || 0,
     can_send_private_messages: !!cu.can_send_private_messages,
+    // Not in /session/current.json (Discourse keeps them with the site
+    // data): kept from boot, which signing in reloads.
+    can_tag_topics: user ? user.can_tag_topics : false,
+    can_create_tag: user ? user.can_create_tag : false,
     can_review: !!cu.can_review,
     reviewable_count: (cu.reviewable_count as number) || 0,
     unread_notifications: (cu.unread_notifications as number) || 0,

@@ -15,11 +15,23 @@ import {
 } from "../content/emoji.ts";
 import { processCooked } from "../content/cooked.ts";
 import { $, byId, debounce, setHtml } from "../dom.ts";
-import { clearDraft, getDraft, saveDraft, type Draft } from "../drafts.ts";
+import {
+  clearDraft,
+  getDraft,
+  saveDraft,
+  type Draft,
+  type TagRef,
+} from "../drafts.ts";
 import { html, raw, type SafeHtml } from "../html.ts";
 import { focus } from "../nav.ts";
 import { busClientId } from "../messagebus.ts";
-import { categoryName, postableCategories, topicPath } from "../site.ts";
+import {
+  category,
+  categoryName,
+  postableCategories,
+  topicPath,
+} from "../site.ts";
+import { user } from "../session.ts";
 import type { Post } from "../types.ts";
 import { icon } from "../ui/icons.ts";
 import {
@@ -29,6 +41,7 @@ import {
   promptDialog,
   toast,
   type Layer,
+  type SheetItem,
 } from "../ui/layers.ts";
 import { avatar } from "../site.ts";
 
@@ -80,6 +93,7 @@ export function openComposer(o: ComposerOptions): void {
   let title = "";
   let to = "";
   let categoryId: number | null = null;
+  let tags: TagRef[] = [];
   if (o.kind === "reply") {
     if (!o.replyTo && saved && saved.replyTo) o.replyTo = saved.replyTo;
     text = saved ? saved.text : "";
@@ -96,6 +110,10 @@ export function openComposer(o: ComposerOptions): void {
       saved && saved.categoryId !== undefined
         ? saved.categoryId || null
         : o.categoryId || null;
+    tags =
+      saved && saved.tags
+        ? saved.tags
+        : (o.tags || []).map((name) => ({ name }));
   } else {
     text = saved ? saved.text : o.body || "";
     title = saved ? saved.title || "" : o.title || "";
@@ -149,6 +167,16 @@ export function openComposer(o: ComposerOptions): void {
           </select>
         </div>`
       : html``;
+  // Categories can require tags, so a new topic gets a way to add them.
+  const canTag =
+    o.kind === "topic" && settings.tagsEnabled && !!user && user.can_tag_topics;
+  const tagField = canTag
+    ? html`<div class="field">
+        <span class="field-label">Tags</span>
+        <div id="cTags" class="c-tags" data-row></div>
+        <p id="cTagsHint" class="hint" hidden></p>
+      </div>`
+    : html``;
   const toField =
     o.kind === "message"
       ? html`<div class="field">
@@ -195,7 +223,7 @@ export function openComposer(o: ComposerOptions): void {
         </button>
       </div>
       <div class="c-body scroll">
-        ${context}${toField}${titleField}${catField}
+        ${context}${toField}${titleField}${catField}${tagField}
         <label class="sr" for="cText">Message</label>
         <textarea
           id="cText"
@@ -324,6 +352,7 @@ ${text}</textarea
     text: ta.value,
     title: titleEl ? titleEl.value : undefined,
     categoryId: catEl ? parseInt(catEl.value, 10) || null : undefined,
+    tags: canTag ? tags : undefined,
     to: toEl ? toEl.value : undefined,
     topicId: o.kind === "reply" || o.kind === "edit" ? o.topicId : undefined,
     topicTitle:
@@ -360,7 +389,159 @@ ${text}</textarea
   });
   if (titleEl) titleEl.addEventListener("input", persist);
   if (toEl) toEl.addEventListener("input", persist);
-  if (catEl) catEl.addEventListener("change", persist);
+  if (catEl)
+    catEl.addEventListener("change", () => {
+      persist();
+      drawTags();
+    });
+
+  // ── Tags ─────────────────────────────────────────────────────────────
+  const tagsBox = $("#cTags", layer.el) as HTMLElement | null;
+  const tagsHint = $("#cTagsHint", layer.el) as HTMLElement | null;
+  const chosenCategory = () =>
+    catEl ? parseInt(catEl.value, 10) || null : null;
+
+  // How many the chosen category asks for: its minimum, or its required
+  // groups' together if that's more. The server checks each group itself.
+  const tagsNeeded = (): number => {
+    const c = category(chosenCategory());
+    if (!c) return 0;
+    let fromGroups = 0;
+    (c.required_tag_groups || []).forEach(
+      (g) => (fromGroups += g.min_count || 0)
+    );
+    return Math.max(c.minimum_required_tags || 0, fromGroups);
+  };
+
+  const drawTags = (focusAdd = false) => {
+    if (!tagsBox) return;
+    setHtml(
+      tagsBox,
+      html`${tags.map(
+          (t) =>
+            html`<button
+              type="button"
+              class="chip"
+              data-tag="${t.name}"
+              aria-label="Remove #${t.name}"
+            >
+              #${t.name} ×
+            </button>`
+        )}<button type="button" class="btn small" data-tag-add>
+          ${icon("tag")}Add tag
+        </button>`
+    );
+    const need = tagsNeeded();
+    if (tagsHint) {
+      tagsHint.hidden = !need;
+      tagsHint.textContent =
+        need === 1
+          ? "This category needs a tag."
+          : `This category needs at least ${need} tags.`;
+    }
+    if (focusAdd) focus($("[data-tag-add]", tagsBox) as HTMLElement);
+  };
+
+  const hasTag = (name: string) =>
+    tags.some((t) => t.name.toLowerCase() === name.toLowerCase());
+
+  const addTag = (t: TagRef) => {
+    if (!hasTag(t.name)) tags = tags.concat([t]);
+    persist();
+    drawTags(true);
+  };
+
+  // The category's tags, most used first, or those matching what was
+  // typed. Someone allowed to make tags can use a new one. `why` says what
+  // the category still needs, when sending found it short.
+  const pickTag = (q: string, why = "") => {
+    const cat = chosenCategory();
+    // No limit: asking for more than max_tag_search_results is refused, so
+    // the forum's own setting decides.
+    const selected = tags
+      .filter((t) => t.id)
+      .map((t) => "&selected_tag_ids[]=" + t.id)
+      .join("");
+    get<{
+      results?: Array<{ id: number; name: string; count?: number }>;
+      required_tag_group?: { name: string; min_count: number };
+    }>(
+      `/tags/filter/search.json?q=${encodeURIComponent(q)}&filterForInput=true${cat ? "&categoryId=" + cat : ""}${selected}`
+    ).then(
+      (res) => {
+        const found = (res.results || []).filter((r) => !hasTag(r.name));
+        const typed = q.replace(/^\s+|\s+$/g, "").replace(/\s+/g, "-");
+        const items: SheetItem[] = [
+          {
+            label: "Search…",
+            icon: "search",
+            run: () =>
+              void promptDialog("Tag", {
+                title: "Find a tag",
+                value: q,
+                ok: "Search",
+              }).then((text) => {
+                if (text !== null) pickTag(text, why);
+              }),
+          },
+        ];
+        found.forEach((r) =>
+          items.push({
+            label: "#" + r.name,
+            hint: r.count ? String(r.count) : undefined,
+            run: () => addTag({ id: r.id, name: r.name }),
+          })
+        );
+        if (
+          typed &&
+          user &&
+          user.can_create_tag &&
+          !hasTag(typed) &&
+          !found.some((r) => r.name.toLowerCase() === typed.toLowerCase())
+        )
+          items.push({
+            label: `New tag #${typed}`,
+            icon: "plus",
+            run: () => addTag({ name: typed }),
+          });
+        if (items.length === 1)
+          items.push({
+            label: q ? "No tags match." : "No tags to pick here.",
+            disabled: true,
+          });
+        const group = res.required_tag_group;
+        actionSheet(q ? `Tags matching "${q}"` : "Add a tag", items, {
+          subtitle: group
+            ? `Pick at least ${group.min_count} from ${group.name}.`
+            : why || undefined,
+        });
+      },
+      (err: unknown) => toast(errorMessage(err), "error")
+    );
+  };
+
+  if (tagsBox) {
+    drawTags();
+    tagsBox.addEventListener("click", (e) => {
+      // No Element.closest on the oldest phones.
+      let el = e.target as HTMLElement | null;
+      while (
+        el &&
+        el !== tagsBox &&
+        !el.getAttribute("data-tag") &&
+        el.getAttribute("data-tag-add") === null
+      )
+        el = el.parentNode as HTMLElement | null;
+      if (!el || el === tagsBox) return;
+      e.preventDefault();
+      const name = el.getAttribute("data-tag");
+      if (name) {
+        tags = tags.filter((t) => t.name !== name);
+        persist();
+        drawTags(true);
+      } else pickTag("");
+    });
+  }
 
   // ── Mentions ─────────────────────────────────────────────────────────
   const mentions = mentionHelper(
@@ -670,12 +851,22 @@ ${text}</textarea
         if (titleEl) focus(titleEl);
         return;
       }
+      const need = canTag ? tagsNeeded() : 0;
+      if (tags.length < need) {
+        pickTag(
+          "",
+          need === 1
+            ? "This category needs a tag."
+            : `This category needs at least ${need} tags.`
+        );
+        return;
+      }
       const cat = catEl ? parseInt(catEl.value, 10) || undefined : undefined;
       req = post("/posts.json", {
         title: t,
         raw: body,
         category: cat,
-        tags: o.tags && o.tags.length ? o.tags : undefined,
+        tags: tags.length ? tags : undefined,
         archetype: "regular",
         dumbcourse: true,
       });

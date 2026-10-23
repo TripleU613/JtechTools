@@ -259,6 +259,8 @@ module DiscourseDumbcourse
         moderator: user.moderator?,
         trust_level: user.trust_level,
         can_send_private_messages: guardian.can_send_private_messages?,
+        can_tag_topics: guardian.can_tag_topics?,
+        can_create_tag: guardian.can_create_tag?,
         can_review: guardian.can_see_review_queue?,
         reviewable_count: guardian.can_see_review_queue? ? user.reviewable_count : 0,
         unread_notifications: user.unread_notifications,
@@ -389,6 +391,9 @@ module DiscourseDumbcourse
           :position,
           :notification_level,
           :subcategory_ids,
+          # What a new topic there needs, so the composer can ask for tags.
+          :minimum_required_tags,
+          :required_tag_groups,
         )
       end
     end

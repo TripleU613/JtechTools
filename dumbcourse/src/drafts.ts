@@ -3,12 +3,20 @@
 
 import { userGet, userSet } from "./storage.ts";
 
+// A tag on a new topic: one picked from the forum's has its id; one typed
+// in that doesn't exist yet has only a name.
+export interface TagRef {
+  id?: number;
+  name: string;
+}
+
 export interface Draft {
   key: string;
   kind: "reply" | "topic" | "message" | "edit";
   text: string;
   title?: string;
   categoryId?: number | null;
+  tags?: TagRef[];
   to?: string;
   topicId?: number;
   topicTitle?: string;
