@@ -134,19 +134,23 @@ export default class JtCommandMenu extends Component<JtCommandMenuSignature> {
 
   isSelected = (index: number): boolean => index === this.selected;
 
-  // Shortcut keys beside a command, as keycaps: "g l" → g l, "shift+b" → ⇧ B
+  // Shortcut keys beside a command, as keycaps: "g l" → g l, "shift+b" → ⇧ B,
+  // "mod+shift+k" → ⌘ ⇧ K (Ctrl Shift K off a Mac)
   keysFor = (item: MenuEntry): string[] | null => {
     if (!item.keys || !this.capabilities.hasKeyboard) {
       return null;
     }
-    const shift = this.capabilities.isApple ? "⇧" : "Shift";
-    return item.keys
-      .split(" ")
-      .flatMap((combo) =>
-        combo.startsWith("shift+")
-          ? [shift, combo.slice("shift+".length).toUpperCase()]
-          : [combo]
-      );
+    const apple = this.capabilities.isApple;
+    const names: Record<string, string> = {
+      mod: apple ? "⌘" : "Ctrl",
+      shift: apple ? "⇧" : "Shift",
+    };
+    return item.keys.split(" ").flatMap((combo) => {
+      const keys = combo.split("+");
+      return keys.length > 1
+        ? keys.map((key) => names[key] ?? key.toUpperCase())
+        : keys;
+    });
   };
 
   #searchTimer: Timer | null = null;
@@ -208,6 +212,15 @@ export default class JtCommandMenu extends Component<JtCommandMenuSignature> {
         label: t("tags"),
         keys: JT_SHORTCUTS.tags,
         url: "/tags",
+      },
+      // the search page with its filters open, where core's own search
+      // menu only gets to after a search
+      this.site.can_search && {
+        icon: "sliders",
+        label: t("advanced_search"),
+        keywords: "filters find",
+        keys: JT_SHORTCUTS.advanced_search,
+        url: "/search?expanded=true",
       },
       user && {
         icon: "bookmark",
@@ -497,6 +510,21 @@ export default class JtCommandMenu extends Component<JtCommandMenuSignature> {
     if (item.url && newTab) {
       window.open(item.url, "_blank", "noopener");
       return;
+    }
+    // The Enter that ran it is let go of on the page it opened: not in that
+    // page's field. Core's fields act on Enter's release, and the search
+    // page's ran an empty search and shut the filters advanced search opens.
+    if (event instanceof KeyboardEvent) {
+      document.addEventListener(
+        "keyup",
+        (up) => {
+          if (up.key === "Enter") {
+            up.preventDefault();
+            up.stopPropagation();
+          }
+        },
+        { capture: true, once: true }
+      );
     }
     this.args.closeModal();
     if (item.run) {

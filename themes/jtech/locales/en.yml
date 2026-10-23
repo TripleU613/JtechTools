@@ -137,7 +137,7 @@ en:
       density_menu: "Density button in the sidebar footer, beside the palette button: topic lists as they are, Comfortable (cards without the excerpt and picture) or Compact (one row a topic), like Gmail's. Kept in this browser."
       overlay_scrollbar: "Thin overlay scrollbar for the page (macOS style) on mouse/trackpad devices, instead of the browser's wide classic one."
       back_to_top: "Floating back-to-top button on long pages (not on topics, which have their own)."
-      command_menu: "⌘K / Ctrl+K command menu: jump to pages, categories, topics and people, or run an action."
+      command_menu: "⌘K / Ctrl+K command menu: jump to pages, categories, topics and people, or run an action. ⌘⇧K / Ctrl+Shift+K opens advanced search."
       card_thumbnails: "Show the topic's first image beside its title on topic cards."
       code_language_labels: "Header showing the language on code blocks whose author named one (```bash)."
       code_line_numbers: "Line numbers in a gutter beside code blocks of two or more lines. Copying a block copies the code only."

@@ -6,6 +6,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **New**
 
+- JTech theme: advanced search in the command menu (⌘K / Ctrl+K): Open advanced search goes to the search page with its filters open, without searching first. ⌘⇧K / Ctrl+Shift+K goes there from anywhere outside a text field ([#353](https://github.com/TripleU613/JtechTools/issues/353)).
 - Mod elections: candidates can change their statement or drop out during Vote Week too, on the full site and in Dumbcourse. Someone who drops out in Vote Week can't come back on the ballot, and votes for them go to each voter's next choice. Once Vote Week is over, both are fixed.
 - REQ-PM: WhatsApp takes a username as well as a number, as Telegram and Signal do. A number still gets the Chat link; a username is shown with a copy button, on the full site and in Dumbcourse.
 - JTech theme and Dumbcourse: reactions roll out in a row. With the Reactions plugin, the heart still likes a post when clicked, and pointing at it rolls the reactions out sideways in the post's menu, pushing what's beside it along, instead of a box over the post; a row that doesn't fit scrolls (the mouse wheel scrolls it too). On phones a button beside the heart opens the row with a tap, the menu's other buttons but Reply step aside while it's open, and it fades at the edge where there are more to swipe to. Dumbcourse on a touch screen does the same in a post's footer, from the smile beside the like. Room for more than six reactions without the picker taking over the post. Setting: `reaction_rollout`.

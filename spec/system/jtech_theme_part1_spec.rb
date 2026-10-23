@@ -178,6 +178,34 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
     expect(page).to have_no_css(".jt-cmdk")
   end
 
+  # Issue #353: advanced search took a search first, then the results page's
+  # Advanced filters. The menu goes to the search page with them open, and
+  # so does Ctrl+Shift+K.
+  it "opens advanced search from the command menu, and with Ctrl+Shift+K" do
+    SiteSetting.chat_enabled = false
+    sign_in(member)
+    visit("/latest")
+    expect(page).to have_css(".jt-header-search__keys")
+
+    send_keys([:control, "k"])
+    find(".jt-cmdk__input").fill_in(with: "advanced")
+    expect(page).to have_css(".jt-cmdk__item.--active", text: I18n.t("js.search.open_advanced"))
+    expect(page).to have_css(".jt-cmdk__item.--active .jt-cmdk__keys kbd", count: 3)
+    send_keys(:enter)
+    expect(page).to have_current_path(%r{/search\?expanded=true})
+    expect(page).to have_css(".advanced-filters.--is-expanded .search-advanced-filters")
+    # the Enter that picked it isn't let go of in the page's search field,
+    # which searched for nothing and shut the filters
+    expect(page).to have_no_css(".fps-invalid")
+
+    visit("/latest")
+    expect(page).to have_css(".jt-header-search__keys")
+    send_keys([:control, :shift, "k"])
+    expect(page).to have_current_path(%r{/search\?expanded=true})
+    expect(page).to have_css(".advanced-filters.--is-expanded .search-advanced-filters")
+    expect_no_theme_errors
+  end
+
   # The People page's six periods need about 350px in a row: at 360px "All
   # time" was cut off and only reachable by swiping
   it "shows every period on the People page on a 360px phone", mobile: true do

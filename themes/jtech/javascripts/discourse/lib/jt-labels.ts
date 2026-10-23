@@ -19,6 +19,7 @@ const CORE_KEYS: Record<string, string> = {
   "cmdk.profile": "keyboard_shortcuts_help.jump_to.profile",
   "cmdk.preferences": "user.preferences.title",
   "cmdk.admin": "admin_title",
+  "cmdk.advanced_search": "search.open_advanced",
   "cmdk.group_categories": "search.categories",
   "header.messages": "user.private_messages",
   "header.notifications": "user.notifications",

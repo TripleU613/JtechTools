@@ -1,6 +1,7 @@
 import { settings } from "virtual:theme";
 import { apiInitializer } from "discourse/lib/api";
 import DiscourseURL from "discourse/lib/url";
+import type Site from "discourse/models/site";
 import type User from "discourse/models/user";
 import type InterfaceColor from "discourse/services/interface-color";
 import type SiteSettingsService from "discourse/services/site-settings";
@@ -25,8 +26,8 @@ function addHelpLabels(names: ShortcutName[]) {
 }
 
 // The command menu's commands that core has no key for (lib/jt-shortcuts):
-// tags, notifications, preferences, admin and light / dark. Like core's own
-// keys, they don't fire while typing in a field.
+// tags, notifications, preferences, admin, light / dark and advanced search.
+// Like core's own keys, they don't fire while typing in a field.
 export default apiInitializer((api) => {
   if (!settings.command_menu) {
     return;
@@ -38,28 +39,35 @@ export default apiInitializer((api) => {
   const interfaceColor = api.container.lookup(
     "service:interface-color"
   ) as InterfaceColor;
+  const site = api.container.lookup("service:site") as Site & {
+    can_search: boolean;
+  };
 
-  const go = (url: string) => () => DiscourseURL.routeTo(url, undefined);
+  // and the browser's own use of the keys, if any, left out
+  const go = (url: string) => (event?: KeyboardEvent) => {
+    event?.preventDefault();
+    DiscourseURL.routeTo(url, undefined);
+  };
   const added: ShortcutName[] = [];
   const add = (
     name: ShortcutName,
-    callback: () => unknown,
+    callback: (event?: KeyboardEvent) => unknown,
     category: "jump_to" | "application",
     anonymous = false
   ) => {
-    const keys = JT_SHORTCUTS[name];
+    const keys: string = JT_SHORTCUTS[name];
+    const [first, then] = keys.split(" ");
     api.addKeyboardShortcut(keys, callback, {
       anonymous,
       help: {
         category,
         name: `jtech.${name}`,
         // one key, then the next (as core shows "shift+z shift+z"); a single
-        // group of ["g", "g"] would show one G
-        definition: {
-          keys1: [keys.split(" ")[0]],
-          keys2: [keys.split(" ")[1]],
-          shortcutsDelimiter: "space",
-        },
+        // group of ["g", "g"] would show one G. Keys held together are one
+        // group, as core's [mod, p].
+        definition: then
+          ? { keys1: [first], keys2: [then], shortcutsDelimiter: "space" }
+          : { keys1: first.split("+") },
       },
     });
     added.push(name);
@@ -82,6 +90,9 @@ export default apiInitializer((api) => {
       "application",
       true
     );
+  }
+  if (site.can_search) {
+    add("advanced_search", go("/search?expanded=true"), "application", true);
   }
   addHelpLabels(added);
 });
