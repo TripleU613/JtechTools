@@ -332,7 +332,10 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
     end
 
     it "opens the post being answered, and a post's replies, as a card" do
+      # what posting the answer records: the Replies button and the replies
+      # it loads come from these, not from reply_to_post_number
       question.update!(reply_count: 1)
+      PostReply.create!(post: question, reply: answer)
       open_thread
 
       find("#post_#{answer.post_number} .reply-to-tab").click
