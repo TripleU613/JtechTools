@@ -1041,9 +1041,16 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
       expect(page).to have_css("#{post_selector} .discourse-reactions-reaction-button")
       # The menu in the middle, not the post: a reaction on the window's edge
       # gets scrolled to when hovered, and the page moves out from under it.
-      page.execute_script(
-        "document.querySelector(#{"#{post_selector} .post-controls".to_json}).scrollIntoView({ block: 'center' })",
-      )
+      # Again until it stays there, in case the page was still moving.
+      menu = "#{post_selector} nav.post-controls"
+      try_until_success do
+        page.execute_script(
+          "document.querySelector(#{menu.to_json}).scrollIntoView({ block: 'center' })",
+        )
+        height = page.evaluate_script("window.innerHeight")
+        expect(box(menu)["top"]).to be > height / 4
+        expect(box(menu)["bottom"]).to be < height * 3 / 4
+      end
     end
 
     def box(selector)
