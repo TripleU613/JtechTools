@@ -33,42 +33,39 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
     end
   end
 
-  # Buttons on a line of their own (under the like count, or more than fit
-  # beside it) hung at the right with a gap at the left. They fill the line
-  # from the text's edge to the right one now, each the same width.
-  it "spreads a post's buttons evenly over a line of their own on a phone", mobile: true do
+  # A post's buttons stay on one line on a phone: what doesn't fit goes into
+  # ⋯, which lists them, named, in a sheet; each does what it did on the line.
+  it "keeps a post's buttons on one line on a phone, the rest in ⋯", mobile: true do
     SiteSetting.post_menu = "read|like|copyLink|share|flag|edit|bookmark|delete|admin|reply"
     SiteSetting.post_menu_hidden_items = ""
     sign_in(admin)
-    resize_window(width: 390) do
+    resize_window(width: 320) do
       visit(topic.relative_url)
-      expect(page).to have_css("#post_1 nav.post-controls .actions .post-action-menu__share")
-      at = page.evaluate_script(<<~JS)
+      expect(page).to have_css("#post_1 nav.post-controls .show-more-actions")
+      line = page.evaluate_script(<<~JS)
         (() => {
-          const post = document.querySelector("#post_1");
-          const text = post.querySelector(".cooked").getBoundingClientRect();
-          const icons = [...post.querySelectorAll("nav.post-controls .actions > .btn.no-text")]
-            .filter((button) => !button.classList.contains("post-action-menu__reply"))
-            .map((button) => button.getBoundingClientRect())
+          const nav = document.querySelector("#post_1 nav.post-controls");
+          const boxes = [...nav.querySelectorAll(":scope > :not(.actions), .actions > *")]
+            .map((part) => part.getBoundingClientRect())
             .filter((box) => box.width);
-          const all = [...post.querySelectorAll("nav.post-controls .actions > *")]
-            .map((button) => button.getBoundingClientRect())
-            .filter((box) => box.width);
-          const top = Math.round(all[0].top);
-          const line = all.filter((box) => Math.round(box.top) === top);
           return {
-            text_left: Math.round(text.left),
-            text_right: Math.round(text.right),
-            left: Math.round(line[0].left),
-            right: Math.round(line[line.length - 1].right),
-            widths: icons.filter((box) => Math.round(box.top) === top).map((box) => Math.round(box.width)),
+            middles: [...new Set(boxes.map((box) => Math.round((box.top + box.bottom) / 2)))],
+            left: Math.round(Math.min(...boxes.map((box) => box.left))),
+            right: Math.round(Math.max(...boxes.map((box) => box.right))),
           };
         })()
       JS
-      expect(at["left"]).to be_within(1).of(at["text_left"])
-      expect(at["right"]).to be_within(1).of(at["text_right"])
-      expect(at["widths"].max - at["widths"].min).to be <= 1
-      shot("post-buttons-line")
+      expect(line["middles"].max - line["middles"].min).to be <= 2
+      expect(line["left"]).to be >= 0
+      expect(line["right"]).to be <= 320
+
+      find("#post_1 nav.post-controls .show-more-actions").click
+      expect(page).to have_css(".jt-post-more .jt-post-more__list .btn", minimum: 2)
+      expect(page).to have_css(".jt-post-more .btn", text: I18n.t("js.post.controls.flag_action"))
+      shot("post-more-sheet")
+      find(".jt-post-more .btn", text: I18n.t("js.post.controls.flag_action")).click
+      expect(page).to have_css(".flag-modal")
+      expect(page).to have_no_css(".jt-post-more")
       expect_no_theme_errors
     end
   end

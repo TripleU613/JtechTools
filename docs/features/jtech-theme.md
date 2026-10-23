@@ -14,6 +14,7 @@ What it adds on top of a restyle:
 - **Lucide icons**: Discourse's icons in Lucide's thin outline style (lucide.dev) instead of Font Awesome, as ChatGPT and Gemini use.
 - The **tags page** as chips with their counts, instead of columns of "name x 190".
 - **Reactions in a row** (with the Reactions plugin, setting `reaction_rollout`): the heart likes a post when clicked, and pointing at it rolls the reactions out sideways in the post's menu, pushing what's beside it along, instead of a box over the post. It slides open to as many whole reactions as there's room for, and slides shut again when the pointer leaves. A row that doesn't fit scrolls (the mouse wheel glides along it, and while pointing at the row never scrolls the page, even at its ends) and fades at an edge with more to scroll to. On phones a button beside the heart opens it with a tap; while it's open the menu's other buttons but Reply step aside. Under a Discourse palette the plugin's own picker shows, as in stock Discourse.
+- **A post's buttons on one line on phones**: what doesn't fit beside the reactions goes into ⋯, which opens a list of them, named, from the bottom of the screen.
 - An overlay page scrollbar, a back-to-top button, reading progress, language labels on code blocks, category icons on the categories page.
 
 Each of those has its own switch in the theme's settings.

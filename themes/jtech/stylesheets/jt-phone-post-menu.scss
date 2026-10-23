@@ -1,27 +1,21 @@
-// A post's row of buttons on phones. Core gives each icon button 0.58em of
-// padding a side, which with the theme's 2px gaps makes a row of eight or
-// nine 38px buttons wider than a 375px phone's column, so the row scrolled
-// sideways (and the first post's, with the like count beside it, by more).
-// Here the buttons are 34px on phones, the row may wrap, and when the like
-// count and the buttons don't fit on one line the buttons drop under it.
-// Nothing scrolls sideways. Nine or more
-// buttons (staff can get View translation, Solution, Share …) are wider
-// than a 320px phone's column (a Qin F21) even so: pushed against the right
-// edge, the first ones hung off the screen's left edge, out of reach. They
-// wrap too, the last ones onto a line of their own under the others.
+// A post's row of buttons on phones: one line, always. Core gave each icon
+// button 0.58em of padding a side, so eight or nine of them were wider than
+// a 375px phone's column and the row scrolled sideways; wrapping them
+// instead left a ragged second line. The buttons are 34px here, and the
+// ones that don't fit beside the reactions go into ⋯
+// (api-initializers/jt-phone-post-menu), which lists them in a sheet.
 html.mobile-view nav.post-controls {
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 
-  // and room between the like count and the buttons, which take up all
-  // there is on their line
+  // and room between the reactions and the buttons, which take up all there
+  // is on the line
   gap: var(--space-2);
   overflow-x: visible;
 
   .actions {
     flex: 1 1 auto;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: flex-end;
-    row-gap: var(--space-2);
     min-width: 0;
 
     .btn {
@@ -29,28 +23,27 @@ html.mobile-view nav.post-controls {
       padding-inline: 0.4em;
     }
 
-    // Reply keeps its word and a little more room than the icons
+    // Icons only on the line, so each button is a button's width: the
+    // solved plugin's Solution keeps its word for whoever asked, wherever.
+    .btn .d-button-label {
+      display: none;
+    }
+
+    // Reply a little more room than the icons
     .post-action-menu__reply {
       padding-inline: 0.6em;
     }
 
-    // Each icon takes up to a tap's width (44px) of the room its line has.
-    // Beside the like count that's a little more room each, against the
-    // right edge; on a line of their own they fill it from the text's edge
-    // to the right, where they hung at the right with a gap at the left.
-    // Not a button with its word (Reply, Solution), nor the heart while its
-    // row of reactions is open and needs the room.
-    // All from 32px, so they come out the same width and the icons evenly
-    // spaced, and ten (a reply by someone else, with Solution and the
-    // flag) fit beside each other from a 360px phone up. Not below it
-    // either: the reactions row lets the heart's box narrow to nothing, for
-    // the row it opens.
+    // Each takes up to a tap's width (44px) of what's left on the line, all
+    // from 34px so they come out the same width, the icons evenly spaced.
+    // Not below it either: the reactions row lets the heart's box narrow to
+    // nothing, for the row it opens.
     > .btn.no-text,
     > .double-button,
     > .discourse-reactions-actions-button-shim {
-      flex: 1 1 2rem;
+      flex: 1 1 2.125rem;
       justify-content: center;
-      min-width: 2rem;
+      min-width: 2.125rem;
       max-width: 2.75rem;
     }
 
@@ -60,11 +53,45 @@ html.mobile-view nav.post-controls {
     }
   }
 
+  // the heart while its reactions row is open: as wide as the row
   &:has(.discourse-reactions-picker.is-expanded, .jt-rx-ghost)
     .actions
     > .discourse-reactions-actions-button-shim {
     flex: 0 1 auto;
     min-width: 0;
     max-width: none;
+  }
+}
+
+// ⋯'s sheet: the buttons that didn't fit, one a row, each with its name
+.jt-post-more .jt-post-more__list {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2) 0;
+
+  .btn {
+    justify-content: flex-start;
+    gap: var(--space-3);
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0 var(--space-4);
+    font-size: var(--jt-text-md);
+    color: var(--jt-text);
+    border-radius: 0;
+
+    .d-icon {
+      margin: 0;
+      color: var(--jt-text-muted);
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: var(--jt-hover);
+    }
+  }
+
+  // the solved plugin names Accept only for whoever asked: its title then
+  .btn:not(:has(.d-button-label))::after {
+    content: attr(title);
   }
 }
