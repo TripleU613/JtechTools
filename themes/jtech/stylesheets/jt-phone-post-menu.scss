@@ -18,6 +18,8 @@ html.mobile-view nav.post-controls {
     justify-content: flex-end;
     min-width: 0;
 
+    // Reply too: it has no word on a phone, and every button the same
+    // width is what jt-post-menu-room counts in
     .btn {
       min-width: 2.125rem;
       padding-inline: 0.4em;
@@ -27,11 +29,6 @@ html.mobile-view nav.post-controls {
     // solved plugin's Solution keeps its word for whoever asked, wherever.
     .btn .d-button-label {
       display: none;
-    }
-
-    // Reply a little more room than the icons
-    .post-action-menu__reply {
-      padding-inline: 0.6em;
     }
 
     // Each takes up to a tap's width (44px) of what's left on the line, all
@@ -45,11 +42,6 @@ html.mobile-view nav.post-controls {
       justify-content: center;
       min-width: 2.125rem;
       max-width: 2.75rem;
-    }
-
-    // from its own width, the little more room it has
-    > .post-action-menu__reply {
-      flex-basis: auto;
     }
   }
 
