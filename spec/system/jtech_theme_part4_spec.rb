@@ -289,6 +289,76 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
       expect(at["title_cut"]).to eq(false)
       expect_no_theme_errors
     end
+
+    # Where a card's parts sit, and the edges of the post it opened in: its
+    # own row (the avatar's left, the menu's right) and its text.
+    def card(post, which)
+      page.evaluate_script(<<~JS)
+        (() => {
+          const post = document.querySelector("#post_#{post.post_number}");
+          const card = post.querySelector(".embedded-posts.#{which}");
+          const box = (element) => {
+            const rect = element.getBoundingClientRect();
+            return {
+              left: Math.round(rect.left),
+              right: Math.round(rect.right),
+              middle: Math.round((rect.top + rect.bottom) / 2),
+            };
+          };
+          return {
+            card: box(card),
+            avatar: box(card.querySelector(".topic-avatar img.avatar")),
+            name: box(card.querySelector(".names .username a")),
+            jump: box(card.querySelector(".post-info.arrow")),
+            chevron: box(card.querySelector(".post__collapse-button .d-icon")),
+            text: box(card.querySelector(".cooked")),
+            post_avatar: box(post.querySelector(":scope > .row > .topic-avatar")),
+            post_menu: box(post.querySelector("nav.post-controls")),
+            post_text: box(post.querySelector(".cooked")),
+          };
+        })()
+      JS
+    end
+
+    # The quote card's layout: who wrote it, the way to it and the chevron
+    # that shuts it on one line, the text under it from the same edges.
+    def expect_card_lines(at)
+      %w[avatar jump chevron].each do |part|
+        expect(at[part]["middle"]).to be_within(1).of(at["name"]["middle"])
+      end
+      expect(at["avatar"]["left"]).to be_within(1).of(at["text"]["left"])
+      expect(at["chevron"]["right"]).to be_within(1).of(at["text"]["right"])
+      expect(at["jump"]["right"]).to be < at["chevron"]["left"]
+    end
+
+    it "opens the post being answered, and a post's replies, as a card" do
+      question.update!(reply_count: 1)
+      open_thread
+
+      find("#post_#{answer.post_number} .reply-to-tab").click
+      above = "#post_#{answer.post_number} .embedded-posts.top"
+      expect(page).to have_css("#{above} .cooked", text: question.raw)
+      at = card(answer, "top")
+      expect_card_lines(at)
+      # over the whole post: its avatar's edge to its menu's
+      expect(at["card"]["left"]).to be_within(1).of(at["post_avatar"]["left"])
+      expect(at["card"]["right"]).to be_within(1).of(at["post_menu"]["right"])
+      shot("post-answered-card")
+
+      find("#post_#{question.post_number} .post-action-menu__show-replies").click
+      below = "#post_#{question.post_number} .embedded-posts.bottom"
+      expect(page).to have_css("#{below} .cooked", text: answer.raw)
+      at = card(question, "bottom")
+      expect_card_lines(at)
+      # under the post's text, as wide as it
+      expect(at["card"]["left"]).to be_within(1).of(at["post_text"]["left"])
+      expect(at["card"]["right"]).to be_within(1).of(at["post_text"]["right"])
+      shot("post-replies-card")
+
+      find("#{below} .post__collapse-button").click
+      expect(page).to have_no_css(below)
+      expect_no_theme_errors
+    end
   end
 
   describe "voice messages" do

@@ -234,18 +234,27 @@ nav.post-controls {
 
 // ── Expanded replies ──────────────────────────────────────
 // The post being answered (the reply-to tab) and a post's replies (the
-// Replies button) open in the stream between core's hairlines, which on
-// this palette are next to invisible, so they read as more posts. A sunken
-// panel with a border, an accent bar on the left and rounded corners sets
-// them apart, and the collapse chevron is a button at its top corner
-// instead of floating in the margin.
-.topic-post .embedded-posts {
-  --border-color: var(--jt-border-strong);
+// Replies button) open as the quote card (jt-post-blocks): who wrote it on
+// one line, with the way to it and the chevron that shuts the card at its
+// end, and the text under it, from the same edge. Core places these with
+// offsets and translations made for its thread lines, which left the
+// chevron a row of its own, the jump link under the text and the avatar
+// against the card's edge; all of that is set here, as deep as core's
+// selectors go.
+$jt-reply-line: 1.75rem; // the name's line: the chevron's height
+
+.topic-post section.embedded-posts {
+  position: relative;
   box-sizing: border-box;
-  padding: var(--space-2) var(--space-3) var(--space-3);
+
+  // all of the row it opens in, which (above the post) is a flex row that
+  // would otherwise fit it to its text
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
   background: var(--jt-surface-sunken);
-  border: 1px solid var(--jt-border-strong);
-  border-inline-start: 3px solid var(--jt-accent);
+  border: 1px solid var(--jt-border);
   border-radius: var(--jt-radius-md);
 
   &.top {
@@ -253,42 +262,192 @@ nav.post-controls {
   }
 
   &.bottom {
-    margin-top: var(--space-2);
-    border: 1px solid var(--jt-border-strong);
-    border-inline-start: 3px solid var(--jt-accent);
+    margin: var(--space-2) 0 var(--space-4);
   }
 
-  // Core's thread lines: the panel does their job
-  .row::before,
-  .topic-body::before {
-    display: none;
-  }
-
-  .topic-body,
-  .topic-avatar {
-    background: transparent;
-    border-top: 0;
-  }
-
-  .collapse-down,
-  .collapse-up {
+  .reply {
+    display: block;
     position: static;
-    margin: 0 0 var(--space-1);
-    transform: none;
-    color: var(--jt-text-muted);
-    border: 1px solid var(--jt-border);
-    border-radius: var(--jt-radius-control);
+    margin: 0;
+    padding: 0.7rem $jt-block-pad 0.75rem;
 
-    &:hover {
-      color: var(--jt-text);
-      border-color: var(--jt-border-strong);
+    + .reply {
+      border-top: 1px solid var(--jt-border);
     }
   }
 
-  .topic-meta-data h5 a,
-  .arrow,
-  .post-date {
-    color: var(--jt-text-muted);
+  .reply .row {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr);
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0;
+    border: 0;
+
+    // core's thread lines: the card does their job
+    &::before,
+    .topic-body::before {
+      display: none;
+    }
+
+    // the name line's height (core's), its picture in the middle of it
+    .topic-avatar {
+      position: static;
+      display: flex;
+      align-items: center;
+      width: auto;
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      border: 0;
+
+      // blocks, not a picture on a line of text
+      .post-avatar,
+      .main-avatar,
+      .avatar {
+        display: block;
+      }
+
+      .avatar {
+        width: 24px;
+        height: 24px;
+      }
+
+      .avatar-flair {
+        display: none;
+      }
+    }
+
+    // the name's line and the text are the row's own cells
+    .topic-body {
+      display: contents;
+    }
+
+    .topic-body .topic-meta-data {
+      position: static;
+      display: flex;
+      align-items: center;
+      gap: var(--space-2);
+      min-width: 0;
+      height: $jt-reply-line;
+      margin: 0;
+      padding: 0;
+
+      // one line height for the name and the link, so they share a baseline
+      line-height: 1.3;
+
+      .names {
+        display: flex;
+        flex: 1 1 auto;
+        align-items: center;
+        min-width: 0;
+        margin: 0;
+        overflow: hidden;
+        font-size: var(--jt-text-sm);
+        white-space: nowrap;
+
+        .username a {
+          font-weight: 600;
+          color: var(--jt-text);
+        }
+
+        .user-title {
+          display: none;
+        }
+      }
+
+      .post-link-arrow {
+        position: static;
+        display: flex;
+        flex: none;
+        margin-inline-start: auto;
+
+        .post-info.arrow {
+          display: inline-flex;
+          align-items: center;
+          gap: 0.3em;
+          margin: 0;
+          padding: 0;
+          font-size: var(--jt-text-sm);
+          line-height: inherit;
+          color: var(--jt-text-muted);
+
+          .d-icon {
+            margin: 0;
+            color: inherit;
+          }
+
+          &:hover,
+          &:focus-visible {
+            color: var(--jt-text);
+          }
+        }
+      }
+    }
+
+    .topic-body .cooked {
+      grid-column: 1 / -1;
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+
+      // what's embedded expects a post's width
+      overflow: hidden;
+
+      > :first-child {
+        margin-top: 0;
+      }
+
+      // the last of the text, before core's empty selection barrier
+      > :last-child,
+      > :has(+ .cooked-selection-barrier) {
+        margin-bottom: 0;
+      }
+    }
+  }
+
+  // The first one's line ends before the chevron in the card's corner
+  .reply:first-of-type .row .topic-body .topic-meta-data {
+    margin-inline-end: $jt-reply-line;
+  }
+
+  .btn.post__collapse-button {
+    position: absolute;
+    top: 0.7rem;
+
+    // its icon's edge on the text's
+    inset-inline-end: calc(#{$jt-block-pad} - 0.475rem);
+    left: auto;
+    bottom: auto;
+    z-index: 1;
+    width: $jt-reply-line;
+    height: $jt-reply-line;
+    margin: 0;
+    padding: 0;
+    transform: none;
+    background: transparent;
+    border: 0;
+    border-radius: var(--jt-radius-control);
+
+    .d-icon {
+      color: var(--jt-text-subtle);
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: var(--jt-hover);
+
+      .d-icon {
+        color: var(--jt-text);
+      }
+    }
+  }
+
+  .load-more-replies {
+    position: static;
+    display: block;
+    margin: 0 $jt-block-pad 0.75rem;
+    transform: none;
   }
 }
 
