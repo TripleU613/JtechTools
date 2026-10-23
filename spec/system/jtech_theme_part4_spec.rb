@@ -1034,7 +1034,10 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
 
     def open_reply
       sign_in(reader)
-      visit("#{topic.relative_url}/#{reply.post_number}")
+      # The topic's top, not the reply's own link: on a reply's, Discourse
+      # keeps scrolling back to the reply for a second (LockOn) and undoes
+      # the scroll below.
+      visit(topic.relative_url)
       expect(page).to have_css("#{post_selector} .discourse-reactions-reaction-button")
       # The menu in the middle, not the post: a reaction on the window's edge
       # gets scrolled to when hovered, and the page moves out from under it.
