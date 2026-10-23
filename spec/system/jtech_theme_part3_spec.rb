@@ -37,7 +37,8 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
   # ⋯, which lists them, named, in a sheet; each does what it did on the line.
   it "keeps a post's buttons on one line on a phone, the rest in ⋯", mobile: true do
     SiteSetting.post_menu = "read|like|copyLink|share|flag|edit|bookmark|delete|admin|reply"
-    SiteSetting.post_menu_hidden_items = ""
+    # as the forum's: core keeps buttons in ⋯ only when some are kept there
+    SiteSetting.post_menu_hidden_items = "delete|admin"
     sign_in(admin)
     resize_window(width: 320) do
       visit(topic.relative_url)

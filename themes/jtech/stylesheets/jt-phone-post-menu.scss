@@ -3,9 +3,12 @@
 // a 375px phone's column and the row scrolled sideways; wrapping them
 // instead left a ragged second line. The buttons are 34px here, and the
 // ones that don't fit beside the reactions go into ⋯
-// (api-initializers/jt-phone-post-menu), which lists them in a sheet.
+// (api-initializers/jt-phone-post-menu), which lists them in a sheet. Core
+// keeps buttons in ⋯ only when the forum keeps some there
+// (post_menu_hidden_items, html.jt-post-menu-fits); without, the line wraps,
+// the buttons dropping under the reactions against the right edge.
 html.mobile-view nav.post-controls {
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
 
   // and room between the reactions and the buttons, which take up all there
   // is on the line
@@ -14,8 +17,9 @@ html.mobile-view nav.post-controls {
 
   .actions {
     flex: 1 1 auto;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     justify-content: flex-end;
+    row-gap: var(--space-2);
     min-width: 0;
 
     // Reply too: it has no word on a phone, and every button the same
@@ -53,6 +57,11 @@ html.mobile-view nav.post-controls {
     min-width: 0;
     max-width: none;
   }
+}
+
+html.mobile-view.jt-post-menu-fits nav.post-controls,
+html.mobile-view.jt-post-menu-fits nav.post-controls .actions {
+  flex-wrap: nowrap;
 }
 
 // ⋯'s sheet: the buttons that didn't fit, one a row, each with its name

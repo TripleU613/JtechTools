@@ -77,6 +77,14 @@ export default apiInitializer((api) => {
     post_menu_hidden_items: string;
   };
 
+  // Core keeps buttons in ⋯ only when the forum keeps some there
+  // (post_menu_hidden_items); without, the line wraps as it did
+  // (jt-phone-post-menu.scss).
+  if (!siteSettings.post_menu_hidden_items) {
+    return;
+  }
+  document.documentElement.classList.add("jt-post-menu-fits");
+
   api.registerValueTransformer(
     "post-menu-buttons",
     ({ value: dag, context }: { value: MenuDag; context: MenuContext }) => {
