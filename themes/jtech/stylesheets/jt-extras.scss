@@ -89,9 +89,8 @@
   width: max-content;
   margin-left: auto;
 
-  // the buttons as wide as the timeline: flush with its left edge, under
-  // reader mode's buttons at the top (core places them absolutely, 10px
-  // in), and with the page's right edge
+  // the buttons as wide as the timeline: flush with its left edge (core
+  // places them absolutely, 10px in) and with the page's right edge
   .timeline-footer-controls {
     left: 0;
     right: 0;

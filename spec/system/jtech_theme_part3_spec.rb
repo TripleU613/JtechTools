@@ -1181,50 +1181,6 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
       expect(page).to have_no_css("[data-section-name='jt-inboxes']")
     end
 
-    it "switches a topic to reader mode from the timeline" do
-      sign_in(member)
-      visit(topic.relative_url)
-      size = "parseFloat(getComputedStyle(document.querySelector('#post_1 .cooked')).fontSize)"
-      normal = page.evaluate_script(size)
-      body_width = "document.querySelector('#post_1 .topic-body').getBoundingClientRect().width"
-      find(".jt-reader-toggle").click
-      expect(page).to have_css("html.jt-reader")
-      expect(page).to have_no_css(".sidebar-wrapper")
-
-      # the reading column stands in the middle of the window (the timeline
-      # hanging to its right), not at the window's left edge
-      center, middle = page.evaluate_script(<<~JS)
-        (() => {
-          const avatar = document.querySelector("#post_1 .topic-avatar").getBoundingClientRect();
-          const body = document.querySelector("#post_1 .topic-body").getBoundingClientRect();
-          return [(avatar.left + body.right) / 2, window.innerWidth / 2];
-        })()
-      JS
-      expect(center).to be_within(16).of(middle)
-
-      # its settings, labelled, in the Aa menu
-      find(".jt-reader-settings__trigger").click
-      expect(page).to have_css(".jt-reader-menu__value", text: "100%")
-      find(".jt-reader-larger").click
-      try_until_success { expect(page.evaluate_script(size)).to be > normal }
-      expect(page).to have_css(".jt-reader-menu__value", text: "113%")
-
-      # and the width buttons change the column (they did nothing)
-      before = page.evaluate_script(body_width)
-      find(".jt-reader-narrower").click
-      try_until_success { expect(page.evaluate_script(body_width)).to be < before - 20 }
-
-      find(".jt-reader-serif").click
-      expect(page).to have_css("html.jt-reader--serif")
-      shot("reader-mode")
-      find(".jt-reader-sans").click
-      expect(page).to have_no_css("html.jt-reader--serif")
-      find(".jt-reader-toggle").click
-      expect(page).to have_no_css("html.jt-reader")
-      expect(page).to have_css(".sidebar-wrapper")
-      expect_no_theme_errors
-    end
-
     it "offers a topic's link as a QR code among the share options" do
       sign_in(member)
       visit(topic.relative_url)

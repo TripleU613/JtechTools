@@ -63,7 +63,6 @@ JTech replaces the forum's theme components: each one it covers has a JTech sett
 | Post Image Carousel | `image_carousels` | Posts written with its `[wrap=Carousel]` show their pictures in Discourse's own carousel, the one `[grid mode=carousel]` makes (use that for new posts); any text in the wrap stays. Its autoplay, loop and thumbnails aren't carried over (four of the forum's five carousels had them off), and nothing is loaded from a CDN any more. |
 | Messages section for sidebar | `sidebar_inboxes` | An Inboxes section for people in a group with a shared inbox (moderators and admins on the forum): My messages and each group's inbox, with unread counts and a + for a new message. Everyone else has Discourse's My Messages link, which the section would only repeat. |
 | Who's Online | `online_box` | With the Who's Online plugin, a button beside the topic list's tabs, "Online: 3", instead of the plugin's row of avatars over the list. Clicked, a box pops out under it with everyone online, each linking to their profile. Shown to whoever the plugin shows its row to, while its minimum are online. |
-| Reader Mode | `reader_mode` | The switch at the top of the timeline, and Ctrl+Alt+R, as before: the sidebar goes, the header and the posts' buttons fade until pointed at, and the text can be made larger, the column narrower or wider, or the type a serif (kept per browser). The component's sepia and dark colours aren't carried over: the forum's own light and dark (and the palettes) cover them. |
 | QR Code Shareables | `qr_code_share` | QR code among the share options (a topic, a post, the buttons over a quote): the link as a code to scan with a phone, black on white in both colour modes, with Save image. Made in the browser by the theme (Discourse only makes QR codes on the server, for two-factor setup); the component's colour, dot-style and logo settings aren't carried over. |
 | Unhide composer fullscreen toggle for tablets | — | Always on. |
 | Sidebar Theme Toggle | `color_mode_toggle` | Keep the component only if people should also be able to switch to another theme. |
@@ -82,6 +81,7 @@ JTech replaces the forum's theme components: each one it covers has a JTech sett
 - **Wikipedia Lookup**: used once, in a test message.
 - **Restricted reactions (like) by group**: it never restricted anyone (it compared the setting's group IDs with group names), and hiding a button wouldn't stop the like API anyway. A real restriction belongs on the server, in the plugin.
 - **chat-bubbles**: it wasn't attached to any theme.
+- **Reader Mode**: nobody used it.
 
 **Not a real restriction:** JTech's login gate (like "Gated Topics in Category" before it) only hides topics in the browser. They're still sent to logged-out visitors (`/t/….json` reads them). If that needs to hold, it belongs in category permissions.
 

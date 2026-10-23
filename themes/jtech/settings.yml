@@ -235,9 +235,6 @@ sidebar_inboxes:
 online_box:
   type: bool
   default: true
-reader_mode:
-  type: bool
-  default: true
 qr_code_share:
   type: bool
   default: true
