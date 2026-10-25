@@ -542,6 +542,28 @@ RSpec.describe "Dumbcourse" do
       expect(Topic.last.category).to eq(category)
     end
 
+    it "asks for a tag where the category needs one, and adds it" do
+      SiteSetting.tagging_enabled = true
+      Fabricate(:tag, name: "tcl")
+      category.update!(minimum_required_tags: 1)
+      phone do
+        visit "/dumb/"
+        press("3")
+        find("#cTitle").fill_in(with: "Best case for the TCL Flip Pro")
+        find("#cCat").select("Flip Phones")
+        expect(page).to have_css("#cTagsHint", text: "This category needs a tag.")
+        find("#cText").fill_in(with: "Mine keeps getting scratched. Any recommendations?")
+        find("[data-c=send]").click
+
+        expect(page).to have_css(".sheet-sub", text: "This category needs a tag.")
+        find(".sheet-item", text: "#tcl").click
+        expect(page).to have_css("#cTags .chip", text: "#tcl")
+        find("[data-c=send]").click
+        expect(page).to have_css(".topic-title", text: "Best case for the TCL Flip Pro")
+      end
+      expect(Topic.last.tags.map(&:name)).to eq(["tcl"])
+    end
+
     it "shows notifications and marks them read when opened" do
       notification =
         Notification.create!(

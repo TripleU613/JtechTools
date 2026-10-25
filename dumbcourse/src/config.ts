@@ -11,6 +11,8 @@ export interface BootUser {
   moderator: boolean;
   trust_level: number;
   can_send_private_messages: boolean;
+  can_tag_topics: boolean;
+  can_create_tag: boolean;
   can_review: boolean;
   reviewable_count: number;
   unread_notifications: number;
@@ -38,6 +40,10 @@ export interface BootCategory {
   read_restricted: boolean;
   position: number;
   subcategory_ids?: number[];
+  // What a new topic here needs. A group's name is only there for people
+  // who can edit the category.
+  minimum_required_tags?: number;
+  required_tag_groups?: Array<{ name?: string; min_count: number }>;
 }
 
 export interface AuthProvider {
