@@ -54,18 +54,9 @@ module DiscourseModElections
       )
     end
 
+    # The winners and the whole count, charted (ResultsPost).
     def self.results(election)
-      lines = Presenter.elected_usernames(election).map { |name| "- #{user_link_for(name)}" }
-      lines = [I18n.t("mod_elections.topic.nobody")] if lines.empty?
-      reply(
-        election,
-        I18n.t(
-          "mod_elections.topic.results",
-          winners: lines.join("\n"),
-          ballots: election.result&.dig("ballots").to_i,
-          url: "#{page_url}?id=#{election.id}",
-        ),
-      )
+      ResultsPost.post!(election)
     end
 
     # An admin changed the seats or the dates still ahead: everyone hears the

@@ -888,3 +888,20 @@
     border-bottom: 1px solid var(--primary-low);
   }
 }
+
+// The charted count in the election topic's results post: bars of block
+// characters in the fourth column, tinted like the page's and kept on one
+// line so they stay comparable.
+.cooked .d-wrap[data-wrap="mod-election-count"] {
+  table td:nth-child(4) {
+    color: var(--tertiary);
+    white-space: nowrap;
+    line-height: 1;
+  }
+
+  table td:nth-child(2),
+  table td:nth-child(3) {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+}

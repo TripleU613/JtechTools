@@ -1230,11 +1230,48 @@ en:
         %{candidates}
 
         [Vote](%{url})
-      results: |
-        The results are in. Elected:
-        %{winners}
-
-        %{ballots} ballots were counted. [Every stage of the count](%{url})
+      count:
+        winners: "The results are in. Elected:"
+        winners_unopposed: "The results are in. There were no more candidates than seats, so there was no Vote Week. Elected unopposed:"
+        title: "How the count went"
+        summary: "Seats: **%{seats}** · Ballots counted: **%{ballots}**, worth **%{total} votes** (a ballot's weight comes from its voter's trust level) · Votes to win a seat: **%{quota}**, %{quota_share} of all votes."
+        first_title: "First choices"
+        first_intro: "Every ballot's weight on its first choice, before anything moved."
+        stages_title: "Stage by stage"
+        stage_first: "First choices counted."
+        stage_surplus: "%{name}'s extra votes move on."
+        stage_exclusion:
+          one: "%{names} is out."
+          other: "%{names} are out."
+        stage_unopposed: "The rest are elected."
+        detail_surplus: "The votes they didn't need went to their voters' next choices, at a reduced value."
+        detail_exclusion:
+          one: "Fewest votes: their ballots went to their voters' next choices."
+          other: "None of them had any votes, so they went out together."
+        detail_unopposed: "No more candidates were left than open seats."
+        elected: "Elected: %{names}."
+        elected_with: "%{name} with %{votes} votes"
+        final_title: "Where everyone finished"
+        final_intro: "Winners at the votes that elected them, in the order they were elected; everyone else at the votes they ended with."
+        candidate: "Candidate"
+        votes: "Votes"
+        share: "Share"
+        outcome: "Result"
+        elected_at: "Elected at stage %{stage}"
+        out_at: "Out at stage %{stage}"
+        not_elected: "Not elected"
+        exhausted: "By the end, %{votes} votes (%{share}) were on ballots with no more choices."
+        ties_title: "Ties"
+        ties:
+          exclusion_earlier_stage: "Stage %{stage}: %{names} were level on the fewest votes. %{chosen} had fewer at stage %{decided_at}, so went out."
+          exclusion_lot: "Stage %{stage}: %{names} were level on the fewest votes at every stage, so a lot put %{chosen} out (seed %{seed})."
+          surplus_earlier_stage: "Stage %{stage}: %{names} had equal extra votes. %{chosen} had more at stage %{decided_at}, so theirs moved first."
+          surplus_lot: "Stage %{stage}: %{names} had equal extra votes and were level at every stage, so a lot moved %{chosen}'s first (seed %{seed})."
+          order_earlier_stage: "Stage %{stage}: %{names} were elected on equal votes. %{chosen} had more at stage %{decided_at}, so is listed ahead."
+          order_lot: "Stage %{stage}: %{names} were elected on equal votes and were level at every stage, so a lot listed %{chosen} ahead (seed %{seed})."
+        every_stage: "Every stage in numbers"
+        no_more_choices: "No more choices"
+        link: "[Every stage of the count, on the elections page](%{url})"
       cancelled: "This election was cancelled. The moderators stay as they are."
       changed:
         one: "An admin changed this election. It's for %{count} seat; nominations close %{voting_open}, and Vote Week runs from then to %{voting_close}."
