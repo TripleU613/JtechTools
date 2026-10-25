@@ -20,7 +20,9 @@ There's a page at `/elections` for members (trust level 1 and up by default, `mo
 
 If Disteleplus sends admin notices to Telegram, the staff topic there hears when voting closes (with how many ballots came in) and who won when the results are published.
 
-If a category is set, each election gets a topic there: the schedule when nominations open, the candidates when Vote Week opens, and the winners when the results are published. Candidates are linked, not @mentioned.
+If a category is set, each election gets a topic there: the schedule when nominations open, the candidates when Vote Week opens, and the results when they're published. Candidates are linked, not @mentioned.
+
+**The results post shows the whole count**, so anyone can see it was honest: everyone's first-choice votes and their share of all votes as a bar chart, what each stage did (who was elected with how many votes, whose extra votes moved on, who went out), where everyone finished, how any tie was settled, and every stage in numbers. It never says who ranked whom: it's built from the published count, the same one the elections page shows. Elections published before this get the same post: their results post is updated in place (the topic isn't bumped), or one is added if there's none. The topic is as visible as its category, so the count is too.
 
 ## Who can run and who can vote
 

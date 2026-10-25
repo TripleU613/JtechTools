@@ -6,6 +6,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **New**
 
+- Mod elections: the results post shows the whole count, so anyone can see it was honest: everyone's first-choice votes and share as a bar chart, what each stage did, where everyone finished, how ties were settled, and every stage in numbers. Never who ranked whom. Elections already published get it too: their results post is updated in place without bumping the topic, or added if there's none.
 - JTech theme: advanced search in the command menu (⌘K / Ctrl+K): Open advanced search goes to the search page with its filters open, without searching first. ⌘⇧K / Ctrl+Shift+K goes there from anywhere outside a text field ([#353](https://github.com/TripleU613/JtechTools/issues/353)).
 - Mod elections: candidates can change their statement or drop out during Vote Week too, on the full site and in Dumbcourse. Someone who drops out in Vote Week can't come back on the ballot, and votes for them go to each voter's next choice. Once Vote Week is over, both are fixed.
 - REQ-PM: WhatsApp takes a username as well as a number, as Telegram and Signal do. A number still gets the Chat link; a username is shown with a copy button, on the full site and in Dumbcourse.

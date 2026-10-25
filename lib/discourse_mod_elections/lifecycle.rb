@@ -10,6 +10,14 @@ module DiscourseModElections
       # Before the steps, so nominations close on the ballot as it really is.
       drop_ineligible!(now)
       Election.unfinished.order(:id).each { |election| advance!(election, now) }
+      results_posts!
+    end
+
+    # Past elections' results posts get the charted count too (ResultsPost).
+    def self.results_posts!
+      ResultsPost.backfill!
+    rescue StandardError => e
+      Rails.logger.warn("#{DiscourseModElections::LOG_TAG} results posts failed: #{e.message}")
     end
 
     # Rescued: neither the tick nor the suspension or demotion that set this
