@@ -77,6 +77,7 @@ module DiscourseModElections
       reply(election, I18n.t("mod_elections.topic.countback", user: user_link(candidate.user)))
     end
 
+    # The new post, or nil when there's no topic or posting failed.
     def self.reply(election, raw)
       return if election.topic_id.blank? || !Topic.exists?(id: election.topic_id)
       PostCreator.create!(
@@ -87,6 +88,7 @@ module DiscourseModElections
       )
     rescue StandardError => e
       log(e)
+      nil
     end
 
     # A link, not an @mention: listing the candidates shouldn't notify them.

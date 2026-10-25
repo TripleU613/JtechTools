@@ -104,13 +104,18 @@ RSpec.describe DiscourseModElections::ResultsPost do
     expect(old.reload.version).to eq(version)
   end
 
+  # Published before results posts were charted, with no results post.
+  def publish_quietly
+    result = DiscourseModElections::Tally.count(election)
+    election.update!(
+      status: :published,
+      result: DiscourseModElections::Tally.serialize(election, result),
+      published_at: Time.zone.now,
+    )
+  end
+
   it "adds the post when a past election's topic has none, and waits while the module is off" do
-    DiscourseModElections::Tally
-      .count(election)
-      .then { |result| DiscourseModElections::Tally.serialize(election, result) }
-      .then do |result|
-        election.update!(status: :published, result: result, published_at: Time.zone.now)
-      end
+    publish_quietly
     posts = election.topic.posts.count
 
     SiteSetting.mod_elections_enabled = false
@@ -121,6 +126,28 @@ RSpec.describe DiscourseModElections::ResultsPost do
     DiscourseModElections::Lifecycle.tick
     expect(election.topic.posts.count).to eq(posts + 1)
     expect(results_post.raw).to include("How the count went")
+  end
+
+  it "tries again at the next tick when the post couldn't be written" do
+    publish_quietly
+    posts = election.topic.posts.count
+    allow(PostCreator).to receive(:create!).and_raise(ActiveRecord::StatementInvalid)
+    DiscourseModElections::Lifecycle.tick
+    expect(election.topic.posts.count).to eq(posts)
+
+    allow(PostCreator).to receive(:create!).and_call_original
+    DiscourseModElections::Lifecycle.tick
+    expect(election.topic.posts.count).to eq(posts + 1)
+  end
+
+  it "never adds a second post for an election, whichever path gets there first" do
+    DiscourseModElections::Publisher.publish!(election, admin)
+    posts = election.topic.posts.count
+
+    PluginStore.remove(described_class::STORE, described_class::DONE_KEY)
+    described_class.post!(election)
+    DiscourseModElections::Lifecycle.tick
+    expect(election.topic.posts.count).to eq(posts)
   end
 
   it "says when nobody voted because nominations were uncontested" do

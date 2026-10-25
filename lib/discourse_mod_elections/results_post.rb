@@ -36,26 +36,37 @@ module DiscourseModElections
         .each { |election| write!(election) }
     end
 
+    # One at a time: publishing and the tick can both get here for the same
+    # election, and each must find the other's post rather than add a second.
+    # The election is recorded only once its post is there, so a failed write
+    # is tried again at the next tick.
     def self.write!(election)
-      if election.result.present? && Topic.exists?(id: election.topic_id)
-        raw = raw(election)
-        post = existing_post(election)
-        if post
+      DistributedMutex.synchronize("jtech-mod-elections-results-post", validity: 60) do
+        done!(election) if written?(election)
+      end
+    rescue StandardError => e
+      Rails.logger.warn(
+        "#{DiscourseModElections::LOG_TAG} results post for election #{election.id} failed: #{e.message}",
+      )
+    end
+
+    # Whether the election's results post now says what it should. With no
+    # count or no topic there's nothing to write, which counts as done.
+    def self.written?(election)
+      return true if election.result.blank? || !Topic.exists?(id: election.topic_id)
+      raw = raw(election)
+      post = existing_post(election)
+      if post
+        post.raw == raw ||
           post.revise(
             Discourse.system_user,
             { raw: raw },
             skip_validations: true,
             bypass_bump: true,
           )
-        else
-          Announcer.reply(election, raw)
-        end
+      else
+        Announcer.reply(election, raw).present?
       end
-      done!(election)
-    rescue StandardError => e
-      Rails.logger.warn(
-        "#{DiscourseModElections::LOG_TAG} results post for election #{election.id} failed: #{e.message}",
-      )
     end
 
     # The system's post with this election's results link. The closing
