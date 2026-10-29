@@ -358,12 +358,12 @@ jtech_mod_topic_tools:
 jtech_mod_users:
   mod_user_slow_mode_enabled:
     default: true
-    client: true
+    client: false
     depends_on:
       - "mod_categories_enabled"
   mod_user_slow_mode_moderators:
     default: true
-    client: true
+    client: false
     depends_on:
       - "mod_user_slow_mode_enabled"
 
