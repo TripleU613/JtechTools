@@ -84,6 +84,23 @@ RSpec.describe "Dumbcourse review queue" do
     expect(reviewable.reload.payload["raw"]).to eq("The Kyocera DuraXV lasts a few days for me.")
   end
 
+  it "keeps each action's name readable on a narrow screen" do
+    post = Fabricate(:post, topic: topic, user: bob, raw: "Buy cheap phones at my site.")
+    PostActionCreator.spam(carol, post)
+    sign_in(moderator)
+    phone do
+      open_item
+      expect(page).to have_css(".sheet-item", text: "Hide post")
+      narrowest = page.evaluate_script(<<~JS)
+          Math.min.apply(null, Array.prototype.map.call(
+            document.querySelectorAll(".layer.open .sheet-item .sheet-label"),
+            function (el) { return el.getBoundingClientRect().width; }
+          ))
+        JS
+      expect(narrowest).to be > 80
+    end
+  end
+
   it "shows who flagged a post and why, and takes a note" do
     post = Fabricate(:post, topic: topic, user: bob, raw: "Buy cheap phones at my site.")
     reviewable = PostActionCreator.spam(carol, post).reviewable

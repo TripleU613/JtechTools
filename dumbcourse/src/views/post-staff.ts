@@ -511,11 +511,11 @@ export function editHistory(p: Post, onReverted: () => void): void {
         foot,
         html`${canRevert
           ? html`<button type="button" class="btn small" data-h="revert">
-              ${icon("undo")}Go back to the version before this
+              ${icon("undo")}Undo this edit
             </button>`
           : ""}${isStaffUser() && r.current_revision >= 2
           ? html`<button type="button" class="btn small" data-h="visibility">
-              ${icon("eye")}Who sees this edit
+              ${icon("eye")}Who sees it
             </button>`
           : ""}`
       );

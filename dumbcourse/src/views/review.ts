@@ -539,7 +539,6 @@ function reviewMenu(
     actionsOf(r, l).forEach((a) =>
       items.push({
         label: actionLabel(a),
-        hint: a.description ? truncate(a.description, 40) : undefined,
         danger: /danger|delete|reject|suspend|silence/i.test(
           (a.button_class || "") + " " + (a.server_action || a.id)
         ),
