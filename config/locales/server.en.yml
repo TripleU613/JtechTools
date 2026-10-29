@@ -330,6 +330,19 @@ en:
       is staff-only, so ordinary users cannot use it to enumerate badge
       membership.
 
+    # ── Jtech — Mod: Users ─────────────────────────────────────────────────
+    mod_user_slow_mode_enabled: Lets staff put a user in slow mode from their
+      admin page — one reply or new topic every so often (1 minute to a week
+      apart), for a set time or until lifted. Personal messages and edits stay
+      unlimited, and a post waiting for approval holds them until it's
+      reviewed. The user gets a system message when it's set, with the
+      reason, and another when it's lifted. Staff can't be put in slow mode. Turning this OFF
+      stops the limit but keeps each user's slow mode, so turning it back on
+      resumes it.
+
+    mod_user_slow_mode_moderators: Lets moderators, not just admins, set and
+      lift a user's slow mode.
+
     # ── Jtech — Mod: Checklists ────────────────────────────────────────────
     mod_first_post_checklist_enabled: Lets moderators maintain a checklist
       that users must accept before they can post, up to a trust-level cap
@@ -1139,6 +1152,16 @@ en:
       busy: Couldn't create a code just now. Please try again.
 
   discourse_mod_categories:
+    slow_mode:
+      too_soon: "You're in slow mode. You can post again in %{time_left}."
+      waiting: "You're in slow mode, and a post of yours is waiting for approval. You can post again once it's been reviewed."
+      no_end: "until a moderator lifts it"
+      until: "until %{time}"
+      errors:
+        interval: "Choose how often they can post: whole minutes, from 1 minute to 7 days."
+        ends_at: "Choose an end time in the future, or no end."
+        reason: "Add a reason. The user sees it in their message."
+        reason_too_long: "Keep the reason under %{count} characters."
     whisper:
       first_post_not_allowed: "A new topic can't start with or quote a whisper."
       move_first_post_not_allowed: "A whisper can't be a topic's first post. Move an earlier public post with it, or move it to the end of an existing topic."
@@ -1414,3 +1437,22 @@ en:
       name: "Power User"
       description: "Used every JTech tool"
       long_description: "This badge is granted when you hold Constituent, Business Card, Seller, Flip Phone and Heads Up: you've voted in an election, made a REQ-PM card, posted a listing, used Dumbcourse and turned on pop-ups."
+  system_messages:
+    mod_user_slow_mode_set:
+      title: "Slow mode"
+      subject_template: "You're in slow mode"
+      text_body_template: |
+        Hello,
+
+        A moderator has put your account in slow mode: you can post one reply or new topic every %{interval}, %{ends}.
+
+        Reason: %{reason}
+
+        You can still edit your posts.
+    mod_user_slow_mode_lifted:
+      title: "Slow mode lifted"
+      subject_template: "Slow mode has been lifted"
+      text_body_template: |
+        Hello,
+
+        A moderator has lifted slow mode on your account. You can post as usual again.
