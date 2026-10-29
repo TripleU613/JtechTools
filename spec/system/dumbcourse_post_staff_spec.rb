@@ -50,23 +50,17 @@ RSpec.describe "Dumbcourse post staff actions" do
   end
 
   # A topic seen before shows its saved copy first, and its keys work once
-  # the fresh copy is in; a key pressed between the two does nothing. Press
-  # again until whatever it opens is open (never into an open sheet).
-  def until_open(selector, **options)
-    5.times do
-      yield
-      return if page.has_css?(selector, wait: 2, **options)
-      break if page.has_css?(".layer.open", wait: 0)
-    end
-    expect(page).to have_css(selector, **options)
+  # the fresh copy is in, which is when the right soft key says Options.
+  def wait_until_ready
+    expect(page).to have_css("#softkeys .sk-right", text: "Options")
   end
 
   def open_post_menu(number)
     visit_topic
-    until_open(".sheet-title", text: "##{number}") do
-      find(".post[data-n='#{number}'] .post-when").click
-      press(:enter)
-    end
+    wait_until_ready
+    find(".post[data-n='#{number}'] .post-when").click
+    press(:enter)
+    expect(page).to have_css(".sheet-title", text: "##{number}")
   end
 
   def pick(text)
@@ -273,7 +267,8 @@ RSpec.describe "Dumbcourse post staff actions" do
   describe "selecting posts" do
     def start_selecting
       visit_topic
-      until_open(".sheet-item", text: "Select posts…") { press(:f2) }
+      wait_until_ready
+      press(:f2)
       pick("Select posts…")
       expect(page).to have_css("html.selecting")
     end
