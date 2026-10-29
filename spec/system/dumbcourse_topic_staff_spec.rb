@@ -41,7 +41,7 @@ RSpec.describe "Dumbcourse topic staff actions" do
     visit "/dumb/t/#{topic.slug}/#{topic.id}"
     expect(page).to have_css(".topic-head")
     press(:f2)
-    expect(page).to have_css(".sheet-heading", text: "Moderation")
+    expect(page).to have_css(".sheet-heading", text: /moderation/i)
   end
 
   def pick(text)
@@ -207,7 +207,7 @@ RSpec.describe "Dumbcourse topic staff actions" do
       expect(page).to have_css(".topic-head")
       press(:f2)
       expect(page).to have_css(".sheet-item", text: "Copy link")
-      expect(page).to have_no_css(".sheet-heading", text: "Moderation")
+      expect(page).to have_no_css(".sheet-heading", text: /moderation/i)
       expect(page).to have_no_css(".sheet-item", text: "Set timer…")
     end
   end
