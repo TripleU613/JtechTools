@@ -56,6 +56,7 @@ import { decodeEntities, topicRow, usersById } from "../ui/topic-row.ts";
 import { useScreen } from "./common.ts";
 import { openComposer } from "./composer.ts";
 import { levelLabel, topicLevelSheet } from "./levels.ts";
+import { topicStaffItems } from "./topic-staff.ts";
 import { reactionPicker, whoReacted } from "./reactions.ts";
 
 interface State {
@@ -1035,90 +1036,24 @@ function wireTopic(
           void promptDialog("Link to this topic", { value: url, ok: "Done" });
       },
     });
-    const mod: SheetItem[] = [];
-    if (d.can_close_topic)
-      mod.push({
-        label: t.closed ? "Open topic" : "Close topic",
-        icon: t.closed ? "unlock" : "lock",
-        run: () => setStatus("closed", !t.closed),
-      });
-    if (d.can_pin_unpin_topic)
-      mod.push({
-        label: t.pinned ? "Unpin" : "Pin",
-        icon: "pin",
-        run: () => setStatus("pinned", !t.pinned),
-      });
-    if (d.can_archive_topic)
-      mod.push({
-        label: t.archived ? "Unarchive" : "Archive",
-        icon: "archive",
-        run: () => setStatus("archived", !t.archived),
-      });
-    if (d.can_toggle_topic_visibility)
-      mod.push({
-        label: t.visible === false ? "List topic" : "Unlist topic",
-        icon: "hide",
-        run: () => setStatus("visible", t.visible === false),
-      });
-    if (t.deleted_at && d.can_recover)
-      mod.push({ label: "Restore topic", icon: "undo", run: recoverTopic });
-    else if (d.can_delete)
-      mod.push({
-        label: "Delete topic",
-        icon: "trash",
-        danger: true,
-        run: deleteTopic,
-      });
+    const mod = topicStaffItems(t, {
+      reload: (message) => {
+        toast(message, "success");
+        invalidate(`/t/${t.id}`);
+        invalidate("/latest");
+        go(ctx.path + location.search, { replace: true });
+      },
+      gone: (message) => {
+        toast(message, "success");
+        invalidate();
+        go("/", { replace: true });
+      },
+    });
     if (mod.length) {
       items.push({ label: "Moderation", heading: true });
       for (let i = 0; i < mod.length; i++) items.push(mod[i]);
     }
     actionSheet(decodeEntities(t.fancy_title || t.title), items);
-  };
-
-  const setStatus = (status: string, enabled: boolean) => {
-    const body: Record<string, unknown> = {
-      status,
-      enabled: enabled ? "true" : "false",
-    };
-    if (status === "pinned" && enabled) body.until = "";
-    put(`/t/${t.id}/status.json`, body).then(
-      () => {
-        toast("Done.", "success");
-        invalidate(`/t/${t.id}`);
-        invalidate("/latest");
-        go(ctx.path + location.search, { replace: true });
-      },
-      (e: unknown) => toast(errorMessage(e), "error")
-    );
-  };
-
-  const deleteTopic = () => {
-    confirmDialog("Delete this whole topic?", {
-      ok: "Delete",
-      danger: true,
-    }).then((ok) => {
-      if (!ok) return;
-      del(`/t/${t.id}.json`).then(
-        () => {
-          toast("Topic deleted.", "success");
-          invalidate();
-          go("/", { replace: true });
-        },
-        (e: unknown) => toast(errorMessage(e), "error")
-      );
-    });
-  };
-
-  const recoverTopic = () => {
-    put(`/t/${t.id}/recover.json`).then(
-      () => {
-        toast("Topic restored.", "success");
-        invalidate();
-        go(ctx.path + location.search, { replace: true });
-      },
-      (e: unknown) => toast(errorMessage(e), "error")
-    );
   };
 
   const askJump = () => {
