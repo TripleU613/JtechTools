@@ -11,7 +11,9 @@ RSpec.describe "User slow mode" do
   fab!(:other_user) { Fabricate(:user, trust_level: TrustLevel[2]) }
 
   let(:path) { "/discourse-mod-categories/user/#{user.id}/slow-mode.json" }
-  let(:params) { { seconds: 900, ends_at: 1.week.from_now.iso8601, reason: "Too many posts at once" } }
+  let(:params) do
+    { seconds: 900, ends_at: 1.week.from_now.iso8601, reason: "Too many posts at once" }
+  end
 
   before { SiteSetting.mod_categories_enabled = true }
 
@@ -45,9 +47,7 @@ RSpec.describe "User slow mode" do
       expect(log.details).to include("interval: 15 minutes", "reason: Too many posts at once")
 
       message = last_message_to(user)
-      expect(message.title).to eq(
-        I18n.t("system_messages.mod_user_slow_mode_set.subject_template"),
-      )
+      expect(message.title).to eq(I18n.t("system_messages.mod_user_slow_mode_set.subject_template"))
       expect(message.first_post.raw).to include("15 minutes", "Too many posts at once")
     end
 

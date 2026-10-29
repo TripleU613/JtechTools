@@ -597,7 +597,9 @@ after_initialize do
   # the handlers that queue a post, so a post that's too soon is refused
   # rather than sent for approval; below the whisper handler, which only
   # marks the post and never decides.
-  NewPostManager.add_handler(5_000) { |manager| DiscourseModCategories::UserSlowMode.check(manager) }
+  NewPostManager.add_handler(5_000) do |manager|
+    DiscourseModCategories::UserSlowMode.check(manager)
+  end
 
   # The user's own slow mode, for the note in their composer.
   add_to_serializer(

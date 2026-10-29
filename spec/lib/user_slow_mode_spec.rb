@@ -107,7 +107,8 @@ RSpec.describe DiscourseModCategories::UserSlowMode do
     slow!(user)
     post = reply_as(user).post
 
-    revised = PostRevisor.new(post).revise!(user, raw: "An edited reply that is long enough to be valid.")
+    revised =
+      PostRevisor.new(post).revise!(user, raw: "An edited reply that is long enough to be valid.")
     expect(revised).to be_truthy
     expect(post.reload.raw).to start_with("An edited reply")
   end
@@ -140,8 +141,11 @@ RSpec.describe DiscourseModCategories::UserSlowMode do
 
     other_topic = Fabricate(:topic, category: category)
     result =
-      NewPostManager.new(other, raw: "A reply from someone else entirely.", topic_id: other_topic.id)
-        .perform
+      NewPostManager.new(
+        other,
+        raw: "A reply from someone else entirely.",
+        topic_id: other_topic.id,
+      ).perform
     expect(result.success?).to eq(true)
   end
 
@@ -150,7 +154,9 @@ RSpec.describe DiscourseModCategories::UserSlowMode do
     reply_as(user)
 
     freeze_time(2.hours.from_now) do
-      expect(reply_as(user, raw: "A reply after slow mode ended, long enough.").success?).to eq(true)
+      expect(reply_as(user, raw: "A reply after slow mode ended, long enough.").success?).to eq(
+        true,
+      )
       expect(described_class.state_for(user.reload)).to be_nil
     end
   end
@@ -159,7 +165,9 @@ RSpec.describe DiscourseModCategories::UserSlowMode do
     slow!(moderator)
 
     expect(reply_as(moderator).success?).to eq(true)
-    expect(reply_as(moderator, raw: "A second staff reply that is long enough.").success?).to eq(true)
+    expect(reply_as(moderator, raw: "A second staff reply that is long enough.").success?).to eq(
+      true,
+    )
   end
 
   it "stops limiting while the feature is off, and resumes when it's back on" do

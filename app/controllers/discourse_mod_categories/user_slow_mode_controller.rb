@@ -16,7 +16,8 @@ module DiscourseModCategories
       user = find_user!
 
       seconds = params[:seconds].to_i
-      if seconds % 1.minute.to_i != 0 || !seconds.between?(UserSlowMode::MIN_SECONDS, UserSlowMode::MAX_SECONDS)
+      if seconds % 1.minute.to_i != 0 ||
+           !seconds.between?(UserSlowMode::MIN_SECONDS, UserSlowMode::MAX_SECONDS)
         return render_json_error(I18n.t("discourse_mod_categories.slow_mode.errors.interval"))
       end
 
@@ -43,7 +44,13 @@ module DiscourseModCategories
         )
       end
 
-      UserSlowMode.set!(user, actor: current_user, seconds: seconds, ends_at: ends_at, reason: reason)
+      UserSlowMode.set!(
+        user,
+        actor: current_user,
+        seconds: seconds,
+        ends_at: ends_at,
+        reason: reason,
+      )
       render json: { slow_mode: UserSlowMode.admin_summary_for(user) }
     end
 

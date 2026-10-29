@@ -87,7 +87,10 @@ module DiscourseModCategories
       return nil if wait <= 0
 
       refusal(
-        I18n.t("discourse_mod_categories.slow_mode.too_soon", time_left: RateLimiter.time_left(wait)),
+        I18n.t(
+          "discourse_mod_categories.slow_mode.too_soon",
+          time_left: RateLimiter.time_left(wait),
+        ),
       )
     end
 

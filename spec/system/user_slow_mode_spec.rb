@@ -11,7 +11,9 @@ RSpec.describe "User slow mode" do
   fab!(:admin)
   fab!(:user) { Fabricate(:user, username: "eager_poster", trust_level: TrustLevel[2]) }
   fab!(:category)
-  fab!(:topic) { Fabricate(:topic, category: category, title: "Which flip phone has the best battery?") }
+  fab!(:topic) do
+    Fabricate(:topic, category: category, title: "Which flip phone has the best battery?")
+  end
   fab!(:op) { Fabricate(:post, topic: topic, raw: "Looking for something that lasts a few days.") }
 
   let(:admin_user_page) { PageObjects::Pages::AdminUser.new }
@@ -55,7 +57,10 @@ RSpec.describe "User slow mode" do
     find(".mod-slow-mode-save").click
 
     expect(page).to have_no_css(".mod-user-slow-mode-modal")
-    expect(page).to have_css(".mod-user-slow-mode__status", text: "One post every 15 minutes, until")
+    expect(page).to have_css(
+      ".mod-user-slow-mode__status",
+      text: "One post every 15 minutes, until",
+    )
     shot("03_set")
 
     state = DiscourseModCategories::UserSlowMode.state_for(user.reload)
@@ -109,7 +114,13 @@ RSpec.describe "User slow mode" do
       ends_at: nil,
       reason: "Several posts a minute in the phones thread",
     )
-    Fabricate(:post, topic: topic, user: user, raw: "The Kyocera lasts days.", created_at: 5.minutes.ago)
+    Fabricate(
+      :post,
+      topic: topic,
+      user: user,
+      raw: "The Kyocera lasts days.",
+      created_at: 5.minutes.ago,
+    )
     sign_in(user)
 
     topic_page.visit_topic(topic)
