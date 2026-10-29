@@ -9,6 +9,12 @@
   color: var(--primary-medium);
 }
 
+// Core's redesigned composer pads each row instead of the reply area, so the
+// note lines up with the text below it the same way.
+:where(.uc-enable-composer-redesign) .mod-slow-mode-note {
+  padding-inline: var(--space-4);
+}
+
 .mod-user-slow-mode-modal {
   .mod-messages-label {
     display: block;

@@ -43,7 +43,7 @@ RSpec.describe "User slow mode" do
     admin_user_page.visit(user)
 
     expect(page).to have_css(".mod-user-slow-mode__status", text: "No")
-    find(".mod-user-slow-mode__status").scroll_to(:center)
+    page.scroll_to(find(".mod-user-slow-mode__status"), align: :center)
     shot("01_admin_page")
 
     find(".mod-user-slow-mode__set").click
