@@ -283,7 +283,9 @@ export function topicStaffItems(t: Topic, hooks: TopicStaffHooks): SheetItem[] {
               put(`/t/${t.id}/change-timestamp.json`, {
                 timestamp: Math.floor(when.getTime() / 1000),
               }).then(() => hooks.reload("Timestamp changed."), fail),
-            parseDate(t.created_at) || undefined
+            parseDate(t.created_at) || undefined,
+            // A topic's date is usually moved back.
+            true
           ),
       });
     items.push({

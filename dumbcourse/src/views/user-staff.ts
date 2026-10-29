@@ -103,6 +103,20 @@ const SLOW_MODE: Choice[] = [
   { label: "24 hours", value: "86400" },
 ];
 
+// "until Nov 5, 2026", or "forever" for core's thousand-year penalty.
+function until(at: string): string {
+  return new Date(at).getTime() > Date.now() + 100 * 365 * DAY
+    ? "forever"
+    : "until " + longDate(at);
+}
+
+// Discourse sends the silences and suspensions that count, without a total.
+function penalties(a: AdminUser): number {
+  const pc = a.penalty_counts;
+  if (!pc) return 0;
+  return pc.total || (pc.silenced || 0) + (pc.suspended || 0);
+}
+
 function future(at: string | null | undefined): boolean {
   return !!at && new Date(at).getTime() > Date.now();
 }
@@ -122,9 +136,9 @@ function summary(a: AdminUser): string {
             : "")
   );
   if (future(a.suspended_till))
-    parts.push("suspended until " + longDate(a.suspended_till as string));
+    parts.push("suspended " + until(a.suspended_till as string));
   if (future(a.silenced_till))
-    parts.push("silenced until " + longDate(a.silenced_till as string));
+    parts.push("silenced " + until(a.silenced_till as string));
   if (a.mod_slow_mode) parts.push("in slow mode");
   if (!a.active) parts.push("not activated");
   if (a.approved === false) parts.push("not approved");
@@ -486,7 +500,7 @@ function paintMenu(a: AdminUser, hooks: UserStaffHooks): void {
         }),
     });
 
-  if (isAdminUser() && a.penalty_counts && (a.penalty_counts.total || 0) > 0)
+  if (isAdminUser() && penalties(a) > 0)
     items.push({
       label: "Clear penalty history",
       icon: "undo",
