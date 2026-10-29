@@ -122,6 +122,54 @@ RSpec.describe "Dumbcourse review queue" do
     expect(ReviewableClaimedTopic.exists?(topic_id: topic.id)).to eq(false)
   end
 
+  it "suspends the author from a flag, and deletes the post with it" do
+    post = Fabricate(:post, topic: topic, user: bob, raw: "Buy cheap phones at my site.")
+    PostActionCreator.spam(carol, post)
+    sign_in(moderator)
+    phone do
+      open_item
+      pick("Suspend user")
+      pick("1 week")
+      answer("Spam")
+      answer("")
+      pick("Delete the post")
+      expect(page).to have_css(".toast", text: "Done.")
+    end
+    expect(bob.reload.suspended?).to eq(true)
+    expect(post.reload.deleted_at).to be_present
+  end
+
+  it "filters by who flagged, and shows an item's history" do
+    first = Fabricate(:post, topic: topic, user: bob, raw: "Buy cheap phones at my site.")
+    second = Fabricate(:post, topic: topic, user: bob, raw: "Cheap phones, my site again.")
+    PostActionCreator.spam(carol, first)
+    PostActionCreator.off_topic(alice, second)
+    sign_in(moderator)
+    phone do
+      visit "/dumb/review?flagged_by=carol_t"
+      expect(page).to have_css(".row.review", count: 1)
+      expect(page).to have_css(".row.review", text: "Spam")
+      find(".row.review").click
+      pick("History")
+      expect(page).to have_css(".sheet-item", text: "Created")
+    end
+  end
+
+  it "lets an admin set how much a flag reason weighs" do
+    sign_in(Fabricate(:admin))
+    phone do
+      visit "/dumb/review"
+      find("[data-act=review-filter]").click
+      pick("Priorities of flag reasons…")
+      pick("Spam")
+      pick("High")
+      expect(page).to have_css(".toast", text: "Priority saved.")
+    end
+    expect(PostActionType.find_by(name_key: "spam").reviewable_priority).to eq(
+      Reviewable.priorities[:high],
+    )
+  end
+
   it "filters by status" do
     reviewable = queued_reply
     reviewable.perform(moderator, :approve_post)

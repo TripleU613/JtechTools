@@ -154,6 +154,78 @@ RSpec.describe "Dumbcourse user staff actions" do
     ).to include("Warned by phone about reselling.")
   end
 
+  it "gives a member a title and a new username" do
+    sign_in(admin)
+    phone do
+      open_moderate
+      pick("Title…")
+      answer("Phone Guru")
+      expect(page).to have_css(".toast", text: "Title set.")
+    end
+    expect(bob.reload.title).to eq("Phone Guru")
+
+    phone do
+      open_moderate
+      pick("Change username…")
+      answer("bob_renamed")
+      expect(page).to have_css(".toast", text: "Username changed.")
+      expect(page).to have_current_path(%r{/dumb/u/bob_renamed})
+    end
+    expect(bob.reload.username).to eq("bob_renamed")
+  end
+
+  it "sets a member's primary group" do
+    group = Fabricate(:group, name: "testers")
+    group.add(bob)
+    sign_in(admin)
+    phone do
+      open_moderate
+      pick("Groups…")
+      pick("Primary group…")
+      pick("testers")
+      expect(page).to have_css(".toast", text: "Primary group changed.")
+    end
+    expect(bob.reload.primary_group_id).to eq(group.id)
+  end
+
+  it "clears penalty history and resets the bounce score" do
+    UserSilencer.new(bob, admin, reason: "Arguing").silence
+    UserSilencer.unsilence(bob, admin)
+    bob.user_stat.update!(bounce_score: 3)
+    sign_in(admin)
+    phone do
+      open_moderate
+      pick("Clear penalty history")
+      find(".dialog [data-ok]").click
+      expect(page).to have_css(".toast", text: "Penalty history cleared.")
+    end
+    expect(
+      UserHistory.where(target_user_id: bob.id, action: UserHistory.actions[:silence_user]),
+    ).to be_empty
+
+    phone do
+      open_moderate
+      pick("Reset email bounce score")
+      expect(page).to have_css(".toast", text: "Bounce score reset.")
+    end
+    expect(bob.user_stat.reload.bounce_score).to eq(0)
+  end
+
+  it "deletes the other accounts on a member's address" do
+    bob.update!(ip_address: "10.0.0.7")
+    other = Fabricate(:user, username: "bob_alt", ip_address: "10.0.0.7")
+    sign_in(admin)
+    phone do
+      open_moderate
+      pick("IP addresses…")
+      pick("Delete the other accounts on these addresses…")
+      find(".dialog [data-ok]").click
+      expect(page).to have_css(".toast", text: "Deleted.")
+    end
+    expect(User.find_by(id: other.id)).to be_nil
+    expect(User.find_by(id: bob.id)).to be_present
+  end
+
   it "deletes an account" do
     sign_in(admin)
     phone do

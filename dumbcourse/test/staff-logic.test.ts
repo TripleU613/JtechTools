@@ -4,6 +4,8 @@ import {
   actionLabel,
   actionsOf,
   claimOf,
+  historiesOf,
+  historyLine,
   lookupOf,
   notesOf,
   parseLocalDateTime,
@@ -55,6 +57,7 @@ const REVIEW: ReviewJson = {
       reviewable_score_ids: [1, 2],
       reviewable_note_ids: [9],
       claimed_by_id: 5,
+      reviewable_history_ids: [20, 21],
     },
   ],
   bundled_actions: [
@@ -89,6 +92,20 @@ const REVIEW: ReviewJson = {
     },
   ],
   claimed_bies: [{ id: 5, automatic: false, user_id: 3 }],
+  reviewable_histories: [
+    {
+      id: 20,
+      created_at: "2026-10-01T10:00:00Z",
+      reviewable_history_type: 0,
+      status: 0,
+    },
+    {
+      id: 21,
+      created_at: "2026-10-01T12:00:00Z",
+      reviewable_history_type: 1,
+      status: 1,
+    },
+  ],
   users: [
     { id: 3, username: "mod_m", avatar_template: "" },
     { id: 4, username: "bob", avatar_template: "" },
@@ -111,6 +128,10 @@ test("a reviewable's side-loaded actions, flags, notes and claim come back toget
     ["Looks like a repost"]
   );
   assert.deepEqual(claimOf(r, l), { username: "mod_m", id: 3 });
+  assert.deepEqual(historiesOf(r, l).map(historyLine), [
+    "Created",
+    "Status changed to approved",
+  ]);
 });
 
 test("inline objects are taken as they are, and missing ones are skipped", () => {

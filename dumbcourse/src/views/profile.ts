@@ -272,6 +272,11 @@ function paint(
         invalidate();
         go("/", { replace: true });
       },
+      renamed: (name, message) => {
+        toast(message, "success");
+        invalidate("/u/");
+        go("/u/" + encodeURIComponent(name), { replace: true });
+      },
     })
   );
   if (!me && reqpmOn)

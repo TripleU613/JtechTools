@@ -204,6 +204,48 @@ RSpec.describe "Dumbcourse post staff actions" do
       ).to eq(reply.id)
     end
 
+    it "publishes the topic as a page" do
+      SiteSetting.enable_page_publishing = true
+      sign_in(admin)
+      phone do
+        open_post_menu(1)
+        pick("Publish as a page…")
+        answer("kosher-flip-phones")
+        expect(page).to have_css(".toast", text: "Published as a page.")
+      end
+      expect(PublishedPage.find_by(topic_id: topic.id).slug).to eq("kosher-flip-phones")
+    end
+
+    it "hides an edit from everyone but staff" do
+      PostRevisor.new(reply).revise!(
+        bob,
+        { raw: "The Kyocera lasts a whole week for me." },
+        force_new_version: true,
+      )
+      sign_in(moderator)
+      phone do
+        open_post_menu(2)
+        pick("Edit history")
+        expect(page).to have_css(".history-pos", text: "Version 2 of 2")
+        find("[data-h=visibility]").click
+        pick("Staff only (hidden)")
+        expect(page).to have_css(".toast", text: "Saved.")
+      end
+      expect(PostRevision.find_by(post_id: reply.id, number: 2).hidden).to eq(true)
+    end
+
+    it "pins a reply at the top of nested replies" do
+      SiteSetting.nested_replies_enabled = true
+      SiteSetting.nested_replies_default = true
+      sign_in(moderator)
+      phone do
+        open_post_menu(2)
+        pick("Pin or unpin in nested replies")
+        expect(page).to have_css(".toast", text: "Pinned at the top of nested replies.")
+      end
+      expect(topic.reload.nested_topic.pinned_post_ids).to include(reply.id)
+    end
+
     it "shows a member none of it" do
       sign_in(alice)
       phone do
@@ -295,6 +337,26 @@ RSpec.describe "Dumbcourse post staff actions" do
       whisper = topic.posts.order(:post_number).last
       expect(whisper.raw).to eq("Keep an eye on this one, please.")
       expect(whisper.post_type).to eq(Post.types[:whisper])
+    end
+
+    it "whispers to a group" do
+      SiteSetting.mod_whisper_enabled = true
+      group = Fabricate(:group, name: "testers")
+      sign_in(moderator)
+      phone do
+        open_post_menu(2)
+        pick("Whisper to…")
+        pick("A group…")
+        answer("testers")
+        expect(page).to have_css(".c-notice", text: "only testers and staff can read it")
+        find("#cText").fill_in(with: "Testers: does this match what you see?")
+        find("[data-c=send]").click
+        expect(page).to have_css(".toast", text: "Whisper posted.")
+      end
+      whisper = topic.posts.order(:post_number).last
+      expect(
+        whisper.custom_fields[DiscourseModCategories::POST_WHISPER_TARGET_GROUPS_FIELD],
+      ).to contain_exactly(group.id)
     end
 
     it "whispers to the post's author, and makes a whisper public" do

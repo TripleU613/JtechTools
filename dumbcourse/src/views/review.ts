@@ -35,6 +35,8 @@ import {
   actionLabel,
   actionsOf,
   claimOf,
+  historiesOf,
+  historyLine,
   type Lookup,
   lookupOf,
   type Note,
@@ -47,7 +49,14 @@ import {
 } from "../staff-logic.ts";
 import { useScreen } from "./common.ts";
 import { openComposer } from "./composer.ts";
-import { askText, choose, chooseUntil } from "./staff-common.ts";
+import {
+  askDate,
+  askText,
+  choose,
+  chooseUntil,
+  isAdminUser,
+  localValue,
+} from "./staff-common.ts";
 
 const TYPE_LABELS: Record<string, string> = {
   ReviewableFlaggedPost: "Flagged post",
@@ -71,8 +80,18 @@ const FILTERS = [
   "category_id",
   "topic_id",
   "username",
+  "flagged_by",
+  "reviewed_by",
+  "claimed_by",
+  "score_type",
+  "from_date",
+  "to_date",
   "offset",
 ];
+
+type DsaOptions = NonNullable<
+  NonNullable<ReviewJson["extras"]>["dsa_classification"]
+>;
 
 function reasonOf(scores: Score[]): string {
   const titles: string[] = [];
@@ -136,6 +155,29 @@ export function reviewRoute(ctx: RouteContext): Promise<void> {
     const q = qs(next);
     go("/review" + (q ? "?" + q : ""), { replace: true });
   };
+
+  let scoreTypes: Array<{ id: number | string; name: string }> = [];
+  let dsa: DsaOptions | null = null;
+
+  // A day, as YYYY-MM-DD; Clear takes the filter off.
+  const pickDay = (title: string, key: string) =>
+    choose(
+      title,
+      [
+        { label: "Pick a day…", value: "pick" },
+        { label: "Clear", value: "" },
+      ].map((c) => ({ label: c.label, value: c.value })),
+      (v) => {
+        if (!v) withFilter(key, "");
+        else
+          askDate(
+            title,
+            (d) => withFilter(key, localValue(d).split(" ")[0]),
+            new Date(),
+            true
+          );
+      }
+    );
 
   const filterMenu = () => {
     const items: SheetItem[] = [
@@ -254,7 +296,82 @@ export function reviewRoute(ctx: RouteContext): Promise<void> {
             { optional: true, value: query.username || "" }
           ),
       },
+      {
+        label: "Flagged by…",
+        hint: query.flagged_by ? "@" + query.flagged_by : undefined,
+        run: () =>
+          askText(
+            "Flagged by",
+            "Username (empty for anyone)",
+            (v) => withFilter("flagged_by", v.replace(/^@/, "")),
+            { optional: true, value: query.flagged_by || "" }
+          ),
+      },
+      {
+        label: "Reviewed by…",
+        hint: query.reviewed_by ? "@" + query.reviewed_by : undefined,
+        run: () =>
+          askText(
+            "Reviewed by",
+            "Username (empty for anyone)",
+            (v) => withFilter("reviewed_by", v.replace(/^@/, "")),
+            { optional: true, value: query.reviewed_by || "" }
+          ),
+      },
+      {
+        label: "Claimed by…",
+        hint: query.claimed_by ? "@" + query.claimed_by : undefined,
+        run: () =>
+          askText(
+            "Claimed by",
+            "Username (empty for anyone)",
+            (v) => withFilter("claimed_by", v.replace(/^@/, "")),
+            { optional: true, value: query.claimed_by || "" }
+          ),
+      },
+      {
+        label: "Reason",
+        hint: query.score_type
+          ? (
+              scoreTypes.filter(
+                (t) => String(t.id) === query.score_type
+              )[0] || {
+                name: query.score_type,
+              }
+            ).name
+          : "any",
+        run: () =>
+          choose(
+            "Reason",
+            [{ label: "Any reason", value: "" }]
+              .concat(
+                scoreTypes.map((t) => ({ label: t.name, value: String(t.id) }))
+              )
+              .map((c) => ({
+                label: c.label,
+                value: c.value,
+                active: c.value === (query.score_type || ""),
+              })),
+            (v) => withFilter("score_type", v)
+          ),
+      },
+      {
+        label: "From a date…",
+        hint: query.from_date || undefined,
+        run: () => pickDay("From", "from_date"),
+      },
+      {
+        label: "To a date…",
+        hint: query.to_date || undefined,
+        run: () => pickDay("To", "to_date"),
+      },
     ];
+    if (isAdminUser())
+      items.push({
+        label: "Priorities of flag reasons…",
+        icon: "gear",
+        run: priorities,
+      });
     if (qs(query))
       items.push({
         label: "Clear filters",
@@ -272,6 +389,8 @@ export function reviewRoute(ctx: RouteContext): Promise<void> {
       if (!s.alive()) return;
       const items = d.reviewables || [];
       const l = lookupOf(d);
+      scoreTypes = (d.meta && d.meta.score_types) || [];
+      dsa = (d.extras && d.extras.dsa_classification) || null;
       const filtered = !!qs(query);
       const filterRow = html`<div class="review-filter" data-row>
         <button type="button" class="btn small" data-act="review-filter">
@@ -388,7 +507,7 @@ export function reviewRoute(ctx: RouteContext): Promise<void> {
         const r = items.filter(
           (x) => String(x.id) === el.getAttribute("data-id")
         )[0];
-        if (r) reviewMenu(r, l, reload);
+        if (r) reviewMenu(r, l, reload, dsa);
       });
       if (!ctx.restore) focusContent(".row");
     },
@@ -397,7 +516,12 @@ export function reviewRoute(ctx: RouteContext): Promise<void> {
   );
 }
 
-function reviewMenu(r: Reviewable, l: Lookup, reload: () => void): void {
+function reviewMenu(
+  r: Reviewable,
+  l: Lookup,
+  reload: () => void,
+  dsa: DsaOptions | null
+): void {
   const items: SheetItem[] = [];
   const scores = scoresOf(r, l);
   const notes = notesOf(r, l);
@@ -500,6 +624,61 @@ function reviewMenu(r: Reviewable, l: Lookup, reload: () => void): void {
       icon: "edit",
       run: () => editQueued(r, reload),
     });
+  const history = historiesOf(r, l);
+  if (history.length)
+    items.push({
+      label: "History",
+      icon: "clock",
+      hint: plural(history.length, "entry").replace("entrys", "entries"),
+      run: () =>
+        actionSheet(
+          "History",
+          history.map((h) => {
+            const by = h.created_by_id
+              ? l.users[String(h.created_by_id)]
+              : null;
+            return {
+              label: historyLine(h) + (by ? " by @" + by.username : ""),
+              hint: timeAgo(h.created_at),
+            };
+          })
+        ),
+    });
+  const statements =
+    (r.dsa_classification && r.dsa_classification.statement_ids) || [];
+  if (
+    statements.length &&
+    dsa &&
+    dsa.community_rules &&
+    dsa.community_rules.length &&
+    dsa.categories
+  ) {
+    const rules = dsa.community_rules;
+    const categories = dsa.categories;
+    items.push({
+      label: "Classify for the DSA…",
+      icon: "flag",
+      run: () =>
+        choose(
+          "Which rule",
+          rules.map((x) => ({ label: x.ground, value: x.id })),
+          (rule) =>
+            choose(
+              "Which category",
+              categories.map((x) => ({ label: x.name, value: x.id })),
+              (category) =>
+                put(`/review/${r.id}/dsa-classification.json`, {
+                  community_rule: rule,
+                  category,
+                  statement_ids: statements,
+                }).then(() => {
+                  toast("Classified.", "success");
+                  reload();
+                }, failed)
+            )
+        ),
+    });
+  }
   if (author)
     items.push({
       label: "@" + author.username + "'s profile",
@@ -538,13 +717,50 @@ function perform(r: Reviewable, a: ReviewAction, reload: () => void): void {
   // Penalties that go with the action: ask for them as the admin page does.
   if (a.client_action === "suspend" || a.client_action === "silence") {
     const suspend = a.client_action === "suspend";
+    const post = r.target_type === "Post" && r.target_id ? r.target_id : 0;
+    // What happens to the post as well, as the full site's penalty asks.
+    const withPost = (penalty: Record<string, unknown>) => {
+      if (!post) {
+        void send(penalty);
+        return;
+      }
+      const choices = [
+        { label: "Leave the post", value: "none" },
+        { label: "Delete the post", value: "delete" },
+        { label: "Delete the post and its replies", value: "delete_replies" },
+      ];
+      if (suspend)
+        choices.push({ label: "Delete all their posts", value: "delete_all" });
+      choices.push({ label: "Edit the post", value: "edit" });
+      choose("And the post", choices, (action) => {
+        const extra: Record<string, unknown> = {
+          post_id: post,
+          post_action: action,
+        };
+        for (const k in penalty)
+          if (penalty.hasOwnProperty(k)) extra[k] = penalty[k];
+        if (action !== "edit") {
+          void send(extra);
+          return;
+        }
+        askText(
+          "Edit the post",
+          "Post",
+          (text) => {
+            extra.post_edit = text;
+            void send(extra);
+          },
+          { value: r.raw || "", ok: a.label }
+        );
+      });
+    };
     chooseUntil(suspend ? "Suspend until" : "Silence until", (until) =>
       askText(a.label, "Why (the member sees this)", (reason) =>
         askText(
           a.label,
           "A message to email them (optional)",
           (message) =>
-            void send(
+            withPost(
               suspend
                 ? { suspend_until: until.toISOString(), reason, message }
                 : { silenced_till: until.toISOString(), reason, message }
@@ -725,4 +941,51 @@ function notesMenu(r: Reviewable, notes: Note[], reload: () => void): void {
     })
   );
   actionSheet("Notes", items);
+}
+
+interface ScoreTypeSetting {
+  id: number;
+  title: string;
+  reviewable_priority: number;
+}
+
+// How much each flag reason weighs in the queue (admins), as on the full
+// site's review settings.
+function priorities(): void {
+  get<{
+    reviewable_score_types?: ScoreTypeSetting[];
+    reviewable_settings?: {
+      reviewable_priorities?: Array<{ id: number; name: string }>;
+    };
+  }>("/review/settings.json").then((d) => {
+    const types = d.reviewable_score_types || [];
+    const levels =
+      (d.reviewable_settings && d.reviewable_settings.reviewable_priorities) ||
+      [];
+    const nameOf = (n: number) =>
+      (levels.filter((x) => x.id === n)[0] || { name: String(n) }).name;
+    actionSheet(
+      "Priorities",
+      types.map((t) => ({
+        label: t.title,
+        hint: nameOf(t.reviewable_priority),
+        run: () =>
+          choose(
+            t.title,
+            levels.map((x) => ({
+              label: x.name,
+              value: String(x.id),
+              active: x.id === t.reviewable_priority,
+            })),
+            (v) => {
+              const body: Record<string, number> = {};
+              body[String(t.id)] = parseInt(v, 10);
+              put("/review/settings.json", {
+                reviewable_priorities: body,
+              }).then(() => toast("Priority saved.", "success"), failed);
+            }
+          ),
+      }))
+    );
+  }, failed);
 }

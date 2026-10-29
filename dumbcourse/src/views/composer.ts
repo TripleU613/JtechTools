@@ -50,6 +50,8 @@ import { avatar } from "../site.ts";
 export interface Whisper {
   core: boolean;
   userIds: number[];
+  groupIds?: number[];
+  badgeIds?: number[];
   label: string;
 }
 
@@ -868,6 +870,14 @@ ${text}</textarea
         mod_whisper_target_user_ids:
           o.whisper && !o.whisper.core && o.whisper.userIds.length
             ? o.whisper.userIds
+            : undefined,
+        mod_whisper_target_group_ids:
+          o.whisper && !o.whisper.core && o.whisper.groupIds
+            ? o.whisper.groupIds
+            : undefined,
+        mod_whisper_target_badge_ids:
+          o.whisper && !o.whisper.core && o.whisper.badgeIds
+            ? o.whisper.badgeIds
             : undefined,
       });
     } else if (o.kind === "edit") {

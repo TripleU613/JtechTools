@@ -68,6 +68,7 @@ import {
   toggleSelected,
 } from "./select-posts.ts";
 import { chooseCategory, fail, isStaffUser } from "./staff-common.ts";
+import { chooseWhisperAudience } from "./whisper-audience.ts";
 import { reactionPicker, whoReacted } from "./reactions.ts";
 
 interface State {
@@ -585,6 +586,12 @@ function wireTopic(
             userIds: [p.user_id],
             label: "@" + p.username + " and staff",
           }),
+      });
+    if (plugin)
+      out.push({
+        label: "Whisper to…",
+        icon: "lock",
+        run: () => chooseWhisperAudience((w) => reply(p, undefined, w)),
       });
     return out;
   };

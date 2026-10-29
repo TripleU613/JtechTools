@@ -228,6 +228,67 @@ RSpec.describe "Dumbcourse topic staff actions" do
     expect(topic.reload.category_id).to eq(other_category.id)
   end
 
+  it "adds and removes a tag" do
+    SiteSetting.tagging_enabled = true
+    Fabricate(:tag, name: "kyocera")
+    sign_in(moderator)
+    phone do
+      open_topic_menu
+      pick("Edit tags…")
+      pick("Add a tag…")
+      answer("kyo")
+      pick("#kyocera")
+      expect(page).to have_css(".toast", text: "Tag added.")
+    end
+    expect(topic.reload.tags.pluck(:name)).to eq(["kyocera"])
+
+    phone do
+      open_topic_menu
+      pick("Edit tags…")
+      pick("Remove #kyocera")
+      expect(page).to have_css(".toast", text: "Tag removed.")
+    end
+    expect(topic.reload.tags).to be_empty
+  end
+
+  it "publishes a shared draft into a category" do
+    drafts = Fabricate(:category, name: "Drafts")
+    SiteSetting.shared_drafts_category = drafts.id
+    topic.update!(category: drafts)
+    SharedDraft.create!(topic: topic, category: category)
+    sign_in(admin)
+    phone do
+      open_topic_menu
+      pick("Publish the shared draft…")
+      pick("Accessories")
+      expect(page).to have_css(".toast", text: "Published.")
+    end
+    expect(topic.reload.category_id).to eq(other_category.id)
+  end
+
+  it "shows a topic's replies nested, where that isn't the default" do
+    SiteSetting.nested_replies_enabled = true
+    SiteSetting.nested_replies_default = false
+    sign_in(moderator)
+    phone do
+      open_topic_menu
+      pick("Show replies nested")
+      expect(page).to have_css(".toast", text: "Replies shown nested.")
+    end
+    expect(topic.reload.nested_view?).to eq(true)
+  end
+
+  it "links to the topic's review history" do
+    sign_in(moderator)
+    phone do
+      open_topic_menu
+      expect(page).to have_css(
+        ".sheet-item[href$='/review?topic_id=#{topic.id}&status=all']",
+        text: "Review history",
+      )
+    end
+  end
+
   describe "this plugin's topic tools" do
     before { SiteSetting.mod_categories_enabled = true }
 

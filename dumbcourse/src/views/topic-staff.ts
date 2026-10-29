@@ -3,11 +3,20 @@
 // under core's own condition for it (topic-admin-menu.gjs), and each action
 // calls the endpoint core's menu calls, so the server's checks are the same.
 
-import { del, post as apiPost, put } from "../api.ts";
+import { del, get, post as apiPost, put } from "../api.ts";
+import { settings } from "../config.ts";
+import { href } from "../router.ts";
+import { user } from "../session.ts";
 import { dateTime, parseDate } from "../format.ts";
 import { allCategories } from "../site.ts";
 import type { Topic } from "../types.ts";
-import { actionSheet, confirmDialog, type SheetItem } from "../ui/layers.ts";
+import {
+  actionSheet,
+  confirmDialog,
+  promptDialog,
+  type SheetItem,
+  toast,
+} from "../ui/layers.ts";
 import {
   askDate,
   fail as failToast,
@@ -322,7 +331,142 @@ export function topicStaffItems(t: Topic, hooks: TopicStaffHooks): SheetItem[] {
     });
   }
 
+  // ── Tags, shared drafts, nested replies, history ────────────────────
+  if (d.can_edit && settings.tagsEnabled && user && user.can_tag_topics)
+    items.push({
+      label: "Edit tags…",
+      icon: "tag",
+      hint: tagNames(t).length ? tagNames(t).join(" ") : undefined,
+      run: () => tagsMenu(t, hooks),
+    });
+
+  if (t.is_shared_draft && t.destination_category_id)
+    items.push({
+      label: "Publish the shared draft…",
+      icon: "send",
+      run: () =>
+        chooseCategory(
+          "Publish into",
+          (categoryId) =>
+            put(`/t/${t.id}/shared-draft.json`, { category_id: categoryId })
+              .then(() =>
+                put(`/t/${t.id}/publish.json`, {
+                  destination_category_id: categoryId,
+                })
+              )
+              .then(() => hooks.reload("Published."), fail),
+          t.destination_category_id
+        ),
+    });
+
+  if (
+    isStaffUser() &&
+    settings.staff &&
+    settings.staff.nestedRepliesToggle &&
+    !pm
+  )
+    items.push({
+      label: t.is_nested_view ? "Show replies flat" : "Show replies nested",
+      icon: "list",
+      run: () =>
+        put(`/n/${t.slug}/${t.id}/toggle.json`, {
+          enabled: !t.is_nested_view,
+        }).then(
+          () =>
+            hooks.reload(
+              t.is_nested_view ? "Replies shown flat." : "Replies shown nested."
+            ),
+          fail
+        ),
+    });
+
+  if (isStaffUser())
+    items.push({
+      label: "Review history",
+      icon: "review",
+      href: href("/review?topic_id=" + t.id + "&status=all"),
+    });
+
   return items;
+}
+
+function tagNames(t: Topic): string[] {
+  return (t.tags || []).map((x) => (typeof x === "string" ? x : x.name));
+}
+
+interface TagRef {
+  id?: number;
+  name: string;
+}
+
+// The topic's tags: remove one, or add one found by search. Saved as tag
+// objects, as core asks for now.
+function tagsMenu(t: Topic, hooks: TopicStaffHooks): void {
+  const current: TagRef[] = (t.tags || []).map((x) =>
+    typeof x === "string" ? { name: x } : { id: (x as TagRef).id, name: x.name }
+  );
+  const save = (tags: TagRef[], message: string) =>
+    put(`/t/-/${t.id}.json`, {
+      tags: tags.map((x) =>
+        x.id ? { id: x.id, name: x.name } : { name: x.name }
+      ),
+    }).then(() => hooks.reload(message), failToast);
+  const items: SheetItem[] = [
+    {
+      label: "Add a tag…",
+      icon: "plus",
+      run: () =>
+        promptDialog("Tag", { title: "Add a tag", ok: "Search" }).then((q) => {
+          if (q === null || !q.replace(/\s+/g, "")) return;
+          get<{
+            results?: Array<{ id: number; name: string; count?: number }>;
+          }>(
+            `/tags/filter/search.json?q=${encodeURIComponent(q)}&filterForInput=true${t.category_id ? "&categoryId=" + t.category_id : ""}`
+          ).then((res) => {
+            const have = current.map((x) => x.name.toLowerCase());
+            const found = (res.results || []).filter(
+              (r) => have.indexOf(r.name.toLowerCase()) < 0
+            );
+            if (!found.length) {
+              toast("No tags found.", "error");
+              return;
+            }
+            choose(
+              "Add a tag",
+              found.map((r) => ({
+                label: "#" + r.name,
+                value: String(r.id),
+                hint: r.count ? String(r.count) : undefined,
+              })),
+              (id) => {
+                const r = found.filter((x) => String(x.id) === id)[0];
+                if (r)
+                  save(
+                    current.concat([{ id: r.id, name: r.name }]),
+                    "Tag added."
+                  );
+              }
+            );
+          }, failToast);
+        }),
+    },
+  ];
+  current.forEach((tag) =>
+    items.push({
+      label: "Remove #" + tag.name,
+      icon: "x",
+      run: () =>
+        save(
+          current.filter((x) => x.name !== tag.name),
+          "Tag removed."
+        ),
+    })
+  );
+  actionSheet("Tags", items, {
+    subtitle: current.length
+      ? current.map((x) => "#" + x.name).join(" ")
+      : "No tags yet.",
+  });
 }
 
 function pinChoices(t: Topic): Choice[] {

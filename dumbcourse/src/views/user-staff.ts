@@ -69,6 +69,12 @@ interface AdminUser {
   can_view_action_logs?: boolean;
   can_disable_second_factor?: boolean;
   groups?: Array<{ id: number; name: string; automatic?: boolean }>;
+  title?: string | null;
+  primary_group_id?: number | null;
+  penalty_counts?: { silenced?: number; suspended?: number; total?: number };
+  bounce_score?: number;
+  associated_accounts?: Array<{ name: string; description?: string }>;
+  single_sign_on_record?: { external_id?: string } | null;
   // discourse-user-notes, when it's on.
   user_notes_count?: number;
   // This plugin's per-user slow mode.
@@ -77,6 +83,8 @@ interface AdminUser {
 }
 
 export interface UserStaffHooks {
+  // Their username changed: show the profile under the new one.
+  renamed: (username: string, message: string) => void;
   // Re-show the profile, after a change.
   reload: (message: string) => void;
   // The account is gone (deleted, merged, anonymized).
@@ -343,6 +351,56 @@ function paintMenu(a: AdminUser, hooks: UserStaffHooks): void {
       run: () => put(`${base}/deactivate.json`).then(did("Deactivated."), fail),
     });
 
+  // ── Their name, title and email ─────────────────────────────────────
+  items.push({
+    label: "Title…",
+    icon: "award",
+    hint: a.title || undefined,
+    run: () =>
+      askText(
+        "Title",
+        "Shown under their name (empty for none)",
+        (title) =>
+          put(`/u/${encodeURIComponent(a.username)}.json`, { title }).then(
+            did(title ? "Title set." : "Title removed."),
+            fail
+          ),
+        { optional: true, value: a.title || "", ok: "Save" }
+      ),
+  });
+  items.push({
+    label: "Change username…",
+    icon: "user",
+    run: () =>
+      askUsername(
+        "Change username",
+        (name) =>
+          put(
+            `/u/${encodeURIComponent(a.username)}/preferences/username.json`,
+            { new_username: name }
+          ).then(() => hooks.renamed(name, "Username changed."), fail),
+        "New username"
+      ),
+  });
+  if (isAdminUser())
+    items.push({
+      label: "Change email…",
+      icon: "mail",
+      run: () =>
+        askUsername(
+          "Change email",
+          (email) =>
+            put(`/u/${encodeURIComponent(a.username)}/preferences/email.json`, {
+              email,
+            }).then(
+              () =>
+                toast("A confirmation was sent to the new address.", "success"),
+              fail
+            ),
+          "New email address"
+        ),
+    });
+
   if ("user_notes_count" in a)
     items.push({
       label: "Staff notes",
@@ -425,6 +483,66 @@ function paintMenu(a: AdminUser, hooks: UserStaffHooks): void {
               did("Two-factor sign-in turned off."),
               fail
             );
+        }),
+    });
+
+  if (isAdminUser() && a.penalty_counts && (a.penalty_counts.total || 0) > 0)
+    items.push({
+      label: "Clear penalty history",
+      icon: "undo",
+      hint: "Past suspensions and silences stop counting",
+      run: () =>
+        confirmDialog(
+          `Stop @${a.username}'s past suspensions and silences counting against them? The logs keep them.`,
+          { ok: "Clear" }
+        ).then((ok) => {
+          if (ok)
+            del(`${base}/penalty_history.json`).then(
+              did("Penalty history cleared."),
+              fail
+            );
+        }),
+    });
+  if ((a.bounce_score || 0) > 0)
+    items.push({
+      label: "Reset email bounce score",
+      icon: "mail",
+      hint: String(a.bounce_score),
+      run: () =>
+        apiPost(`${base}/reset-bounce-score.json`).then(
+          did("Bounce score reset."),
+          fail
+        ),
+    });
+  if (isAdminUser() && a.associated_accounts && a.associated_accounts.length)
+    items.push({
+      label: "Unlink sign-in accounts",
+      icon: "link",
+      hint: a.associated_accounts.map((x) => x.name).join(", "),
+      run: () =>
+        confirmDialog(
+          `Unlink ${a.associated_accounts!.map((x) => x.name).join(", ")} from @${a.username}?`,
+          { ok: "Unlink", danger: true }
+        ).then((ok) => {
+          if (ok)
+            put(`${base}/delete_associated_accounts.json`).then(
+              did("Sign-in accounts unlinked."),
+              fail
+            );
+        }),
+    });
+  if (isAdminUser() && a.single_sign_on_record)
+    items.push({
+      label: "Delete the DiscourseConnect record",
+      icon: "key",
+      danger: true,
+      run: () =>
+        confirmDialog(
+          `Delete @${a.username}'s DiscourseConnect record? Their next sign-in links them again.`,
+          { ok: "Delete", danger: true }
+        ).then((ok) => {
+          if (ok)
+            del(`${base}/sso_record.json`).then(did("Record deleted."), fail);
         }),
     });
 
@@ -625,6 +743,30 @@ function groupsMenu(a: AdminUser, hooks: UserStaffHooks): void {
         ),
     },
   ];
+  const custom = (a.groups || []).filter((g) => !g.automatic);
+  if (custom.length)
+    items.push({
+      label: "Primary group…",
+      icon: "users",
+      hint:
+        (custom.filter((g) => g.id === a.primary_group_id)[0] || { name: "" })
+          .name || "none",
+      run: () =>
+        choose(
+          "Primary group",
+          [{ label: "None", value: "" }]
+            .concat(custom.map((g) => ({ label: g.name, value: String(g.id) })))
+            .map((c) => ({
+              label: c.label,
+              value: c.value,
+              active: c.value === String(a.primary_group_id || ""),
+            })),
+          (v) =>
+            put(`${base}/primary_group.json`, {
+              primary_group_id: v ? parseInt(v, 10) : "",
+            }).then(() => hooks.reload("Primary group changed."), fail)
+        ),
+    });
   (a.groups || [])
     .filter((g) => !g.automatic)
     .forEach((g) =>
@@ -697,6 +839,31 @@ function ipMenu(a: AdminUser): void {
     });
   };
   add("Last used", a.ip_address);
+  if (isAdminUser() && (a.ip_address || a.registration_ip_address))
+    items.push({
+      label: "Delete the other accounts on these addresses…",
+      icon: "trash",
+      danger: true,
+      run: () =>
+        get<{ total?: number }>(
+          `/admin/users/total-others-with-same-ip.json?user_id=${a.id}`
+        ).then((d) => {
+          const n = (d && d.total) || 0;
+          if (!n) {
+            toast("No other accounts.");
+            return;
+          }
+          confirmDialog(
+            `Delete ${n} other ${n === 1 ? "account" : "accounts"} on @${a.username}'s addresses as spammers? Their posts go, and their emails and addresses are blocked.`,
+            { ok: "Delete", danger: true }
+          ).then((ok) => {
+            if (ok)
+              del(
+                `/admin/users/delete-others-with-same-ip.json?user_id=${a.id}`
+              ).then(() => toast("Deleted.", "success"), fail);
+          });
+        }, fail),
+    });
   if (a.registration_ip_address !== a.ip_address)
     add("Signed up from", a.registration_ip_address);
   actionSheet("IP addresses", items);

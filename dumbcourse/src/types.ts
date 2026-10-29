@@ -170,6 +170,7 @@ export interface TopicDetails {
   can_permanently_delete?: boolean;
   can_move_posts?: boolean;
   can_edit_staff_notes?: boolean;
+  can_publish_page?: boolean;
   notification_level?: number;
   participants?: BasicUser[];
   created_by?: BasicUser;
@@ -197,7 +198,7 @@ export interface Topic {
   created_at: string;
   last_posted_at?: string;
   category_id?: number | null;
-  tags?: Array<string | { name: string }>;
+  tags?: Array<string | { id?: number; name: string }>;
   archetype: string;
   closed?: boolean;
   archived?: boolean;
@@ -210,6 +211,12 @@ export interface Topic {
   slow_mode_seconds?: number;
   slow_mode_enabled_until?: string | null;
   visible?: boolean;
+  // Shown as nested replies (only sent when it is).
+  is_nested_view?: boolean;
+  // A shared draft, and where it's published to.
+  is_shared_draft?: boolean;
+  destination_category_id?: number | null;
+  published_page?: { id: number; slug: string; public?: boolean } | null;
   views?: number;
   like_count?: number;
   reply_count?: number;

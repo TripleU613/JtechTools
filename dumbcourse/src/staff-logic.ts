@@ -121,6 +121,19 @@ export interface Reviewable {
   reviewable_notes?: Note[];
   claimed_by?: Claim | null;
   claimed_by_id?: number | null;
+  reviewable_history_ids?: number[];
+  reviewable_histories?: History[];
+  // Statements still to classify, where the DSA reporting is on.
+  dsa_classification?: { statement_ids?: number[] } | null;
+}
+
+export interface History {
+  id: number;
+  created_at: string;
+  // created, transitioned, edited, claimed, unclaimed
+  reviewable_history_type: number;
+  status: number;
+  created_by_id?: number;
 }
 
 export interface ReviewJson {
@@ -132,7 +145,18 @@ export interface ReviewJson {
   reviewable_notes?: Note[];
   claimed_bies?: Claim[];
   claimed_by?: Claim[];
-  meta?: { total_rows_reviewables?: number; load_more_reviewables?: string };
+  reviewable_histories?: History[];
+  meta?: {
+    total_rows_reviewables?: number;
+    load_more_reviewables?: string;
+    score_types?: Array<{ id: number | string; name: string }>;
+  };
+  extras?: {
+    dsa_classification?: {
+      community_rules?: Array<{ id: string; ground: string }>;
+      categories?: Array<{ id: string; name: string }>;
+    };
+  };
 }
 
 function byId<T extends { id: number | string }>(
@@ -144,6 +168,7 @@ function byId<T extends { id: number | string }>(
 }
 
 export interface Lookup {
+  histories: Record<string, History>;
   users: Record<string, UserRef>;
   bundles: Record<string, Bundle>;
   actions: Record<string, ReviewAction>;
@@ -160,6 +185,7 @@ export function lookupOf(d: ReviewJson): Lookup {
     scores: byId(d.reviewable_scores),
     notes: byId(d.reviewable_notes),
     claims: byId(d.claimed_bies || d.claimed_by || []),
+    histories: byId(d.reviewable_histories),
   };
 }
 
@@ -182,6 +208,32 @@ export function scoresOf(r: Reviewable, l: Lookup): Score[] {
     r.reviewable_scores ||
     (r.reviewable_score_ids || []).map((id) => l.scores[id]).filter((s) => !!s)
   );
+}
+
+export function historiesOf(r: Reviewable, l: Lookup): History[] {
+  return (
+    r.reviewable_histories ||
+    (r.reviewable_history_ids || [])
+      .map((id) => l.histories[id])
+      .filter((h) => !!h)
+  );
+}
+
+const HISTORY_WORDS = [
+  "Created",
+  "Status changed",
+  "Edited",
+  "Claimed",
+  "Unclaimed",
+];
+const STATUS_WORDS = ["pending", "approved", "rejected", "ignored", "deleted"];
+
+// "Status changed to approved", for one line of an item's history.
+export function historyLine(h: History): string {
+  const what = HISTORY_WORDS[h.reviewable_history_type] || "Changed";
+  return h.reviewable_history_type === 1
+    ? what + " to " + (STATUS_WORDS[h.status] || String(h.status))
+    : what;
 }
 
 export function notesOf(r: Reviewable, l: Lookup): Note[] {

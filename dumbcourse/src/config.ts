@@ -37,6 +37,8 @@ export interface StaffSettings {
   whisperConvert: boolean;
   whisperAddParticipant: boolean;
   whisperTargeted: boolean;
+  whisperBadges: boolean;
+  nestedRepliesToggle: boolean;
 }
 
 export interface BootCategory {

@@ -258,6 +258,11 @@ module DiscourseDumbcourse
         whisperAddParticipant:
           !!(setting(:mod_whisper_enabled) && setting(:mod_whisper_add_participant_enabled)),
         whisperTargeted: !!setting(:mod_whisper_enabled),
+        whisperBadges:
+          !!(setting(:mod_whisper_enabled) && setting(:mod_whisper_badge_targeting_enabled)),
+        # Staff switch a topic to nested replies, where that isn't the default.
+        nestedRepliesToggle:
+          !!(setting(:nested_replies_enabled) && !setting(:nested_replies_default)),
       }
     rescue StandardError => e
       Rails.logger.warn("[Dumbcourse] staff settings failed: #{e.class}: #{e.message}")

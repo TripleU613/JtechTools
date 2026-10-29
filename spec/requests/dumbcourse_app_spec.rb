@@ -104,6 +104,8 @@ RSpec.describe "Dumbcourse app page" do
         "reviewableClaiming" => "optional",
         "whisperTargeted" => true,
         "whisperConvert" => true,
+        "whisperBadges" => SiteSetting.mod_whisper_badge_targeting_enabled,
+        "nestedRepliesToggle" => false,
       )
 
       sign_in(user)

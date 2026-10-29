@@ -17,6 +17,7 @@ import { icon } from "../ui/icons.ts";
 import {
   confirmDialog,
   openLayer,
+  promptDialog,
   type SheetItem,
   toast,
 } from "../ui/layers.ts";
@@ -170,6 +171,39 @@ export function postStaffItems(
         ),
     });
 
+  if (p.post_number === 1 && d.can_publish_page)
+    items.push({
+      label: t.published_page ? "Published page…" : "Publish as a page…",
+      icon: "external",
+      hint: t.published_page ? "/pub/" + t.published_page.slug : undefined,
+      run: () => publishPage(t, hooks),
+    });
+
+  // Core's nested view keeps pinned replies to the topic at the top.
+  if (
+    staff &&
+    t.is_nested_view &&
+    p.post_number > 1 &&
+    (!p.reply_to_post_number || p.reply_to_post_number === 1)
+  )
+    items.push({
+      label: "Pin or unpin in nested replies",
+      icon: "pin",
+      run: () =>
+        put<{ pinned_post_ids?: number[] }>(`/n/${t.slug}/${t.id}/pin.json`, {
+          post_id: p.id,
+        }).then(
+          (r) =>
+            toast(
+              (r.pinned_post_ids || []).indexOf(p.id) >= 0
+                ? "Pinned at the top of nested replies."
+                : "Unpinned.",
+              "success"
+            ),
+          fail
+        ),
+    });
+
   if (canManageTopic())
     items.push({
       label: "Rebuild HTML",
@@ -230,6 +264,63 @@ export function postStaffItems(
   }
 
   return items;
+}
+
+// ── Published page ─────────────────────────────────────────────────────
+
+function publishPage(t: Topic, hooks: PostStaffHooks): void {
+  const page = t.published_page;
+  const publish = (slug: string, isPublic: boolean, message: string) =>
+    get<{ valid_slug?: boolean; reason?: string }>(
+      `/pub/check-slug.json?slug=${encodeURIComponent(slug)}`
+    ).then((c) => {
+      if (c && c.valid_slug === false && !(page && page.slug === slug)) {
+        toast(c.reason || "That address can't be used.", "error");
+        return;
+      }
+      put(`/pub/by-topic/${t.id}.json`, {
+        published_page: { slug, public: isPublic },
+      }).then(() => hooks.reload(message), fail);
+    }, fail);
+  const askSlug = (value: string, isPublic: boolean, message: string) =>
+    promptDialog("Its address: /pub/…", {
+      title: "Publish as a page",
+      value,
+      ok: "Publish",
+    }).then((v) => {
+      const slug = (v || "").replace(/^\s+|\s+$/g, "");
+      if (slug) publish(slug, isPublic, message);
+    });
+  if (!page) {
+    askSlug(t.slug, false, "Published as a page.");
+    return;
+  }
+  choose(
+    "Published page",
+    [
+      { label: "Change its address", value: "slug" },
+      {
+        label: page.public ? "Only members can see it" : "Anyone can see it",
+        value: "public",
+      },
+      { label: "Unpublish", value: "remove", danger: true },
+    ],
+    (v) => {
+      if (v === "slug") askSlug(page.slug, !!page.public, "Address changed.");
+      else if (v === "public")
+        publish(
+          page.slug,
+          !page.public,
+          page.public ? "Now for members only." : "Now public."
+        );
+      else
+        del(`/pub/by-topic/${t.id}.json`).then(
+          () => hooks.reload("Unpublished."),
+          fail
+        );
+    },
+    "/pub/" + page.slug
+  );
 }
 
 // ── Post notice ────────────────────────────────────────────────────────
@@ -346,6 +437,8 @@ interface Revision {
   created_at?: string;
   edit_reason?: string | null;
   can_edit?: boolean;
+  previous_hidden?: boolean;
+  unlisted?: boolean;
   body_changes?: { inline?: string } | null;
   title_changes?: { inline?: string } | null;
 }
@@ -418,11 +511,15 @@ export function editHistory(p: Post, onReverted: () => void): void {
         isStaffUser() && r.can_edit !== false && r.current_revision >= 2;
       setHtml(
         foot,
-        canRevert
+        html`${canRevert
           ? html`<button type="button" class="btn small" data-h="revert">
               ${icon("undo")}Go back to the version before this
             </button>`
-          : html``
+          : ""}${isStaffUser() && r.current_revision >= 2
+          ? html`<button type="button" class="btn small" data-h="visibility">
+              ${icon("eye")}Who sees this edit
+            </button>`
+          : ""}`
       );
     }, fail);
   };
@@ -441,7 +538,45 @@ export function editHistory(p: Post, onReverted: () => void): void {
     else if (what === "older" && rev.previous_revision)
       show(rev.previous_revision);
     else if (what === "newer" && rev.next_revision) show(rev.next_revision);
-    else if (what === "revert" && rev.current_revision >= 2) {
+    else if (what === "visibility" && rev.current_revision >= 2) {
+      const r = rev;
+      const now = r.previous_hidden
+        ? "hidden"
+        : r.unlisted
+          ? "unlisted"
+          : "listed";
+      // Core's steps from one to another (a hidden edit is shown first).
+      const steps: Record<string, Record<string, string[]>> = {
+        listed: { unlisted: ["unlist"], hidden: ["hide"] },
+        unlisted: { listed: ["relist"], hidden: ["hide"] },
+        hidden: { listed: ["show"], unlisted: ["show", "unlist"] },
+      };
+      choose(
+        "Who sees this edit",
+        [
+          { label: "Everyone, in the history", value: "listed" },
+          { label: "Everyone, but skipped in the list", value: "unlisted" },
+          { label: "Staff only (hidden)", value: "hidden" },
+        ].map((c) => ({
+          label: c.label,
+          value: c.value,
+          active: c.value === now,
+        })),
+        (target) => {
+          const todo = (steps[now] && steps[now][target]) || [];
+          let chain: Promise<unknown> = Promise.resolve();
+          todo.forEach((step) => {
+            chain = chain.then(() =>
+              put(`/posts/${p.id}/revisions/${r.current_revision}/${step}.json`)
+            );
+          });
+          chain.then(() => {
+            toast("Saved.", "success");
+            show(r.current_revision);
+          }, fail);
+        }
+      );
+    } else if (what === "revert" && rev.current_revision >= 2) {
       // Core reverts a revision by putting back what it changed.
       const to = rev.current_revision;
       confirmDialog("Put the post back the way it was before this edit?", {
