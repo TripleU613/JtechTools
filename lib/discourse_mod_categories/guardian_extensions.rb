@@ -92,6 +92,16 @@ module DiscourseModCategories
       mod_whisper_participant_ids(topic).include?(@user.id)
     end
 
+    # Whether the current user may put `user` in slow mode, or lift it. The
+    # same people core lets silence them (staff, never on staff), with
+    # moderators behind their own switch.
+    def can_set_user_slow_mode?(user)
+      return false unless DiscourseModCategories::UserSlowMode.enabled?
+      return false if user.nil? || user.staff? || user.bot?
+      return true if is_admin?
+      is_moderator? && SiteSetting.mod_user_slow_mode_moderators
+    end
+
     private
 
     # Guardian keeps a placeholder AnonymousUser in @user for logged-out
@@ -109,16 +119,6 @@ module DiscourseModCategories
 
     def mod_categories_grant?
       DiscourseModCategories.enabled? && is_moderator?
-    end
-
-    # Whether the current user may put `user` in slow mode, or lift it. The
-    # same people core lets silence them (staff, never on staff), with
-    # moderators behind their own switch.
-    def can_set_user_slow_mode?(user)
-      return false unless DiscourseModCategories::UserSlowMode.enabled?
-      return false if user.nil? || user.staff? || user.bot?
-      return true if is_admin?
-      is_moderator? && SiteSetting.mod_user_slow_mode_moderators
     end
   end
 end
