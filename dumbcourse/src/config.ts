@@ -25,6 +25,18 @@ export interface BootUser {
   mod_election_vote_due: number;
   can_pair_devices: boolean;
   second_factor_enabled: boolean;
+  can_change_post_owner: boolean;
+  // May post core's staff-only whispers.
+  whisperer: boolean;
+}
+
+// The forum's switches the staff menus need (see AppController#staff_settings).
+export interface StaffSettings {
+  badgesEnabled: boolean;
+  reviewableClaiming: string;
+  whisperConvert: boolean;
+  whisperAddParticipant: boolean;
+  whisperTargeted: boolean;
 }
 
 export interface BootCategory {
@@ -102,6 +114,7 @@ export interface BootSettings {
   }>;
   categories: BootCategory[];
   currentUser: BootUser | null;
+  staff: StaffSettings | null;
   auth: {
     local: boolean;
     emailLink: boolean;
@@ -154,6 +167,7 @@ const DEFAULTS: BootSettings = {
   flagTypes: [],
   categories: [],
   currentUser: null,
+  staff: null,
   auth: {
     local: true,
     emailLink: false,

@@ -3,18 +3,23 @@
 // under core's own condition for it (topic-admin-menu.gjs), and each action
 // calls the endpoint core's menu calls, so the server's checks are the same.
 
-import { del, errorMessage, post as apiPost, put } from "../api.ts";
+import { del, post as apiPost, put } from "../api.ts";
 import { dateTime, parseDate } from "../format.ts";
-import { user } from "../session.ts";
-import { allCategories, categoryName } from "../site.ts";
+import { allCategories } from "../site.ts";
 import type { Topic } from "../types.ts";
+import { actionSheet, confirmDialog, type SheetItem } from "../ui/layers.ts";
 import {
-  actionSheet,
-  confirmDialog,
-  promptDialog,
-  type SheetItem,
-  toast,
-} from "../ui/layers.ts";
+  askDate,
+  fail as failToast,
+  canManageTopic,
+  type Choice,
+  choose,
+  chooseCategory,
+  chooseDuration,
+  chooseWhen,
+  DAY,
+  isStaffUser,
+} from "./staff-common.ts";
 
 // What the topic screen does after a change: reload it, or leave it.
 export interface TopicStaffHooks {
@@ -22,185 +27,8 @@ export interface TopicStaffHooks {
   gone: (message: string) => void;
 }
 
-interface Choice {
-  label: string;
-  value: string;
-  hint?: string;
-  active?: boolean;
-}
-
-const HOUR = 3600 * 1000;
-const DAY = 24 * HOUR;
-
-// Staff, or a trust level 4 leader: who core's menu shows the topic
-// management items to (User#canManageTopic).
-function canManageTopic(): boolean {
-  return !!user && (user.admin || user.moderator || user.trust_level >= 4);
-}
-
-function isStaffUser(): boolean {
-  return !!user && (user.admin || user.moderator);
-}
-
 function isPrivateMessage(t: Topic): boolean {
   return t.archetype === "private_message";
-}
-
-function choose(
-  title: string,
-  choices: Choice[],
-  pick: (value: string) => void,
-  subtitle?: string
-): void {
-  actionSheet(
-    title,
-    choices.map(
-      (c): SheetItem => ({
-        label: c.label,
-        hint: c.hint,
-        active: c.active,
-        run: () => pick(c.value),
-      })
-    ),
-    subtitle ? { subtitle } : {}
-  );
-}
-
-// "2026-11-05 14:30" or "2026-11-05", read as local time. Typed by hand on
-// phones whose browsers show the date input as a plain text box.
-export function parseLocalDateTime(value: string): Date | null {
-  const m =
-    /^\s*(\d{4})-(\d{1,2})-(\d{1,2})(?:[ T](\d{1,2}):(\d{2}))?\s*$/.exec(
-      value || ""
-    );
-  if (!m) return null;
-  const d = new Date(
-    parseInt(m[1], 10),
-    parseInt(m[2], 10) - 1,
-    parseInt(m[3], 10),
-    m[4] ? parseInt(m[4], 10) : 8,
-    m[5] ? parseInt(m[5], 10) : 0
-  );
-  return isNaN(d.getTime()) ? null : d;
-}
-
-function pad(n: number): string {
-  return (n < 10 ? "0" : "") + n;
-}
-
-function localValue(d: Date): string {
-  return (
-    d.getFullYear() +
-    "-" +
-    pad(d.getMonth() + 1) +
-    "-" +
-    pad(d.getDate()) +
-    " " +
-    pad(d.getHours()) +
-    ":" +
-    pad(d.getMinutes())
-  );
-}
-
-// Asks for a date and time in the future.
-function askDate(title: string, done: (d: Date) => void, value?: Date): void {
-  promptDialog("Date and time (YYYY-MM-DD HH:MM)", {
-    title,
-    value: localValue(value || new Date(Date.now() + DAY)),
-    ok: "Set",
-  }).then((v) => {
-    if (v === null) return;
-    const d = parseLocalDateTime(v);
-    if (!d) toast("Write it as 2026-11-05 14:30.", "error");
-    else if (d.getTime() <= Date.now())
-      toast("Pick a time in the future.", "error");
-    else done(d);
-  });
-}
-
-// When something should happen: a few common times, or a date.
-function chooseWhen(title: string, done: (d: Date) => void): void {
-  const at = (ms: number) => String(Date.now() + ms);
-  choose(
-    title,
-    [
-      { label: "In 1 hour", value: at(HOUR) },
-      { label: "In 4 hours", value: at(4 * HOUR) },
-      { label: "In 1 day", value: at(DAY) },
-      { label: "In 3 days", value: at(3 * DAY) },
-      { label: "In 1 week", value: at(7 * DAY) },
-      { label: "In 1 month", value: at(30 * DAY) },
-      { label: "Pick a date…", value: "pick" },
-    ],
-    (v) => {
-      if (v === "pick") askDate(title, done);
-      else done(new Date(parseInt(v, 10)));
-    }
-  );
-}
-
-// How long, in minutes.
-function chooseDuration(
-  title: string,
-  unit: "hours" | "days",
-  done: (minutes: number) => void
-): void {
-  const choices: Choice[] =
-    unit === "hours"
-      ? [
-          { label: "1 hour", value: "60" },
-          { label: "4 hours", value: "240" },
-          { label: "12 hours", value: "720" },
-          { label: "1 day", value: "1440" },
-          { label: "3 days", value: "4320" },
-          { label: "1 week", value: "10080" },
-          { label: "1 month", value: "43200" },
-          { label: "Other…", value: "other" },
-        ]
-      : [
-          { label: "1 day", value: "1440" },
-          { label: "3 days", value: "4320" },
-          { label: "1 week", value: "10080" },
-          { label: "2 weeks", value: "20160" },
-          { label: "1 month", value: "43200" },
-          { label: "Other…", value: "other" },
-        ];
-  choose(title, choices, (v) => {
-    if (v !== "other") {
-      done(parseInt(v, 10));
-      return;
-    }
-    promptDialog(unit === "hours" ? "Hours" : "Days", {
-      title,
-      type: "number",
-      ok: "Set",
-    }).then((n) => {
-      const num = parseFloat(n || "");
-      if (!(num > 0)) return;
-      done(Math.round(num * (unit === "hours" ? 60 : 1440)));
-    });
-  });
-}
-
-function chooseCategory(
-  title: string,
-  done: (id: number) => void,
-  current?: number | null
-): void {
-  const cats = allCategories();
-  if (!cats.length) {
-    toast("No categories to choose from.", "error");
-    return;
-  }
-  choose(
-    title,
-    cats.map((c) => ({
-      label: categoryName(c),
-      value: String(c.id),
-      active: c.id === current,
-    })),
-    (v) => done(parseInt(v, 10))
-  );
 }
 
 const TIMER_NAMES: Record<string, string> = {
@@ -249,7 +77,7 @@ export function topicStaffItems(t: Topic, hooks: TopicStaffHooks): SheetItem[] {
   const pm = isPrivateMessage(t);
   const items: SheetItem[] = [];
 
-  const fail = (e: unknown) => toast(errorMessage(e), "error");
+  const fail = (e: unknown) => failToast(e);
 
   const status = (
     name: string,

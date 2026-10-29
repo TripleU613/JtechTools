@@ -243,7 +243,25 @@ module DiscourseDumbcourse
         categories: categories(site),
         currentUser: boot_user,
         auth: auth_settings(site),
+        staff: staff_settings,
       }
+    end
+
+    # What the staff menus and the review queue need to know about the
+    # forum's own switches. Only for those who see them.
+    def staff_settings
+      return nil unless current_user&.staff? || guardian.can_see_review_queue?
+      {
+        badgesEnabled: !!SiteSetting.enable_badges,
+        reviewableClaiming: SiteSetting.reviewable_claiming.to_s,
+        whisperConvert: !!(setting(:mod_whisper_enabled) && setting(:mod_whisper_convert_enabled)),
+        whisperAddParticipant:
+          !!(setting(:mod_whisper_enabled) && setting(:mod_whisper_add_participant_enabled)),
+        whisperTargeted: !!setting(:mod_whisper_enabled),
+      }
+    rescue StandardError => e
+      Rails.logger.warn("[Dumbcourse] staff settings failed: #{e.class}: #{e.message}")
+      nil
     end
 
     def boot_user
@@ -272,6 +290,8 @@ module DiscourseDumbcourse
         mod_election_vote_due: mod_election_vote_due(user),
         can_pair_devices: DiscourseDumbcourse::Pairing.enabled? && !user.is_impersonating,
         second_factor_enabled: user.totp_enabled? || user.security_keys_enabled?,
+        can_change_post_owner: guardian.can_change_post_owner?,
+        whisperer: user.whisperer?,
       }
     rescue StandardError => e
       Rails.logger.warn("[Dumbcourse] user data failed: #{e.class}: #{e.message}")

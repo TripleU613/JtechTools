@@ -48,6 +48,11 @@ RSpec.describe "Dumbcourse topic staff actions" do
     find(".sheet-item", text: text, match: :first).click
   end
 
+  def answer(text)
+    find("#dlgInput").fill_in(with: text)
+    find(".dialog [data-ok]").click
+  end
+
   it "pins a topic globally for a week, and unpins it" do
     sign_in(moderator)
     phone do
@@ -198,6 +203,110 @@ RSpec.describe "Dumbcourse topic staff actions" do
       expect(page).to have_css(".toast", text: "Topic deleted permanently.")
     end
     expect(Topic.with_deleted.find_by(id: topic.id)).to be_nil
+  end
+
+  it "selects posts from the menu, and stops" do
+    sign_in(moderator)
+    phone do
+      open_topic_menu
+      pick("Select posts…")
+      expect(page).to have_css("html.selecting")
+      press(:f2)
+      pick("Done selecting")
+      expect(page).to have_no_css("html.selecting")
+    end
+  end
+
+  it "moves the topic to another category" do
+    sign_in(moderator)
+    phone do
+      open_topic_menu
+      pick("Change category…")
+      pick("Accessories")
+      expect(page).to have_css(".toast", text: "Category changed.")
+    end
+    expect(topic.reload.category_id).to eq(other_category.id)
+  end
+
+  describe "this plugin's topic tools" do
+    before { SiteSetting.mod_categories_enabled = true }
+
+    def field(name)
+      topic.reload.custom_fields[name]
+    end
+
+    it "sets a footer message, and removes it" do
+      sign_in(moderator)
+      phone do
+        open_topic_menu
+        pick("Add footer message…")
+        answer("Please search before asking.")
+        expect(page).to have_css(".toast", text: "Footer message saved.")
+      end
+      expect(field(DiscourseModCategories::TOPIC_FOOTER_FIELD)).to eq(
+        "Please search before asking.",
+      )
+
+      phone do
+        open_topic_menu
+        pick("Footer message…")
+        answer("")
+        expect(page).to have_css(".toast", text: "Footer message removed.")
+      end
+      expect(field(DiscourseModCategories::TOPIC_FOOTER_FIELD)).to be_blank
+    end
+
+    it "makes replies wait for approval" do
+      sign_in(moderator)
+      phone do
+        open_topic_menu
+        pick("Approve replies first")
+        expect(page).to have_css(".toast", text: "Replies now need approval.")
+      end
+      expect(field(DiscourseModCategories::TOPIC_REQUIRE_REPLY_APPROVAL_FIELD)).to eq(true)
+    end
+
+    it "leaves a staff note, and replies to it" do
+      sign_in(moderator)
+      phone do
+        open_topic_menu
+        pick("Add staff note…")
+        answer("Watch this one: it was reported twice.")
+        expect(page).to have_css(".toast", text: "Staff note saved.")
+      end
+      expect(field(DiscourseModCategories::TOPIC_PRIVATE_NOTE_FIELD)).to eq(
+        "Watch this one: it was reported twice.",
+      )
+
+      sign_in(admin)
+      phone do
+        open_topic_menu
+        pick("Staff note…")
+        pick("Reply to the note")
+        answer("Agreed, I'll keep an eye on it.")
+        expect(page).to have_css(".toast", text: "Reply added.")
+      end
+      replies = DiscourseModCategories::NoteThread.replies(topic.reload)
+      expect(replies.map { |r| r[:raw] }).to eq(["Agreed, I'll keep an eye on it."])
+    end
+
+    it "asks repliers to tick a checklist first" do
+      sign_in(moderator)
+      phone do
+        open_topic_menu
+        pick("Add reply checklist…")
+        pick("A list to tick")
+        answer("I read the rules\nI searched first")
+        pick("Before every reply")
+        pick("Trust level 1 and below")
+        expect(page).to have_css(".toast", text: "Reply checklist saved.")
+      end
+      config = field(DiscourseModCategories::TOPIC_PROMPT_CHECKLIST_FIELD)
+      config = JSON.parse(config) if config.is_a?(String)
+      expect(config["items"].map { |i| i["label"] }).to eq(["I read the rules", "I searched first"])
+      expect(config["frequency"]).to eq("every_reply")
+      expect(config["max_tl"]).to eq(1)
+    end
   end
 
   it "shows none of it to a regular user" do

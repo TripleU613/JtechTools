@@ -3,7 +3,7 @@
 
 import { errorMessage, get } from "../api.ts";
 import { go } from "../app.ts";
-import { swr } from "../cache.ts";
+import { invalidate, swr } from "../cache.ts";
 import { processCooked } from "../content/cooked.ts";
 import { emojify, emojiImg } from "../content/emoji.ts";
 import { byId } from "../dom.ts";
@@ -14,10 +14,11 @@ import { href, type RouteContext } from "../router.ts";
 import { isMe, user } from "../session.ts";
 import { avatar, categoryBadge, topicPath } from "../site.ts";
 import { icon } from "../ui/icons.ts";
-import { actionSheet } from "../ui/layers.ts";
+import { actionSheet, toast } from "../ui/layers.ts";
 import { decodeEntities } from "../ui/topic-row.ts";
 import { useScreen } from "./common.ts";
 import { openComposer } from "./composer.ts";
+import { canModerateUser, userStaffMenu } from "./user-staff.ts";
 
 interface UserJson {
   id: number;
@@ -161,6 +162,18 @@ function paint(
       </button>`
     );
   }
+  if (canModerateUser(u)) {
+    actions.push(
+      html`<button
+        type="button"
+        class="btn"
+        data-act="moderate-user"
+        data-key="moderate"
+      >
+        ${icon("shield")}Moderate
+      </button>`
+    );
+  }
   if (me) {
     actions.push(
       html`<a class="btn" href="${href("/preferences")}" data-key="prefs"
@@ -246,6 +259,20 @@ function paint(
 
   s.act("message-user", () =>
     openComposer({ kind: "message", to: u.username })
+  );
+  s.act("moderate-user", () =>
+    userStaffMenu(u, {
+      reload: (message) => {
+        toast(message, "success");
+        invalidate("/u/" + encodeURIComponent(u.username));
+        go(ctx.path + location.search, { replace: true });
+      },
+      gone: (message) => {
+        toast(message, "success");
+        invalidate();
+        go("/", { replace: true });
+      },
+    })
   );
   if (!me && reqpmOn)
     s.softkeys({

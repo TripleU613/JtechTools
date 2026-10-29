@@ -110,6 +110,13 @@ export interface Post {
   can_delete?: boolean;
   can_recover?: boolean;
   can_wiki?: boolean;
+  can_permanently_delete?: boolean;
+  can_view_edit_history?: boolean;
+  // Only staff can edit it.
+  locked?: boolean;
+  // A staff notice shown above the post ("custom"), or core's own notes on
+  // a new or returning member.
+  notice?: { type: string; raw?: string; cooked?: string } | null;
   deleted_at?: string | null;
   hidden?: boolean;
   wiki?: boolean;
@@ -162,6 +169,7 @@ export interface TopicDetails {
   can_convert_topic?: boolean;
   can_permanently_delete?: boolean;
   can_move_posts?: boolean;
+  can_edit_staff_notes?: boolean;
   notification_level?: number;
   participants?: BasicUser[];
   created_by?: BasicUser;
