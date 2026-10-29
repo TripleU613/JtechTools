@@ -131,6 +131,11 @@ function smallAction(p: Post): SafeHtml {
 }
 
 function whisperNote(p: Post): SafeHtml {
+  // Core's own whisper: staff only.
+  if (p.post_type === 4)
+    return html`<div class="whisper">
+      ${icon("lock")}<span>Whisper — only staff can see this</span>
+    </div>`;
   if (!p.mod_is_whisper) return html``;
   const to: string[] = [];
   (p.mod_whisper_targets || []).forEach(
@@ -381,7 +386,9 @@ export function renderPost(
   const markup = html`<article
     class="post${p.deleted_at ? " deleted" : ""}${p.hidden
       ? " is-hidden"
-      : ""}${p.yours ? " mine" : ""}${p.mod_is_whisper ? " whispered" : ""}"
+      : ""}${p.yours ? " mine" : ""}${p.mod_is_whisper || p.post_type === 4
+      ? " whispered"
+      : ""}${p.post_type === 2 ? " staff-colour" : ""}${p.wiki ? " wiki" : ""}"
     id="post-${p.id}"
     data-key="p${p.post_number}"
     data-n="${p.post_number}"
@@ -419,7 +426,17 @@ export function renderPost(
           ${icon("trash")} Deleted — only staff can see this.
         </div>`
       : ""}
-    ${whisperNote(p)} ${replyTo}
+    ${whisperNote(p)}${p.notice && p.notice.type === "custom" && p.notice.cooked
+      ? html`<div class="post-notice">
+          ${icon("shield")}
+          <div class="cooked">${processCooked(p.notice.cooked).html}</div>
+        </div>`
+      : ""}${p.locked && isStaff()
+      ? html`<div class="notice small">
+          ${icon("lock")} Locked: only staff can edit it.
+        </div>`
+      : ""}
+    ${replyTo}
     <div class="post-body cooked">${raw(bodyHtml)}${leftover}</div>
     ${reactionPills(p, allowed)}
     <footer class="post-foot">

@@ -22,6 +22,7 @@ import {
   fromHtml,
   nearBottom,
   prependHtml,
+  toggleClass,
 } from "../dom.ts";
 import { count, plural, truncate } from "../format.ts";
 import { html, type SafeHtml } from "../html.ts";
@@ -33,6 +34,7 @@ import type { Screen } from "../screen.ts";
 import { isStaff, user } from "../session.ts";
 import { category, categoryBadge, topicPath, userPath } from "../site.ts";
 import type { Post, Topic } from "../types.ts";
+import type { Whisper } from "./composer.ts";
 import { hiddenParts, hiddenState, showHidden } from "../ui/hidden-text.ts";
 import { showPictures, viewPicture } from "../ui/pictures.ts";
 import { icon } from "../ui/icons.ts";
@@ -56,6 +58,17 @@ import { decodeEntities, topicRow, usersById } from "../ui/topic-row.ts";
 import { useScreen } from "./common.ts";
 import { openComposer } from "./composer.ts";
 import { levelLabel, topicLevelSheet } from "./levels.ts";
+import { topicModToolItems } from "./topic-mod-tools.ts";
+import { topicOwnerItems, topicStaffItems } from "./topic-staff.ts";
+import { canSeeHistory, editHistory, postStaffItems } from "./post-staff.ts";
+import {
+  canSelectPosts,
+  type Selection,
+  selectionMenu,
+  toggleSelected,
+} from "./select-posts.ts";
+import { chooseCategory, fail, isStaffUser } from "./staff-common.ts";
+import { chooseWhisperAudience } from "./whisper-audience.ts";
 import { reactionPicker, whoReacted } from "./reactions.ts";
 
 interface State {
@@ -68,6 +81,8 @@ interface State {
   loadedFrom: number; // index into stream
   loadedTo: number; // exclusive
   level: number;
+  // Called after posts are drawn or redrawn (the selection marks them).
+  onPosts?: () => void;
 }
 
 const BATCH = 20;
@@ -292,6 +307,7 @@ function appendPosts(
   if (!parts.length) return;
   if (where === "end") appendHtml(container, html`${parts}`);
   else prependHtml(container, html`${parts}`);
+  if (state.onPosts) state.onPosts();
 }
 
 function replacePost(state: State, p: Post): void {
@@ -309,6 +325,7 @@ function replacePost(state: State, p: Post): void {
   const hadFocus = old.contains(document.activeElement);
   old.parentNode.replaceChild(fresh, old);
   if (hadFocus) focus(fresh, false);
+  if (state.onPosts) state.onPosts();
 }
 
 function updateEdges(state: State): void {
@@ -458,10 +475,18 @@ function wireTopic(
       () => undefined
     );
 
+  const reloadTopic = (message: string) => {
+    toast(message, "success");
+    invalidate(`/t/${t.id}`);
+    invalidate("/latest");
+    go(ctx.path + location.search, { replace: true });
+  };
+
   // ── Composer hooks ──────────────────────────────────────────────────
 
-  const reply = (p: Post | null, quote?: string) => {
+  const reply = (p: Post | null, quote?: string, whisper?: Whisper) => {
     openComposer({
+      whisper,
       kind: "reply",
       topicId: t.id,
       topicTitle: decodeEntities(t.fancy_title || t.title),
@@ -524,6 +549,51 @@ function wireTopic(
       },
       (e: unknown) => toast(errorMessage(e), "error")
     );
+  };
+
+  // Staff replies only staff (or the people named) can read: core's
+  // whispers, or this plugin's whispers to someone.
+  const whisperItems = (p: Post | null): SheetItem[] => {
+    const out: SheetItem[] = [];
+    if (!isStaffUser() || t.archetype === "private_message") return out;
+    const plugin = !!(settings.staff && settings.staff.whisperTargeted);
+    if ((user && user.whisperer) || plugin)
+      out.push({
+        label: p ? "Whisper reply (staff only)" : "Whisper (staff only)",
+        icon: "lock",
+        run: () =>
+          reply(p, undefined, {
+            core: !!(user && user.whisperer),
+            userIds: [],
+            label: "staff",
+          }),
+      });
+    if (
+      p &&
+      plugin &&
+      p.user_id > 0 &&
+      !p.staff &&
+      !p.admin &&
+      !p.moderator &&
+      !(user && p.username === user.username)
+    )
+      out.push({
+        label: `Whisper to @${p.username}`,
+        icon: "lock",
+        run: () =>
+          reply(p, undefined, {
+            core: false,
+            userIds: [p.user_id],
+            label: "@" + p.username + " and staff",
+          }),
+      });
+    if (plugin)
+      out.push({
+        label: "Whisper to…",
+        icon: "lock",
+        run: () => chooseWhisperAudience((w) => reply(p, undefined, w)),
+      });
+    return out;
   };
 
   s.act("reply-topic", () => reply(null));
@@ -914,6 +984,30 @@ function wireTopic(
         danger: true,
         run: () => flag(p),
       });
+    if (canSeeHistory(p))
+      items.push({
+        label: "Edit history",
+        icon: "clock",
+        run: () =>
+          editHistory(p, () => {
+            invalidate(`/t/${t.id}`);
+            void refreshPost(p.id);
+          }),
+      });
+    if (canReply) whisperItems(p).forEach((w) => items.push(w));
+
+    const staff = postStaffItems(p, t, {
+      refresh: (postId, message) => {
+        toast(message, "success");
+        invalidate(`/t/${t.id}`);
+        void refreshPost(postId);
+      },
+      reload: reloadTopic,
+    });
+    if (staff.length) {
+      items.push({ label: "Moderation", heading: true });
+      staff.forEach((x) => items.push(x));
+    }
 
     if (links.length) {
       items.push({
@@ -938,7 +1032,12 @@ function wireTopic(
 
   s.act("post-menu", (el) => {
     const p = postFrom(el);
-    if (p) postMenu(p);
+    if (!p) return;
+    if (selecting) {
+      toggleSelected(selection(), p.id);
+      return;
+    }
+    postMenu(p);
   });
 
   const showReplies = (p: Post) => {
@@ -1035,90 +1134,49 @@ function wireTopic(
           void promptDialog("Link to this topic", { value: url, ok: "Done" });
       },
     });
-    const mod: SheetItem[] = [];
-    if (d.can_close_topic)
-      mod.push({
-        label: t.closed ? "Open topic" : "Close topic",
-        icon: t.closed ? "unlock" : "lock",
-        run: () => setStatus("closed", !t.closed),
+    if (d.can_create_post !== false)
+      whisperItems(null).forEach((w) => items.push(w));
+    const hooks = {
+      reload: reloadTopic,
+      gone: (message: string) => {
+        toast(message, "success");
+        invalidate();
+        go("/", { replace: true });
+      },
+    };
+    topicOwnerItems(t, hooks).forEach((x) => items.push(x));
+    const mod = topicStaffItems(t, hooks);
+    if (canSelectPosts(t))
+      mod.unshift({
+        label: "Select posts…",
+        icon: "check",
+        run: startSelecting,
       });
-    if (d.can_pin_unpin_topic)
+    if (
+      d.can_edit &&
+      t.archetype !== "private_message" &&
+      (isStaffUser() || d.can_moderate_category)
+    )
       mod.push({
-        label: t.pinned ? "Unpin" : "Pin",
-        icon: "pin",
-        run: () => setStatus("pinned", !t.pinned),
+        label: "Change category…",
+        icon: "grid",
+        run: () =>
+          chooseCategory(
+            "Move to which category?",
+            (categoryId) =>
+              put(`/t/-/${t.id}.json`, { category_id: categoryId }).then(
+                () => reloadTopic("Category changed."),
+                fail
+              ),
+            t.category_id
+          ),
       });
-    if (d.can_archive_topic)
-      mod.push({
-        label: t.archived ? "Unarchive" : "Archive",
-        icon: "archive",
-        run: () => setStatus("archived", !t.archived),
-      });
-    if (d.can_toggle_topic_visibility)
-      mod.push({
-        label: t.visible === false ? "List topic" : "Unlist topic",
-        icon: "hide",
-        run: () => setStatus("visible", t.visible === false),
-      });
-    if (t.deleted_at && d.can_recover)
-      mod.push({ label: "Restore topic", icon: "undo", run: recoverTopic });
-    else if (d.can_delete)
-      mod.push({
-        label: "Delete topic",
-        icon: "trash",
-        danger: true,
-        run: deleteTopic,
-      });
+    topicModToolItems(t, hooks).forEach((x) => mod.push(x));
     if (mod.length) {
       items.push({ label: "Moderation", heading: true });
       for (let i = 0; i < mod.length; i++) items.push(mod[i]);
     }
     actionSheet(decodeEntities(t.fancy_title || t.title), items);
-  };
-
-  const setStatus = (status: string, enabled: boolean) => {
-    const body: Record<string, unknown> = {
-      status,
-      enabled: enabled ? "true" : "false",
-    };
-    if (status === "pinned" && enabled) body.until = "";
-    put(`/t/${t.id}/status.json`, body).then(
-      () => {
-        toast("Done.", "success");
-        invalidate(`/t/${t.id}`);
-        invalidate("/latest");
-        go(ctx.path + location.search, { replace: true });
-      },
-      (e: unknown) => toast(errorMessage(e), "error")
-    );
-  };
-
-  const deleteTopic = () => {
-    confirmDialog("Delete this whole topic?", {
-      ok: "Delete",
-      danger: true,
-    }).then((ok) => {
-      if (!ok) return;
-      del(`/t/${t.id}.json`).then(
-        () => {
-          toast("Topic deleted.", "success");
-          invalidate();
-          go("/", { replace: true });
-        },
-        (e: unknown) => toast(errorMessage(e), "error")
-      );
-    });
-  };
-
-  const recoverTopic = () => {
-    put(`/t/${t.id}/recover.json`).then(
-      () => {
-        toast("Topic restored.", "success");
-        invalidate();
-        go(ctx.path + location.search, { replace: true });
-      },
-      (e: unknown) => toast(errorMessage(e), "error")
-    );
   };
 
   const askJump = () => {
@@ -1134,6 +1192,77 @@ function wireTopic(
 
   s.act("topic-menu", topicMenu);
   s.softkeys({ right: { label: "Options", run: topicMenu } });
+
+  // ── Selecting posts ─────────────────────────────────────────────────
+
+  let selecting = false;
+  let selected: number[] = [];
+
+  const paintSelection = () => {
+    $$(".post[data-post]", container).forEach((el) => {
+      const on =
+        selecting &&
+        selected.indexOf(parseInt(el.getAttribute("data-post") || "0", 10)) >=
+          0;
+      toggleClass(el, "selected", on);
+      if (selecting) el.setAttribute("aria-selected", on ? "true" : "false");
+      else el.removeAttribute("aria-selected");
+    });
+    toggleClass(document.documentElement, "selecting", selecting);
+  };
+
+  const selectionKeys = () =>
+    s.softkeys({
+      right: selecting
+        ? {
+            label: selected.length ? `${selected.length} selected` : "Select",
+            run: () => selectionMenu(selection()),
+          }
+        : { label: "Options", run: topicMenu },
+    });
+
+  const selection = (): Selection => {
+    const el = focusedPost();
+    return {
+      topic: t,
+      stream: state.stream,
+      posts: state.posts,
+      selected,
+      focused: el
+        ? state.posts[parseInt(el.getAttribute("data-post") || "0", 10)] || null
+        : null,
+      set: (ids) => {
+        selected = ids;
+        paintSelection();
+        selectionKeys();
+      },
+      stop: stopSelecting,
+      leave: (message, path) => {
+        toast(message, "success");
+        invalidate();
+        if (path) go(path);
+        else go(ctx.path + location.search, { replace: true });
+      },
+      reload: reloadTopic,
+    };
+  };
+
+  function startSelecting() {
+    selecting = true;
+    selected = [];
+    paintSelection();
+    selectionKeys();
+    toast("OK on a post selects it.");
+  }
+
+  function stopSelecting() {
+    selecting = false;
+    selected = [];
+    paintSelection();
+    selectionKeys();
+  }
+  state.onPosts = paintSelection;
+  s.onLeave(() => toggleClass(document.documentElement, "selecting", false));
 
   const nextPost = (dir: 1 | -1) => {
     const posts = $$(".post", container);

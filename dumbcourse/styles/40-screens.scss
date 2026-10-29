@@ -1532,3 +1532,137 @@ html:not(.with-softkeys) .pv-close {
 .pg-cell:focus img {
   box-shadow: 0 0 0 3px var(--focus);
 }
+
+/* ── Staff tools ─────────────────────────────────────────────────────── */
+
+/* Selecting posts: a chosen post is filled and ticked in its corner. */
+.selecting .post {
+  position: relative;
+}
+
+.post.selected {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+.post.selected::after {
+  content: "\2713";
+  position: absolute;
+  top: 0.35rem;
+  right: 0.5rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+/* A staff-colour post (core's moderator action). */
+.post.staff-colour {
+  background: var(--surface2);
+  border-left: 3px solid var(--warn);
+}
+
+.post-notice {
+  display: flex;
+  align-items: flex-start;
+  margin: 0 0 0.4rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.82rem;
+  background: var(--surface2);
+  border-radius: var(--radius-s);
+}
+
+.post-notice svg.i {
+  flex: 0 0 auto;
+  width: 0.9rem;
+  height: 0.9rem;
+  margin: 0.1rem 0.35rem 0 0;
+}
+
+.post-notice .cooked p {
+  margin: 0;
+}
+
+.c-notice {
+  margin: 0 0 0.5rem;
+  padding: 0.35rem 0.5rem;
+  font-size: 0.8rem;
+  color: var(--fg2);
+  background: var(--surface2);
+  border-radius: var(--radius-s);
+}
+
+.c-notice svg.i {
+  width: 0.85rem;
+  height: 0.85rem;
+  margin-right: 0.3rem;
+}
+
+/* A post's edit history. */
+.history {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.history-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.history-pos {
+  font-size: 0.8rem;
+  color: var(--fg2);
+}
+
+.history-body {
+  flex: 1 1 auto;
+  padding: 0.5rem;
+  overflow-y: auto;
+}
+
+.history-who {
+  margin: 0 0 0.5rem;
+  font-size: 0.78rem;
+  color: var(--fg2);
+}
+
+.history-title {
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.history-diff ins,
+.history-diff .diff-ins {
+  text-decoration: none;
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.history-diff del,
+.history-diff .diff-del {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.history-foot {
+  padding: 0.35rem 0.5rem;
+  border-top: 1px solid var(--line);
+}
+
+.history-foot:empty {
+  display: none;
+}
+
+/* The review queue's filter button and pages. */
+.review-filter,
+.review-pager {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem;
+}
+
+.review-count {
+  margin: 0 0.5rem 0.25rem;
+}

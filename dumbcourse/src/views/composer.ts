@@ -45,9 +45,20 @@ import {
 } from "../ui/layers.ts";
 import { avatar } from "../site.ts";
 
+// A staff reply only some can read: core's whisper (staff only), or this
+// plugin's whisper to the users named (and staff).
+export interface Whisper {
+  core: boolean;
+  userIds: number[];
+  groupIds?: number[];
+  badgeIds?: number[];
+  label: string;
+}
+
 export type ComposerOptions =
   | {
       kind: "reply";
+      whisper?: Whisper;
       topicId: number;
       topicTitle: string;
       categoryId: number | null;
@@ -63,7 +74,14 @@ export type ComposerOptions =
       title?: string;
       body?: string;
     }
-  | { kind: "message"; to?: string; title?: string; body?: string }
+  | {
+      kind: "message";
+      to?: string;
+      title?: string;
+      body?: string;
+      // Staff: send it as an official warning.
+      warning?: boolean;
+    }
   | {
       kind: "edit";
       topicId: number;
@@ -77,6 +95,8 @@ export type ComposerOptions =
     };
 
 function draftKey(o: ComposerOptions): string {
+  // Never saved: a whisper reopened from Drafts would go out as a reply.
+  if (o.kind === "reply" && o.whisper) return "whisper:" + o.topicId;
   if (o.kind === "reply") return "reply:" + o.topicId;
   if (o.kind === "edit") return "edit:" + o.postId;
   return o.kind;
@@ -122,12 +142,16 @@ export function openComposer(o: ComposerOptions): void {
 
   const heading =
     o.kind === "reply"
-      ? "Reply"
+      ? o.whisper
+        ? "Whisper"
+        : "Reply"
       : o.kind === "edit"
         ? `Edit #${o.postNumber}`
         : o.kind === "topic"
           ? "New topic"
-          : "New message";
+          : o.warning
+            ? "Warning"
+            : "New message";
   const sendLabel =
     o.kind === "edit"
       ? "Save"
@@ -147,6 +171,16 @@ export function openComposer(o: ComposerOptions): void {
           >
         </div>`
       : html``;
+  const notice =
+    o.kind === "reply" && o.whisper
+      ? html`<p class="c-notice">
+          ${icon("lock")}Whisper: only ${o.whisper.label} can read it.
+        </p>`
+      : o.kind === "message" && o.warning
+        ? html`<p class="c-notice">
+            ${icon("flag")}An official warning: it goes on their record.
+          </p>`
+        : html``;
 
   const cats = postableCategories();
   const catField =
@@ -223,7 +257,7 @@ export function openComposer(o: ComposerOptions): void {
         </button>
       </div>
       <div class="c-body scroll">
-        ${context}${toField}${titleField}${catField}${tagField}
+        ${context}${notice}${toField}${titleField}${catField}${tagField}
         <label class="sr" for="cText">Message</label>
         <textarea
           id="cText"
@@ -307,9 +341,14 @@ ${text}</textarea
       if (!hasWriting()) return false;
       askingToClose = true;
       // Short labels: they also go on a 240px phone's soft-key bar.
-      void confirmDialog("Close? Your draft stays on this phone.", {
-        ok: "Close",
-      }).then((ok) => {
+      void confirmDialog(
+        o.kind === "reply" && o.whisper
+          ? "Close? A whisper isn't kept as a draft."
+          : "Close? Your draft stays on this phone.",
+        {
+          ok: "Close",
+        }
+      ).then((ok) => {
         askingToClose = false;
         if (ok) layer.close();
       });
@@ -363,6 +402,7 @@ ${text}</textarea
   });
 
   const persist = debounce(() => {
+    if (o.kind === "reply" && o.whisper) return;
     if (
       o.kind === "edit" &&
       ta.value === o.raw &&
@@ -825,6 +865,20 @@ ${text}</textarea
         archetype: "regular",
         nested_post: true,
         dumbcourse: true,
+        whisper: o.whisper && o.whisper.core ? true : undefined,
+        mod_whisper: o.whisper && !o.whisper.core ? "true" : undefined,
+        mod_whisper_target_user_ids:
+          o.whisper && !o.whisper.core && o.whisper.userIds.length
+            ? o.whisper.userIds
+            : undefined,
+        mod_whisper_target_group_ids:
+          o.whisper && !o.whisper.core && o.whisper.groupIds
+            ? o.whisper.groupIds
+            : undefined,
+        mod_whisper_target_badge_ids:
+          o.whisper && !o.whisper.core && o.whisper.badgeIds
+            ? o.whisper.badgeIds
+            : undefined,
       });
     } else if (o.kind === "edit") {
       const edits: Array<Promise<unknown>> = [
@@ -893,6 +947,7 @@ ${text}</textarea
         raw: body,
         target_recipients: recipients,
         archetype: "private_message",
+        is_warning: o.warning ? true : undefined,
       });
     }
     sending = true;
@@ -909,7 +964,7 @@ ${text}</textarea
           const r = res as { post?: Post } & Post;
           const created = r && r.post ? r.post : r;
           if (created && created.id && o.onPosted) o.onPosted(created);
-          toast("Reply posted.", "success");
+          toast(o.whisper ? "Whisper posted." : "Reply posted.", "success");
         } else if (o.kind === "edit") {
           if (o.onSaved) o.onSaved();
           toast("Saved.", "success");

@@ -110,6 +110,13 @@ export interface Post {
   can_delete?: boolean;
   can_recover?: boolean;
   can_wiki?: boolean;
+  can_permanently_delete?: boolean;
+  can_view_edit_history?: boolean;
+  // Only staff can edit it.
+  locked?: boolean;
+  // A staff notice shown above the post ("custom"), or core's own notes on
+  // a new or returning member.
+  notice?: { type: string; raw?: string; cooked?: string } | null;
   deleted_at?: string | null;
   hidden?: boolean;
   wiki?: boolean;
@@ -158,11 +165,26 @@ export interface TopicDetails {
   can_toggle_topic_visibility?: boolean;
   can_moderate_category?: boolean;
   can_split_merge_topic?: boolean;
+  can_banner_topic?: boolean;
+  can_convert_topic?: boolean;
+  can_permanently_delete?: boolean;
+  can_move_posts?: boolean;
+  can_edit_staff_notes?: boolean;
+  can_publish_page?: boolean;
   notification_level?: number;
   participants?: BasicUser[];
   created_by?: BasicUser;
   last_poster?: BasicUser;
   allowed_users?: BasicUser[];
+}
+
+export interface TopicTimer {
+  id?: number;
+  execute_at: string | null;
+  duration_minutes?: number | null;
+  based_on_last_post?: boolean;
+  status_type: string;
+  category_id?: number | null;
 }
 
 export interface Topic {
@@ -176,13 +198,25 @@ export interface Topic {
   created_at: string;
   last_posted_at?: string;
   category_id?: number | null;
-  tags?: Array<string | { name: string }>;
+  tags?: Array<string | { id?: number; name: string }>;
   archetype: string;
   closed?: boolean;
   archived?: boolean;
   pinned?: boolean;
   pinned_at?: string | null;
+  pinned_globally?: boolean;
+  pinned_until?: string | null;
+  // The topic's scheduled change, if any (core's TopicTimerSerializer).
+  topic_timer?: TopicTimer | null;
+  slow_mode_seconds?: number;
+  slow_mode_enabled_until?: string | null;
   visible?: boolean;
+  // Shown as nested replies (only sent when it is).
+  is_nested_view?: boolean;
+  // A shared draft, and where it's published to.
+  is_shared_draft?: boolean;
+  destination_category_id?: number | null;
+  published_page?: { id: number; slug: string; public?: boolean } | null;
   views?: number;
   like_count?: number;
   reply_count?: number;

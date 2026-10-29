@@ -779,7 +779,7 @@ RSpec.describe "Dumbcourse" do
         expect(page).to have_css(".topic-head")
         press(:f2)
         find(".sheet-item", text: "Close topic").click
-        expect(page).to have_css(".toast", text: "Done")
+        expect(page).to have_css(".toast", text: "Topic closed.")
       end
       expect(topic.reload.closed).to eq(true)
     end

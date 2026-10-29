@@ -92,6 +92,8 @@ export function fromCurrentUser(cu: Record<string, unknown>): BootUser {
       election.status === "voting" && election.voter && !election.voted ? 1 : 0,
     can_pair_devices: user ? user.can_pair_devices : settings.auth.pairing,
     second_factor_enabled: !!cu.second_factor_enabled,
+    can_change_post_owner: !!cu.can_change_post_owner,
+    whisperer: !!cu.whisperer,
   };
 }
 
