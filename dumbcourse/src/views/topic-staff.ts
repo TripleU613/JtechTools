@@ -103,33 +103,7 @@ export function topicStaffItems(t: Topic, hooks: TopicStaffHooks): SheetItem[] {
   };
 
   // ── Delete, restore, delete permanently ─────────────────────────────
-  if (t.deleted_at && d.can_recover)
-    items.push({
-      label: "Restore topic",
-      icon: "undo",
-      run: () =>
-        put(`/t/${t.id}/recover.json`).then(
-          () => hooks.reload("Topic restored."),
-          fail
-        ),
-    });
-  else if (d.can_delete)
-    items.push({
-      label: "Delete topic",
-      icon: "trash",
-      danger: true,
-      run: () =>
-        confirmDialog("Delete this whole topic?", {
-          ok: "Delete",
-          danger: true,
-        }).then((ok) => {
-          if (ok)
-            del(`/t/${t.id}.json`).then(
-              () => hooks.gone("Topic deleted."),
-              fail
-            );
-        }),
-    });
+  if (moderating(t)) deleteItems(t, hooks, fail).forEach((x) => items.push(x));
   if (t.deleted_at && d.can_permanently_delete)
     items.push({
       label: "Delete permanently",
@@ -332,7 +306,7 @@ export function topicStaffItems(t: Topic, hooks: TopicStaffHooks): SheetItem[] {
   }
 
   // ── Tags, shared drafts, nested replies, history ────────────────────
-  if (d.can_edit && settings.tagsEnabled && user && user.can_tag_topics)
+  if (moderating(t) && canEditTags(t))
     items.push({
       label: "Edit tags…",
       icon: "tag",
@@ -387,6 +361,71 @@ export function topicStaffItems(t: Topic, hooks: TopicStaffHooks): SheetItem[] {
       href: href("/review?topic_id=" + t.id + "&status=all"),
     });
 
+  return items;
+}
+
+// Staff, leaders and category moderators: whose delete and tag items are
+// moderation. A topic's author gets theirs among the ordinary items.
+function moderating(t: Topic): boolean {
+  return canManageTopic() || !!(t.details && t.details.can_moderate_category);
+}
+
+function canEditTags(t: Topic): boolean {
+  return (
+    !!(t.details && t.details.can_edit) &&
+    settings.tagsEnabled &&
+    !!user &&
+    user.can_tag_topics
+  );
+}
+
+// Delete and edit tags for the author, outside the Moderation section.
+export function topicOwnerItems(t: Topic, hooks: TopicStaffHooks): SheetItem[] {
+  if (moderating(t)) return [];
+  const items = deleteItems(t, hooks, failToast);
+  if (canEditTags(t))
+    items.push({
+      label: "Edit tags…",
+      icon: "tag",
+      run: () => tagsMenu(t, hooks),
+    });
+  return items;
+}
+
+function deleteItems(
+  t: Topic,
+  hooks: TopicStaffHooks,
+  fail: (e: unknown) => void
+): SheetItem[] {
+  const d = t.details || {};
+  const items: SheetItem[] = [];
+  if (t.deleted_at && d.can_recover)
+    items.push({
+      label: "Restore topic",
+      icon: "undo",
+      run: () =>
+        put(`/t/${t.id}/recover.json`).then(
+          () => hooks.reload("Topic restored."),
+          fail
+        ),
+    });
+  else if (d.can_delete)
+    items.push({
+      label: "Delete topic",
+      icon: "trash",
+      danger: true,
+      run: () =>
+        confirmDialog("Delete this whole topic?", {
+          ok: "Delete",
+          danger: true,
+        }).then((ok) => {
+          if (ok)
+            del(`/t/${t.id}.json`).then(
+              () => hooks.gone("Topic deleted."),
+              fail
+            );
+        }),
+    });
   return items;
 }
 

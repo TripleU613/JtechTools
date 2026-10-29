@@ -59,6 +59,7 @@ export interface Score {
   created_at?: string;
   user_id?: number;
   score_type?: { title?: string; type?: string };
+  score_type_id?: number | string;
 }
 
 export interface Note {
@@ -146,6 +147,7 @@ export interface ReviewJson {
   claimed_bies?: Claim[];
   claimed_by?: Claim[];
   reviewable_histories?: History[];
+  score_types?: Array<{ id: number | string; title?: string; type?: string }>;
   meta?: {
     total_rows_reviewables?: number;
     load_more_reviewables?: string;
@@ -168,6 +170,7 @@ function byId<T extends { id: number | string }>(
 }
 
 export interface Lookup {
+  scoreTypes: Record<string, { title?: string; type?: string }>;
   histories: Record<string, History>;
   users: Record<string, UserRef>;
   bundles: Record<string, Bundle>;
@@ -186,6 +189,7 @@ export function lookupOf(d: ReviewJson): Lookup {
     notes: byId(d.reviewable_notes),
     claims: byId(d.claimed_bies || d.claimed_by || []),
     histories: byId(d.reviewable_histories),
+    scoreTypes: byId(d.score_types),
   };
 }
 
@@ -204,10 +208,15 @@ export function actionsOf(r: Reviewable, l: Lookup): ReviewAction[] {
 }
 
 export function scoresOf(r: Reviewable, l: Lookup): Score[] {
-  return (
+  const scores =
     r.reviewable_scores ||
-    (r.reviewable_score_ids || []).map((id) => l.scores[id]).filter((s) => !!s)
-  );
+    (r.reviewable_score_ids || []).map((id) => l.scores[id]).filter((s) => !!s);
+  // A score names its reason (score type) by id too.
+  scores.forEach((sc) => {
+    if (!sc.score_type && sc.score_type_id !== undefined)
+      sc.score_type = l.scoreTypes[String(sc.score_type_id)];
+  });
+  return scores;
 }
 
 export function historiesOf(r: Reviewable, l: Lookup): History[] {

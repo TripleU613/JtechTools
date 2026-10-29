@@ -59,7 +59,7 @@ import { useScreen } from "./common.ts";
 import { openComposer } from "./composer.ts";
 import { levelLabel, topicLevelSheet } from "./levels.ts";
 import { topicModToolItems } from "./topic-mod-tools.ts";
-import { topicStaffItems } from "./topic-staff.ts";
+import { topicOwnerItems, topicStaffItems } from "./topic-staff.ts";
 import { canSeeHistory, editHistory, postStaffItems } from "./post-staff.ts";
 import {
   canSelectPosts,
@@ -1144,6 +1144,7 @@ function wireTopic(
         go("/", { replace: true });
       },
     };
+    topicOwnerItems(t, hooks).forEach((x) => items.push(x));
     const mod = topicStaffItems(t, hooks);
     if (canSelectPosts(t))
       mod.unshift({

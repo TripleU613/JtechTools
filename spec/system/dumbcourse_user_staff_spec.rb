@@ -70,7 +70,7 @@ RSpec.describe "Dumbcourse user staff actions" do
     expect(bob.reload.silenced?).to eq(true)
   end
 
-  it "changes the trust level and locks it" do
+  it "changes the trust level and unlocks it" do
     sign_in(admin)
     phone do
       open_moderate
@@ -80,12 +80,15 @@ RSpec.describe "Dumbcourse user staff actions" do
     end
     expect(bob.reload.trust_level).to eq(3)
 
+    # Setting it by hand locks it there, as on the full site.
+    expect(bob.manual_locked_trust_level).to eq(3)
+
     phone do
       open_moderate
-      pick("Lock trust level")
-      expect(page).to have_css(".toast", text: "Trust level locked.")
+      pick("Unlock trust level")
+      expect(page).to have_css(".toast", text: "Trust level unlocked.")
     end
-    expect(bob.reload.manual_locked_trust_level).to eq(3)
+    expect(bob.reload.manual_locked_trust_level).to be_nil
   end
 
   it "puts a member in slow mode" do
@@ -190,7 +193,6 @@ RSpec.describe "Dumbcourse user staff actions" do
 
   it "clears penalty history and resets the bounce score" do
     UserSilencer.new(bob, admin, reason: "Arguing").silence
-    UserSilencer.unsilence(bob, admin)
     bob.user_stat.update!(bounce_score: 3)
     sign_in(admin)
     phone do

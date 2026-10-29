@@ -162,13 +162,14 @@ export function selectionMenu(s: Selection): void {
             ok: "Merge",
           }).then((ok) => {
             if (ok)
-              put("/posts/merge_posts.json", { post_ids: s.selected }).then(
-                () => {
-                  s.stop();
-                  s.reload("Posts merged.");
-                },
-                fail
-              );
+              // Sent as text, as the full site does: core turns away ids that
+              // match its own numbers exactly.
+              put("/posts/merge_posts.json", {
+                post_ids: s.selected.map(String),
+              }).then(() => {
+                s.stop();
+                s.reload("Posts merged.");
+              }, fail);
           }),
       });
     if (user && user.can_change_post_owner && author)

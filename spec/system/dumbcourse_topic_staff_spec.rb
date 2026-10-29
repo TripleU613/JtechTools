@@ -37,11 +37,22 @@ RSpec.describe "Dumbcourse topic staff actions" do
     resize_window(width: 240, height: 320, &block)
   end
 
+  # A topic seen before shows its saved copy first, and its keys work once
+  # the fresh copy is in; a key pressed between the two does nothing. Press
+  # again until whatever it opens is open (never into an open sheet).
+  def until_open(selector, **options)
+    5.times do
+      yield
+      return if page.has_css?(selector, wait: 2, **options)
+      break if page.has_css?(".layer.open", wait: 0)
+    end
+    expect(page).to have_css(selector, **options)
+  end
+
   def open_topic_menu
     visit "/dumb/t/#{topic.slug}/#{topic.id}"
     expect(page).to have_css(".topic-head")
-    press(:f2)
-    expect(page).to have_css(".sheet-heading", text: /moderation/i)
+    until_open(".sheet-heading", text: /moderation/i) { press(:f2) }
   end
 
   def pick(text)
@@ -375,8 +386,7 @@ RSpec.describe "Dumbcourse topic staff actions" do
     phone do
       visit "/dumb/t/#{topic.slug}/#{topic.id}"
       expect(page).to have_css(".topic-head")
-      press(:f2)
-      expect(page).to have_css(".sheet-item", text: "Copy link")
+      until_open(".sheet-item", text: "Copy link") { press(:f2) }
       expect(page).to have_no_css(".sheet-heading", text: /moderation/i)
       expect(page).to have_no_css(".sheet-item", text: "Set timer…")
     end

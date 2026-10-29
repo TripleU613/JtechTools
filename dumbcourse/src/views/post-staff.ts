@@ -129,10 +129,9 @@ export function postStaffItems(
       icon: p.locked ? "unlock" : "lock",
       hint: p.locked ? undefined : "Only staff can edit it",
       run: () =>
-        put(`/posts/${p.id}/locked.json`, { locked: !p.locked }).then(
-          done(p.locked ? "Post unlocked." : "Post locked."),
-          fail
-        ),
+        put(`/posts/${p.id}/locked.json`, {
+          locked: p.locked ? "false" : "true",
+        }).then(done(p.locked ? "Post unlocked." : "Post locked."), fail),
     });
   }
 
@@ -165,10 +164,9 @@ export function postStaffItems(
       icon: "edit",
       hint: p.wiki ? undefined : "Anyone can edit it",
       run: () =>
-        put(`/posts/${p.id}/wiki.json`, { wiki: !p.wiki }).then(
-          done(p.wiki ? "No longer a wiki." : "Now a wiki."),
-          fail
-        ),
+        put(`/posts/${p.id}/wiki.json`, {
+          wiki: p.wiki ? "false" : "true",
+        }).then(done(p.wiki ? "No longer a wiki." : "Now a wiki."), fail),
     });
 
   if (p.post_number === 1 && d.can_publish_page)

@@ -82,8 +82,9 @@ const REVIEW: ReviewJson = {
   ],
   reviewable_scores: [
     { id: 1, user_id: 3, score_type: { title: "Spam" } },
-    { id: 2, user_id: 4, score_type: { title: "Off-topic" } },
+    { id: 2, user_id: 4, score_type_id: 7 },
   ],
+  score_types: [{ id: 7, title: "Off-topic", type: "off_topic" }],
   reviewable_notes: [
     {
       id: 9,
