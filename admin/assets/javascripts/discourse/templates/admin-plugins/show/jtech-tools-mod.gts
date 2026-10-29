@@ -11,6 +11,7 @@ const JtechToolsMod: TemplateOnlyComponent<{
     @categories={{array
       "jtech_mod"
       "jtech_mod_topic_tools"
+      "jtech_mod_users"
       "jtech_mod_checklists"
       "jtech_mod_notes"
       "jtech_mod_notifications"

@@ -48,6 +48,10 @@ Acceptances are logged, once per version.
 - **New-topic prompt**: a "before you post" note per category.
 - **Badge picker**: adds everyone holding a badge to a private message.
 
+## Users
+
+- **Slow mode**: one reply or new topic every so often (1 minute to a week apart), for a set time or until lifted. Staff set it from the user's admin page, with a reason; the user gets a system message, and a note in their composer says how often they can post and how long until the next one. Private messages and edits aren't limited. A post waiting for approval holds them until it's reviewed. Setting and lifting it are in the staff action log. Staff can't be put in slow mode. Moderators can use it while `mod_user_slow_mode_moderators` is on.
+
 ## Categories
 
 Letting moderators create and edit categories is core's `moderators_manage_categories` setting. This module used to grant it itself, without core's check that the moderator can see the category. On upgrade, sites that had the old grant on get the core setting switched on.
@@ -64,6 +68,8 @@ Admin → Plugins → Jtech Tools → **Mod**. The full text of each setting is 
 | `mod_pin_post_enabled` | `true` | Lets moderators pin any post in a topic to the bottom of that topic. |
 | `mod_topic_require_reply_approval_enabled` | `true` | Lets moderators flag individual topics so every reply goes to the review queue first. |
 | `mod_pm_badge_group_enabled` | `true` | Lets staff composing a personal message expand a badge into its current holders as recipients. |
+| `mod_user_slow_mode_enabled` | `true` | Lets staff put a user in slow mode from their admin page: one reply or new topic every so often, for a set time or until lifted. |
+| `mod_user_slow_mode_moderators` | `true` | Lets moderators, not just admins, set and lift a user's slow mode. |
 | `mod_first_post_checklist_enabled` | `true` | Lets moderators maintain a checklist that users must accept before they can post, up to a trust-level cap set in the checklist itself (TL2 by default). |
 | `mod_targeted_checklists_enabled` | `true` | Lets moderators aim a checklist at named users, blocking their posting anywhere on the forum until they accept — regardless of trust level, and including other moderators. |
 | `mod_topic_prompt_checklist_enabled` | `true` | Lets moderators attach a blocking checklist or single statement to one topic, shown before posting in it. |

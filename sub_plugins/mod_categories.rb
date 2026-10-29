@@ -13,13 +13,16 @@ require_relative "../lib/discourse_mod_categories/note_thread"
 require_relative "../lib/discourse_mod_categories/user_action_whisper_filter"
 require_relative "../lib/discourse_mod_categories/search_indexer_extension"
 require_relative "../lib/discourse_mod_categories/search_extension"
+require_relative "../lib/discourse_mod_categories/user_slow_mode"
 
 register_asset "stylesheets/topic-footer-message.scss"
 register_asset "stylesheets/whisper.scss"
 register_asset "stylesheets/notifications-type-filter.scss"
 register_asset "stylesheets/mod-notes-panel.scss"
+register_asset "stylesheets/mod-slow-mode.scss"
 register_svg_icon "align-left"
 register_svg_icon "clock-rotate-left"
+register_svg_icon "clock"
 register_svg_icon "up-right-from-square"
 register_svg_icon "list-check"
 register_svg_icon "shield-halved"
@@ -396,6 +399,8 @@ after_initialize do
   register_user_custom_field_type(DiscourseModCategories::USER_TARGETED_CHECKLIST_FIELD, :json)
   register_topic_custom_field_type(DiscourseModCategories::TOPIC_PROMPT_CHECKLIST_FIELD, :json)
   register_user_custom_field_type(DiscourseModCategories::USER_TOPIC_CHECKLIST_FIELD, :json)
+  register_user_custom_field_type(DiscourseModCategories::UserSlowMode::SECONDS_FIELD, :integer)
+  register_user_custom_field_type(DiscourseModCategories::UserSlowMode::UNTIL_FIELD, :string)
   register_category_custom_field_type(
     DiscourseModCategories::CATEGORY_NEW_TOPIC_PROMPT_FIELD,
     :string,
@@ -587,6 +592,33 @@ after_initialize do
   add_to_serializer(:current_user, :mod_first_post_checklist) do
     DiscourseModCategories.owed_checklist_for(object)
   end
+
+  # Per-user slow mode (lib/discourse_mod_categories/user_slow_mode.rb). Above
+  # the handlers that queue a post, so a post that's too soon is refused
+  # rather than sent for approval; below the whisper handler, which only
+  # marks the post and never decides.
+  NewPostManager.add_handler(5_000) { |manager| DiscourseModCategories::UserSlowMode.check(manager) }
+
+  # The user's own slow mode, for the note in their composer.
+  add_to_serializer(
+    :current_user,
+    :mod_slow_mode,
+    include_condition: -> { DiscourseModCategories::UserSlowMode.enabled? && !object.staff? },
+  ) { DiscourseModCategories::UserSlowMode.summary_for(object) }
+
+  # A user's slow mode on their admin page, and whether this staff member
+  # may change it.
+  add_to_serializer(
+    :admin_detailed_user,
+    :mod_slow_mode,
+    include_condition: -> { DiscourseModCategories::UserSlowMode.enabled? },
+  ) { DiscourseModCategories::UserSlowMode.admin_summary_for(object) }
+
+  add_to_serializer(
+    :admin_detailed_user,
+    :can_set_mod_slow_mode,
+    include_condition: -> { DiscourseModCategories::UserSlowMode.enabled? },
+  ) { scope.can_set_user_slow_mode?(object) }
 
   # Per-topic reply approval: when a moderator flags a topic, replies to it
   # are routed to the review queue instead of being published directly.

@@ -1,0 +1,29 @@
+// A user's own slow mode, above their composer: a dim line like the armed
+// whisper indicator, so it tells them without getting in the way.
+.mod-slow-mode-note {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  margin: 0.25em 0;
+  font-size: var(--font-down-1);
+  color: var(--primary-medium);
+}
+
+.mod-user-slow-mode-modal {
+  .mod-messages-label {
+    display: block;
+    margin-top: 0.5em;
+    font-weight: 700;
+  }
+
+  select,
+  textarea,
+  input[type="datetime-local"] {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  input[type="number"] {
+    width: 8em;
+  }
+}
