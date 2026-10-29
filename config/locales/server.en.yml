@@ -333,10 +333,10 @@ en:
     # ── Jtech — Mod: Users ─────────────────────────────────────────────────
     mod_user_slow_mode_enabled: Lets staff put a user in slow mode from their
       admin page — one reply or new topic every so often (1 minute to a week
-      apart), for a set time or until lifted. Private messages and edits stay
+      apart), for a set time or until lifted. Personal messages and edits stay
       unlimited, and a post waiting for approval holds them until it's
-      reviewed. The user gets a system message with the reason when it's set
-      and when it's lifted. Staff can't be put in slow mode. Turning this OFF
+      reviewed. The user gets a system message when it's set, with the
+      reason, and another when it's lifted. Staff can't be put in slow mode. Turning this OFF
       stops the limit but keeps each user's slow mode, so turning it back on
       resumes it.
 

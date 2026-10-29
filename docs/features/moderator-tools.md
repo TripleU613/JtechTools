@@ -50,7 +50,7 @@ Acceptances are logged, once per version.
 
 ## Users
 
-- **Slow mode**: one reply or new topic every so often (1 minute to a week apart), for a set time or until lifted. Staff set it from the user's admin page, with a reason; the user gets a system message, and a note in their composer says how often they can post and how long until the next one. Private messages and edits aren't limited. A post waiting for approval holds them until it's reviewed. Setting and lifting it are in the staff action log. Staff can't be put in slow mode. Moderators can use it while `mod_user_slow_mode_moderators` is on.
+- **Slow mode**: one reply or new topic every so often (1 minute to a week apart), for a set time or until lifted. Staff set it from the user's admin page, with a reason; the user gets a system message, and a note in their composer says how often they can post and how long until the next one. Personal messages and edits aren't limited. A post waiting for approval holds them until it's reviewed. Setting and lifting it are in the staff action log. Staff can't be put in slow mode. Moderators can use it while `mod_user_slow_mode_moderators` is on.
 
 ## Categories
 

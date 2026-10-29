@@ -4,7 +4,7 @@ require "rails_helper"
 
 # Per-user slow mode: the NewPostManager check that turns away a reply or new
 # topic that comes too soon after the user's last one, and what it leaves
-# alone (private messages, edits, staff, an expired or switched-off slow mode).
+# alone (personal messages, edits, staff, an expired or switched-off slow mode).
 RSpec.describe DiscourseModCategories::UserSlowMode do
   fab!(:category)
   fab!(:topic) { Fabricate(:topic, category: category) }
@@ -94,7 +94,7 @@ RSpec.describe DiscourseModCategories::UserSlowMode do
     )
   end
 
-  it "doesn't limit private messages, or count them" do
+  it "doesn't limit personal messages, or count them" do
     SiteSetting.personal_message_enabled_groups = Group::AUTO_GROUPS[:trust_level_0]
     slow!(user)
 

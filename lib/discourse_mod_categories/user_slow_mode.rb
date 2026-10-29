@@ -5,7 +5,7 @@ module DiscourseModCategories
   # often, for a while or until lifted. Core's slow mode is per topic, and its
   # post rate limits are per site or trust level; neither reaches one person.
   #
-  # Private messages and edits are never limited. A post waiting for approval
+  # Personal messages and edits are never limited. A post waiting for approval
   # holds the user back until it's reviewed, so the review queue can't be used
   # to post several at once.
   module UserSlowMode
@@ -113,7 +113,7 @@ module DiscourseModCategories
         .maximum(:created_at)
     end
 
-    # Core never queues private messages, so every pending queued post is a
+    # Core never queues personal messages, so every pending queued post is a
     # public one.
     def self.waiting?(user)
       ReviewableQueuedPost.pending.where(target_created_by_id: user.id).exists?
