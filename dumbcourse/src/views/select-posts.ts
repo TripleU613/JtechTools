@@ -275,7 +275,8 @@ function moveToExisting(s: Selection, messages: boolean): void {
         (order) => {
           const body: Record<string, unknown> = {
             destination_topic_id: destination,
-            chronological_order: order === "date",
+            // Core checks for the text "true".
+            chronological_order: order === "date" ? "true" : "false",
           };
           if (messages) {
             body.archetype = "private_message";
