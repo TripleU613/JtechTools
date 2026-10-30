@@ -493,11 +493,16 @@ html.with-softkeys .layer {
   text-overflow: ellipsis;
 }
 
+/* A hint gives way to its item's name: past half the row it's cut short,
+   so a long one can't squeeze the name into a column on a narrow screen. */
 .sheet-hint {
+  max-width: 45%;
   margin-left: 0.5rem;
+  overflow: hidden;
   color: var(--fg3);
   font-size: 0.8rem;
   white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .sheet-check {

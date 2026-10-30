@@ -191,6 +191,13 @@ RSpec.describe "Dumbcourse post staff actions" do
         pick("Edit history")
         expect(page).to have_css(".history-pos", text: "Version 2 of 2")
         expect(page).to have_css(".history-diff", text: /whole week/)
+        overflow = page.evaluate_script(<<~JS)
+            Array.prototype.some.call(
+              document.querySelectorAll(".history-foot .btn"),
+              function (el) { return el.getBoundingClientRect().right > window.innerWidth; }
+            )
+          JS
+        expect(overflow).to eq(false)
         find("[data-h=revert]").click
         find(".dialog [data-ok]").click
         expect(page).to have_css(".toast", text: "Post reverted.")
