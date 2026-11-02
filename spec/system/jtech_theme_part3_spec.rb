@@ -71,6 +71,51 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
     end
   end
 
+  # Opening a topic on a phone laid the whole page out once a post, twice
+  # over: each post's menu read the screen's width as it rendered, and how
+  # many buttons fit was measured a post at a time, each post's menu
+  # rendered again before the next was read. Seconds on a slow phone. The
+  # width is kept from before, and one observer reads every post's line in
+  # one go.
+  it "opens a topic on a phone without laying the page out once a post", mobile: true do
+    SiteSetting.post_menu = "read|like|copyLink|share|flag|edit|bookmark|delete|admin|reply"
+    SiteSetting.post_menu_hidden_items = "delete|admin"
+    6.times { |i| Fabricate(:post, topic: topic, user: admin, raw: "More reply number #{i + 1}.") }
+    sign_in(admin)
+    resize_window(width: 320) do
+      visit("/latest")
+      expect(page).to have_css(".jt-card")
+      # counted from here, the topic opening inside the app
+      page.execute_script(<<~JS)
+        window.jtMenuObservers = new Set();
+        const Native = window.ResizeObserver;
+        window.ResizeObserver = class extends Native {
+          observe(target, options) {
+            if (target.matches("nav.post-controls")) window.jtMenuObservers.add(this);
+            return super.observe(target, options);
+          }
+        };
+        window.jtWidthReads = 0;
+        const width =
+          Object.getOwnPropertyDescriptor(window, "innerWidth") ||
+          Object.getOwnPropertyDescriptor(Window.prototype, "innerWidth");
+        Object.defineProperty(window, "innerWidth", {
+          configurable: true,
+          get() {
+            window.jtWidthReads++;
+            return width.get.call(window);
+          },
+        });
+        require("discourse/lib/url").default.routeTo("#{topic.relative_url}");
+      JS
+      # the posts' menus render together; core soon takes those off the screen away
+      expect(page).to have_css("nav.post-controls .jt-post-menu-room", visible: :all)
+      expect(page.evaluate_script("window.jtMenuObservers.size")).to eq(1)
+      expect(page.evaluate_script("window.jtWidthReads")).to be < topic.posts.count / 2
+      expect_no_theme_errors
+    end
+  end
+
   it "doesn't offer Quick look to visitors, so it can't get round a login gate" do
     visit("/latest")
     expect(page).to have_css(".jt-card")
