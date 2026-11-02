@@ -85,6 +85,14 @@ export default apiInitializer((api) => {
   }
   document.documentElement.classList.add("jt-post-menu-fits");
 
+  // The screen's width, for the guess before a menu is measured. Read here
+  // and on resize: read as each post's menu renders, it made the phone lay
+  // out the whole page once a post.
+  let screenWidth = window.innerWidth;
+  window.addEventListener("resize", () => (screenWidth = window.innerWidth), {
+    passive: true,
+  });
+
   api.registerValueTransformer(
     "post-menu-buttons",
     ({ value: dag, context }: { value: MenuDag; context: MenuContext }) => {
@@ -129,7 +137,7 @@ export default apiInitializer((api) => {
     // the buttons if there are any
     const room =
       menuRoom.get(post.id) ??
-      buttonsIn(window.innerWidth - 22 - (post.reactions?.length ? 72 : 0));
+      buttonsIn(screenWidth - 22 - (post.reactions?.length ? 72 : 0));
 
     const hidden = new Set(siteSettings.post_menu_hidden_items.split("|"));
     const into = shown.filter((key) => hidden.has(key) && !ALWAYS.has(key));
