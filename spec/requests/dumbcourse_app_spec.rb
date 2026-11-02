@@ -90,6 +90,33 @@ RSpec.describe "Dumbcourse app page" do
       expect(data["currentUser"]).to include("can_tag_topics" => true, "can_create_tag" => false)
     end
 
+    it "tells staff what their menus need, and members nothing of it" do
+      SiteSetting.reviewable_claiming = "optional"
+      SiteSetting.mod_whisper_enabled = true
+      SiteSetting.whispers_allowed_groups = Group::AUTO_GROUPS[:staff].to_s
+      sign_in(Fabricate(:admin))
+      get "/dumb/"
+
+      data = boot_data
+      expect(data["currentUser"]).to include("can_change_post_owner" => true, "whisperer" => true)
+      expect(data["staff"]).to include(
+        "badgesEnabled" => true,
+        "reviewableClaiming" => "optional",
+        "whisperTargeted" => true,
+        "whisperConvert" => true,
+        "whisperBadges" => SiteSetting.mod_whisper_badge_targeting_enabled,
+        "nestedRepliesToggle" => false,
+      )
+
+      sign_in(user)
+      get "/dumb/"
+      expect(boot_data["staff"]).to be_nil
+      expect(boot_data["currentUser"]).to include(
+        "can_change_post_owner" => false,
+        "whisperer" => false,
+      )
+    end
+
     it "has no user for signed-out visitors" do
       get "/dumb/"
       expect(response.status).to eq(200)

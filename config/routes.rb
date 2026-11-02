@@ -52,6 +52,9 @@ Discourse::Application.routes.append do
     get "/topic/:topic_id/prompt-checklist" => "checklist#show_topic"
     put "/topic/:topic_id/prompt-checklist" => "checklist#update_topic"
     delete "/topic/:topic_id/prompt-checklist" => "checklist#delete_topic"
+    get "/slow-mode" => "user_slow_mode#show"
+    put "/user/:user_id/slow-mode" => "user_slow_mode#update"
+    delete "/user/:user_id/slow-mode" => "user_slow_mode#destroy"
   end
 end
 
