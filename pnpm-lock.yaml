@@ -42,8 +42,8 @@ importers:
         specifier: 1.64.1
         version: 1.64.1
       postcss:
-        specifier: 8.5.31
-        version: 8.5.31
+        specifier: 8.5.32
+        version: 8.5.32
       prettier:
         specifier: 3.8.1
         version: 3.8.1
@@ -1984,8 +1984,8 @@ packages:
   postcss-value-parser@4.2.0:
     resolution: {integrity: sha512-1NNCs6uurfkVbeXG4S8JFT9t19m45ICnif8zWLd5oPSZ50QnwMfK+H3jv408d4jw/7Bttv5axS5IiHoLaVNHeQ==}
 
-  postcss@8.5.31:
-    resolution: {integrity: sha512-YUbWYCgErwnMAVkjUnYa+KlMBzGpHwiIt/DE7f0G33AuX2LH9UcTk6KgWxd3zRU+pN3u/C+Xl3EnMLM4Hea7Sg==}
+  postcss@8.5.32:
+    resolution: {integrity: sha512-LJlKCCAUFKOuZxipUdYw1NzIITEsPcgyOG9LkvRJvuKj/bRzbuRY0ARXvL0pWGpsZvn8jku+LMep2eU0seHp8g==}
     engines: {node: ^10 || ^12 || >=14}
 
   prelude-ls@1.2.1:
@@ -4184,13 +4184,13 @@ snapshots:
 
   postcss-resolve-nested-selector@0.1.7: {}
 
-  postcss-safe-parser@7.0.1(postcss@8.5.31):
+  postcss-safe-parser@7.0.1(postcss@8.5.32):
     dependencies:
-      postcss: 8.5.31
+      postcss: 8.5.32
 
-  postcss-scss@4.0.9(postcss@8.5.31):
+  postcss-scss@4.0.9(postcss@8.5.32):
     dependencies:
-      postcss: 8.5.31
+      postcss: 8.5.32
 
   postcss-selector-parser@7.1.6:
     dependencies:
@@ -4204,7 +4204,7 @@ snapshots:
 
   postcss-value-parser@4.2.0: {}
 
-  postcss@8.5.31:
+  postcss@8.5.32:
     dependencies:
       nanoid: 3.3.20
       picocolors: 1.1.1
@@ -4362,26 +4362,26 @@ snapshots:
     dependencies:
       ansi-regex: 6.3.0
 
-  stylelint-config-recommended-scss@17.0.1(postcss@8.5.31)(stylelint@17.5.0(typescript@5.9.3)):
+  stylelint-config-recommended-scss@17.0.1(postcss@8.5.32)(stylelint@17.5.0(typescript@5.9.3)):
     dependencies:
-      postcss-scss: 4.0.9(postcss@8.5.31)
+      postcss-scss: 4.0.9(postcss@8.5.32)
       stylelint: 17.5.0(typescript@5.9.3)
       stylelint-config-recommended: 18.0.0(stylelint@17.5.0(typescript@5.9.3))
       stylelint-scss: 7.4.0(stylelint@17.5.0(typescript@5.9.3))
     optionalDependencies:
-      postcss: 8.5.31
+      postcss: 8.5.32
 
   stylelint-config-recommended@18.0.0(stylelint@17.5.0(typescript@5.9.3)):
     dependencies:
       stylelint: 17.5.0(typescript@5.9.3)
 
-  stylelint-config-standard-scss@17.0.0(postcss@8.5.31)(stylelint@17.5.0(typescript@5.9.3)):
+  stylelint-config-standard-scss@17.0.0(postcss@8.5.32)(stylelint@17.5.0(typescript@5.9.3)):
     dependencies:
       stylelint: 17.5.0(typescript@5.9.3)
-      stylelint-config-recommended-scss: 17.0.1(postcss@8.5.31)(stylelint@17.5.0(typescript@5.9.3))
+      stylelint-config-recommended-scss: 17.0.1(postcss@8.5.32)(stylelint@17.5.0(typescript@5.9.3))
       stylelint-config-standard: 40.0.0(stylelint@17.5.0(typescript@5.9.3))
     optionalDependencies:
-      postcss: 8.5.31
+      postcss: 8.5.32
 
   stylelint-config-standard@40.0.0(stylelint@17.5.0(typescript@5.9.3)):
     dependencies:
@@ -4433,8 +4433,8 @@ snapshots:
       micromatch: 4.0.8
       normalize-path: 3.0.0
       picocolors: 1.1.1
-      postcss: 8.5.31
-      postcss-safe-parser: 7.0.1(postcss@8.5.31)
+      postcss: 8.5.32
+      postcss-safe-parser: 7.0.1(postcss@8.5.32)
       postcss-selector-parser: 7.1.6
       postcss-value-parser: 4.2.0
       string-width: 8.3.0
