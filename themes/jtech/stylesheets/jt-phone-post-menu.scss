@@ -35,6 +35,12 @@ html.mobile-view nav.post-controls {
       display: none;
     }
 
+    // Reply's outline (jt-post-chrome) goes round its word on a computer;
+    // here, with no word, it made Reply the one boxed icon in the row
+    .post-action-menu__reply {
+      border-color: transparent;
+    }
+
     // Each takes up to a tap's width (44px) of what's left on the line, all
     // from 34px so they come out the same width, the icons evenly spaced.
     // Not below it either: the reactions row lets the heart's box narrow to

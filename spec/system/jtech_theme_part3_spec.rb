@@ -33,6 +33,42 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
     end
   end
 
+  # Reply's outline goes round its word on a computer; on a phone, with no
+  # word, it was the one boxed icon in each post's row
+  it "draws a post's Reply as an icon like the rest on a phone", mobile: true do
+    sign_in(admin)
+    resize_window(width: 390, height: 844) do
+      visit(topic.relative_url)
+      reply = "#post_1 nav.post-controls .post-action-menu__reply"
+      expect(page).to have_css(reply)
+      border, size, neighbour = page.evaluate_script(<<~JS)
+        (() => {
+          const reply = document.querySelector("#{reply}");
+          const other = document.querySelector("#post_1 nav.post-controls .post-action-menu__copy-link");
+          const box = (el) => {
+            const r = el.getBoundingClientRect();
+            return [Math.round(r.width), Math.round(r.height)];
+          };
+          return [getComputedStyle(reply).borderTopColor, box(reply), box(other)];
+        })()
+      JS
+      expect(border).to eq("rgba(0, 0, 0, 0)")
+      expect(size).to eq(neighbour)
+      expect_no_theme_errors
+    end
+  end
+
+  it "keeps the outline round a post's Reply on a computer" do
+    sign_in(admin)
+    visit(topic.relative_url)
+    reply = "#post_1 nav.post-controls .post-action-menu__reply"
+    expect(page).to have_css(reply)
+    expect(
+      page.evaluate_script("getComputedStyle(document.querySelector('#{reply}')).borderTopColor"),
+    ).not_to eq("rgba(0, 0, 0, 0)")
+    expect_no_theme_errors
+  end
+
   # A post's buttons stay on one line on a phone: what doesn't fit goes into
   # ⋯, which lists them, named, in a sheet; each does what it did on the line.
   it "keeps a post's buttons on one line on a phone, the rest in ⋯", mobile: true do

@@ -164,6 +164,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Fixed**
 
+- JTech theme: on a phone, Reply under each post is an icon like the rest of its row. Its outline, which goes round the word Reply on a computer, made it the one boxed button there.
 - JTech theme: on phones, opening a topic and loading more of it are quicker. Each post's menu made the phone lay out the whole page again, twice: once reading the screen's width as it was drawn, and once measuring how many buttons fit on its line, a post at a time. On a slow phone a topic's posts showed about 2.5 seconds later than they needed to, and the page stayed stuck for about 6 seconds after. The width is now read once, and all the posts on the page are measured together.
 - Dumbcourse: a new topic can have tags. In a category that needs them, creating the topic failed with "You must select at least 1 tag" and there was no way to add one. The composer has a Tags field when tagging is on: Add tag lists the category's tags, most used first, with a search, and people allowed to make tags can use a new one. It says how many the category needs, and sending without enough opens the list instead of failing.
 - JTech theme: on phones a post's buttons stay on one line. The ones that don't fit beside the reactions go into ⋯, which opens a list of them, each with its name, from the bottom of the screen. They used to drop onto a line of their own under the reactions, hanging at the right.

@@ -14,6 +14,10 @@ const config: Linter.Config[] = [
       "discourse/moved-packages-import-paths": "off",
       "discourse/deprecated-imports": "off",
       "discourse/no-route-template": "off",
+      // Ember's built-in eq/and/gt… keywords: newest cores only, and Glint
+      // (pnpm lint:types) doesn't know them, so it can't check templates
+      // that use them
+      "discourse/truth-helpers-keywords": "off",
     },
   },
 ];
