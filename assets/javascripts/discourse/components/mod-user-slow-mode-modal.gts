@@ -55,7 +55,8 @@ export default class ModUserSlowModeModal extends Component<ModUserSlowModeModal
   @tracked interval = this.initialInterval();
   @tracked customMinutes = this.initialCustomMinutes();
   @tracked duration = this.current?.ends_at ? "custom" : "week";
-  @tracked until = this.current?.ends_at
+  @tracked
+  until = this.current?.ends_at
     ? localInputValue(new Date(this.current.ends_at))
     : "";
   @tracked reason = "";
@@ -193,17 +194,17 @@ export default class ModUserSlowModeModal extends Component<ModUserSlowModeModal
             {{i18n "discourse_mod_categories.slow_mode.modal.interval"}}
           </label>
           <select
-            id="mod-slow-mode-interval"
             class="mod-slow-mode-interval"
+            id="mod-slow-mode-interval"
             {{on "change" this.setInterval}}
           >
             {{#each this.intervals as |choice|}}
               <option
-                value={{choice.value}}
                 selected={{eq choice.value this.interval}}
+                value={{choice.value}}
               >{{choice.label}}</option>
             {{/each}}
-            <option value="custom" selected={{eq this.interval "custom"}}>
+            <option selected={{eq this.interval "custom"}} value="custom">
               {{i18n
                 "discourse_mod_categories.slow_mode.modal.custom_interval"
               }}
@@ -214,12 +215,12 @@ export default class ModUserSlowModeModal extends Component<ModUserSlowModeModal
               {{i18n "discourse_mod_categories.slow_mode.modal.custom_minutes"}}
             </label>
             <input
-              id="mod-slow-mode-minutes"
               class="mod-slow-mode-minutes"
-              type="number"
-              min="1"
+              id="mod-slow-mode-minutes"
               max={{MAX_MINUTES}}
+              min="1"
               step="1"
+              type="number"
               value={{this.customMinutes}}
               {{on "input" this.setCustomMinutes}}
             />
@@ -231,23 +232,23 @@ export default class ModUserSlowModeModal extends Component<ModUserSlowModeModal
             {{i18n "discourse_mod_categories.slow_mode.modal.duration"}}
           </label>
           <select
-            id="mod-slow-mode-duration"
             class="mod-slow-mode-duration"
+            id="mod-slow-mode-duration"
             {{on "change" this.setDuration}}
           >
-            <option value="day" selected={{eq this.duration "day"}}>
+            <option selected={{eq this.duration "day"}} value="day">
               {{i18n "discourse_mod_categories.slow_mode.modal.day"}}
             </option>
-            <option value="week" selected={{eq this.duration "week"}}>
+            <option selected={{eq this.duration "week"}} value="week">
               {{i18n "discourse_mod_categories.slow_mode.modal.week"}}
             </option>
-            <option value="month" selected={{eq this.duration "month"}}>
+            <option selected={{eq this.duration "month"}} value="month">
               {{i18n "discourse_mod_categories.slow_mode.modal.month"}}
             </option>
-            <option value="forever" selected={{eq this.duration "forever"}}>
+            <option selected={{eq this.duration "forever"}} value="forever">
               {{i18n "discourse_mod_categories.slow_mode.modal.forever"}}
             </option>
-            <option value="custom" selected={{eq this.duration "custom"}}>
+            <option selected={{eq this.duration "custom"}} value="custom">
               {{i18n "discourse_mod_categories.slow_mode.modal.custom_date"}}
             </option>
           </select>
@@ -256,8 +257,8 @@ export default class ModUserSlowModeModal extends Component<ModUserSlowModeModal
               {{i18n "discourse_mod_categories.slow_mode.modal.until"}}
             </label>
             <input
-              id="mod-slow-mode-until"
               class="mod-slow-mode-until"
+              id="mod-slow-mode-until"
               type="datetime-local"
               value={{this.until}}
               {{on "input" this.setUntil}}
@@ -270,10 +271,10 @@ export default class ModUserSlowModeModal extends Component<ModUserSlowModeModal
             {{i18n "discourse_mod_categories.slow_mode.modal.reason"}}
           </label>
           <textarea
-            id="mod-slow-mode-reason"
             class="mod-slow-mode-reason"
-            rows="3"
+            id="mod-slow-mode-reason"
             maxlength="1000"
+            rows="3"
             value={{this.reason}}
             {{on "input" this.setReason}}
           ></textarea>

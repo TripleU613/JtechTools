@@ -7,8 +7,8 @@ import { ajax } from "discourse/lib/ajax";
 import type AppEventsService from "discourse/services/app-events";
 import { i18n } from "discourse-i18n";
 import {
-  type SlowModeSummary,
   slowModeInterval,
+  type SlowModeSummary,
   slowModeWait,
 } from "../../lib/mod-slow-mode.ts";
 
