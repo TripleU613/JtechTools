@@ -100,7 +100,7 @@ Everything is under **Admin → Plugins → Jtech Tools**, one tab per feature. 
 
 To start from how JTech Forums runs it, [docs/setup/](docs/setup/) has our settings as files: `site-settings.yml` for the plugin (core's `rake site_settings:import`) and `theme-settings.yml` for the theme's words and links (`rake jtech:theme:settings`). Secrets aren't in them, and the lines that point at our own servers, topics and chats are marked.
 
-`jtech_enabled` is the master switch. Turning it off stops everything at once, including the permission changes and background jobs. Private things stay private either way: switching whispers off never makes an existing whisper public.
+`jtech_enabled` is the master switch. Turning it off stops everything at once, including the permission changes and background jobs. Private things stay private either way, except whispers: with whispers off (the default), existing whispers show as ordinary posts.
 
 Upgrading? [CHANGELOG.md](CHANGELOG.md) lists what changed and anything worth checking afterwards.
 

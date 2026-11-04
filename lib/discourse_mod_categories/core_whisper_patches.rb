@@ -4,7 +4,9 @@ module DiscourseModCategories
   # Plugin whispers are regular posts (post_type 1), so every core code path
   # that special-cases core whispers with `post.whisper?` or the post-type
   # SQL would otherwise treat them as public. These prepends make core treat
-  # them as whispers wherever that only ever HIDES more:
+  # them as whispers wherever that only ever HIDES more. Each one is core's
+  # own behavior while Whisper.enabled? is false, either directly or because
+  # the Whisper helpers it calls find no whispers:
   #
   #   * Post#whisper? — PostCreator then skips bumping the topic, updating
   #     last_posted_at / last_poster / word count and user last_posted_at;
@@ -145,6 +147,7 @@ module DiscourseModCategories
 
   module TopicClassWhisperPatch
     def public_post_types_sql
+      return super unless DiscourseModCategories::Whisper.enabled?
       "(#{super} AND NOT #{DiscourseModCategories::WhisperQueryFilter.is_whisper_sql("posts")})"
     end
   end
@@ -156,6 +159,7 @@ module DiscourseModCategories
   # whisper staff pick to reset the bump to hands it to the post before it.
   module TopicWhisperPatch
     def reset_bumped_at(post_or_post_id = nil)
+      return super unless DiscourseModCategories::Whisper.enabled?
       if !post_or_post_id
         return super(DiscourseModCategories::Whisper.last_bumping_post(self) || first_post)
       end
@@ -236,6 +240,7 @@ module DiscourseModCategories
     end
 
     def update_last_post_stats
+      return super unless DiscourseModCategories::Whisper.enabled?
       ::Post
         .where("NOT #{DiscourseModCategories::WhisperQueryFilter.is_whisper_sql("posts")}")
         .scoping(all_queries: true) { super }
@@ -246,6 +251,7 @@ module DiscourseModCategories
   # with raw SQL over every post.
   module TopicViewWhisperPatch
     def post_counts_by_user
+      return super unless DiscourseModCategories::Whisper.enabled?
       @post_counts_by_user ||=
         if is_mega_topic?
           {}
@@ -268,6 +274,7 @@ module DiscourseModCategories
     end
 
     def participant_count
+      return super unless DiscourseModCategories::Whisper.enabled?
       @participant_count ||=
         if participants.size == ::TopicView::MAX_PARTICIPANTS &&
              @topic.posts_count <= ::TopicView::MAX_POSTS_COUNT_PARTICIPANTS
@@ -389,7 +396,7 @@ module DiscourseModCategories
       # whisper that waits for approval shows in their queue until approved
       # (the queued post can't carry the admins-only mark yet); check the
       # payload's reply target here if that matters.
-      return result if user.nil? || user.staff?
+      return result if user.nil? || user.staff? || !DiscourseModCategories::Whisper.enabled?
 
       result.where(<<~SQL)
         NOT (

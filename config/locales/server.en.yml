@@ -426,11 +426,13 @@ en:
       page. Independent of the Enable Mod master switch.
 
     # ── Jtech — Mod: Whispers ──────────────────────────────────────────────
-    mod_whisper_enabled: Master switch for creating whispers — independent of
-      Enable Mod, so whispers keep working when the rest of the module is off.
-      A whisper is visible only to staff, its author and the users, groups and
-      badges it names. Turning this OFF stops new whispers; existing whispers
-      stay private (convert one to public to publish it).
+    mod_whisper_enabled: Turns on whispers, and every change the plugin makes
+      to Discourse for them. Independent of Enable Mod. A whisper is visible
+      only to staff, its author and the users, groups and badges it names.
+      Off by default. While it's off the plugin changes nothing, and every
+      existing whisper shows as an ordinary post to everyone who can read its
+      topic. Turn it off only if that's acceptable for the whispers already
+      posted.
 
     mod_whisper_add_participant_enabled: Lets staff add users to an existing
       whisper. They are notified and can read that whisper and replies that

@@ -27,8 +27,7 @@ module DiscourseModCategories
   # indexing non-post objects, so a schema change can neither leak a whisper
   # into the index nor break topic/user/category indexing.
   #
-  # Enforced regardless of mod_whisper_enabled: switching the feature off
-  # must not start indexing existing whispers.
+  # While whispers are off every post is indexed as core indexes it.
   module SearchIndexerExtension
     def index(obj, force: false)
       whisper =
@@ -55,7 +54,7 @@ module DiscourseModCategories
 
     def whisper_post?(obj)
       return false unless obj.is_a?(::Post)
-      return false unless obj.id
+      return false unless obj.id && DiscourseModCategories::Whisper.enabled?
 
       ::PostCustomField.where(
         post_id: obj.id,

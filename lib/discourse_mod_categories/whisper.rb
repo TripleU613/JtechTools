@@ -17,17 +17,20 @@ module DiscourseModCategories
   # Nobody else — in particular NOT "everyone who was ever whispered to in
   # this topic". The audience of a whisper is what its banner says it is.
   #
-  # Visibility is enforced unconditionally: it does not depend on
-  # mod_whisper_enabled, jtech_enabled or any other toggle. Switching the
-  # feature off stops NEW whispers from being created; it must never turn
-  # existing private text public. The only way to publish a whisper is the
-  # explicit staff "convert to public" action.
+  # Everything here, and every core patch built on it, runs only while
+  # `enabled?`. Off (the default), the plugin changes nothing: an existing
+  # whisper is an ordinary post that everyone who can read its topic sees.
+  # Forums choose to run whispers, at their own risk.
   #
   # Every read path (Guardian, the topic-stream SQL filter, search, the
   # activity feed, notifications, e-mail, live updates, …) goes through the
   # helpers here so the rules can never drift apart.
   module Whisper
     module_function
+
+    def enabled?
+      SiteSetting.jtech_enabled && SiteSetting.mod_whisper_enabled
+    end
 
     def targets_field
       DiscourseModCategories::POST_WHISPER_TARGETS_FIELD
@@ -51,7 +54,7 @@ module DiscourseModCategories
 
     # An admin's whisper: moderators see it only as its targets
     def admins_only?(post)
-      post.is_a?(::Post) && post_fields(post).key?(admins_only_field)
+      enabled? && post.is_a?(::Post) && post_fields(post).key?(admins_only_field)
     end
 
     # Whisper audience definition for `post`, or nil when the post is not a
@@ -60,7 +63,7 @@ module DiscourseModCategories
     # the post carries a preloaded proxy that may not include our keys — a
     # NotPreloadedError must never be the reason a whisper renders.
     def data(post)
-      return nil unless post.is_a?(::Post)
+      return nil unless post.is_a?(::Post) && enabled?
 
       fields = post_fields(post)
       return nil unless fields.key?(targets_field)
@@ -129,7 +132,7 @@ module DiscourseModCategories
     def hidden_post_ids(post_ids, user)
       user = nil unless user.is_a?(::User)
       post_ids = Array(post_ids).compact.uniq
-      return [] if post_ids.empty?
+      return [] if post_ids.empty? || !enabled?
       return [] if user&.admin?
 
       whisper_ids = whisper_post_ids(post_ids)
@@ -141,6 +144,7 @@ module DiscourseModCategories
     end
 
     def whisper_post_ids(post_ids)
+      return [] unless enabled?
       ::PostCustomField.where(post_id: post_ids, name: targets_field).distinct.pluck(:post_id)
     end
 
@@ -212,6 +216,7 @@ module DiscourseModCategories
     #   * A topic's first post can never be a whisper: the title, excerpt and
     #     "new topic" notifications are public by nature.
     def prepare_new_post!(post, opts)
+      return unless enabled?
       author = post.user
       topic = post.topic_id ? post.topic : nil
       return unless author
@@ -220,7 +225,6 @@ module DiscourseModCategories
         DiscourseModCategories::Whisper.opt(opts, DiscourseModCategories::POST_WHISPER_ARMED_PARAM)
       explicitly_armed = ::ActiveModel::Type::Boolean.new.cast(armed_param) == true
       explicitly_disarmed = !armed_param.nil? && armed_param.to_s != "" && !explicitly_armed
-      explicitly_armed = false unless SiteSetting.mod_whisper_enabled
 
       answered = DiscourseModCategories::Whisper.answered_whispers(post, opts, author)
 
@@ -356,7 +360,9 @@ module DiscourseModCategories
     # from PostMover's temp_moved_posts, this move's mapping only: moved_posts
     # keeps every earlier move too, and would make a copy that staff have
     # since made public a whisper again when it's moved on. A moved topic's
-    # first post already has them: core copies its fields.
+    # first post already has them: core copies its fields. Runs while
+    # whispers are off too: the rows do nothing then, and a copy made
+    # meanwhile is still a whisper if they're turned back on.
     def copy_to_moved_copies!
       ::DB.exec(<<~SQL, names: whisper_fields)
         INSERT INTO post_custom_fields (post_id, name, value, created_at, updated_at)
@@ -417,6 +423,7 @@ module DiscourseModCategories
     # and no extra reply. The :listable_topic serializer adds the whisper
     # back into highest_post_number for its audience.
     def refresh_topic_counters(topic)
+      return unless enabled?
       topic_id = topic.is_a?(::Topic) ? topic.id : topic.to_i
       ::DB.exec(<<~SQL, topic_id: topic_id)
         UPDATE topics SET
@@ -458,7 +465,7 @@ module DiscourseModCategories
     # Public reply_count of the posts `post_ids` — whisper replies excluded.
     def refresh_reply_counts(post_ids)
       post_ids = Array(post_ids).compact.uniq
-      return if post_ids.empty?
+      return if post_ids.empty? || !enabled?
       ::DB.exec(<<~SQL, ids: post_ids)
         UPDATE posts parent SET reply_count = (
           SELECT COUNT(*) FROM post_replies pr
@@ -472,7 +479,7 @@ module DiscourseModCategories
     end
 
     def whisper_post_numbers(topic_id)
-      return [] if topic_id.blank?
+      return [] if topic_id.blank? || !enabled?
       ::Post
         .unscoped
         .where(topic_id: topic_id)
@@ -484,6 +491,7 @@ module DiscourseModCategories
     # participant_count from public posts, for one topic (or every topic
     # that contains a whisper).
     def scrub_featured_users(topic_id = nil)
+      return unless enabled?
       topic_ids =
         if topic_id
           [topic_id.to_i]
@@ -526,6 +534,7 @@ module DiscourseModCategories
     # or a queued post that will become one once approved (armed, replying
     # to a whisper, or quoting one).
     def private_reviewable?(reviewable)
+      return false unless enabled?
       target = reviewable.try(:target)
       return whisper?(target) if target.is_a?(::Post)
       return false unless reviewable.is_a?(::ReviewableQueuedPost)
@@ -557,6 +566,7 @@ module DiscourseModCategories
     # Whether a local topic/post onebox route points at a whisper (mirrors
     # Oneboxer.local_topic_html's post lookup).
     def onebox_target_whisper?(route)
+      return false unless enabled?
       topic_id = (route[:id] || route[:topic_id]).to_i
       return false if topic_id <= 0
       post_number = route[:post_number].to_i
@@ -608,6 +618,7 @@ module DiscourseModCategories
     # on each post, so the per-post checks that follow (Guardian, the post
     # serializer) don't each query. Used for the posts of a topic page.
     def prime!(posts)
+      return unless enabled?
       posts = Array(posts).select { |p| p.is_a?(::Post) && p.id }
       return if posts.empty?
 

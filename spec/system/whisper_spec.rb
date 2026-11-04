@@ -348,15 +348,14 @@ RSpec.describe "Moderator whisper" do
       SiteSetting.mod_whisper_enabled = false
     end
 
-    it "keeps existing whispers private" do
+    it "shows existing whispers as ordinary posts" do
       sign_in(stranger)
       visit("/t/#{topic.slug}/#{topic.id}")
       expect(page).to have_css("#topic-title", wait: 10)
-      # Switching the feature off stops new whispers; it never publishes
-      # the existing ones.
-      expect(page).to have_css(".topic-post", count: 1, wait: 10)
-      expect(page).to have_no_content("A staff whisper for the audience.")
-      shot("74_plugin_disabled_still_private")
+      expect(page).to have_css(".topic-post", count: 2, wait: 10)
+      expect(page).to have_content("A staff whisper for the audience.")
+      expect(page).to have_no_css(".mod-whisper-banner")
+      shot("74_whispers_off_ordinary_post")
     end
   end
 end

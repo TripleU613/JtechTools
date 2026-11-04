@@ -10,7 +10,7 @@ module DiscourseModCategories
   # current members of the post's target groups + current holders of the
   # post's target badges. Admins bypass the filter entirely; moderators bypass
   # it except for admins' whispers (see `predicate`). Anonymous viewers
-  # see no whispers at all. Enforced regardless of any site setting.
+  # see no whispers at all. No filter at all while whispers are off.
   #
   # The same visibility rules as DiscourseModCategories::Whisper.visible_to?
   # (and so GuardianExtensions#can_see_post?) apply — the two must agree (see
@@ -95,6 +95,7 @@ module DiscourseModCategories
     # every whisper. A moderator sees every whisper but an admin's, and those
     # only as a target.
     def predicate(user, posts_table = "posts")
+      return nil unless DiscourseModCategories::Whisper.enabled?
       user = nil unless user.is_a?(::User)
       return nil if user&.admin?
       return "NOT #{is_whisper_sql(posts_table)}" unless user&.id

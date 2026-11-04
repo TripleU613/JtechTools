@@ -8,7 +8,7 @@ These apply to everyone who changes this repo, people and AI agents alike. [CONT
 2. **Check before you touch.** Every endpoint that loads something by id checks the caller may see it (`guardian.ensure_can_see!` or equivalent) before reading or changing it.
 3. **Send to the right people.** Notifications, MessageBus messages, pushes and emails go only to users who can see what they point at. Staff aren't all-seeing: moderators don't see every private message or every restricted category.
 4. **Moderators get the least that works.** A new moderator power needs a reason core doesn't cover, its own switch, and a spec showing what it does *not* allow.
-5. **Hidden stays hidden.** Turning a feature off must never make private content public (see whispers).
+5. **Hidden stays hidden.** Turning a feature off must never make private content public. Whispers are the one exception: they're off by default, and while they're off existing whispers are ordinary posts.
 
 ## Don't rebuild Discourse
 

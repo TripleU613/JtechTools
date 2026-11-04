@@ -14,7 +14,7 @@ Reply inside a topic to specific people: users, groups or everyone holding a bad
 - A whisper never bumps its topic or counts as new for people outside its audience. For the people it's addressed to it counts as unread, and they get one notification. A whisper to an automatic group (a trust level, everyone, staff) is read by its members but notifies none of them: a whisper to trust level 2 would ring hundreds of bells.
 - Staff can turn an existing post into a whisper, or make a whisper public. Each change is logged under Staff actions. Only admins can do this to another staff member's post. A post turned into a whisper stops holding its topic up the list; a whisper made public leaves the topic where it is.
 - A moved or copied whisper stays a whisper to the same people. It can't become a topic's first post: moving one into a new topic, or ahead of a topic's first post in chronological order, is refused.
-- Turning whispers off stops new ones. Existing whispers stay private whatever the switches say.
+- Whispers are off by default, and turning them on is at your own risk. Off, the plugin changes nothing about posts, and existing whispers show as ordinary posts to everyone who can read the topic.
 
 ![A whisper, as its audience sees it](../images/whisper.png)
 
@@ -86,7 +86,7 @@ Admin → Plugins → Jtech Tools → **Mod**. The full text of each setting is 
 | `mod_notify_whisper_targets` | `true` | Sends a bell notification to a whisper's audience when one is posted, and to a user when staff add them to a whisper. |
 | `mod_auto_mark_notifications_seen` | `false` | Opening a topic, or the review queue, marks THIS plugin's own note and whisper notifications for it as read. |
 | `mod_notification_type_filter_enabled` | `false` | Adds a type filter to the user notifications page, plus a staff-only mod-notes stream. |
-| `mod_whisper_enabled` | `false` | Master switch for creating whispers — independent of Enable Mod, so whispers keep working when the rest of the module is off. |
+| `mod_whisper_enabled` | `false` | Turns on whispers, and every change the plugin makes to Discourse for them. Off, existing whispers show as ordinary posts. |
 | `mod_whisper_add_participant_enabled` | `true` | Lets staff add users to an existing whisper. |
 | `mod_whisper_convert_enabled` | `true` | Lets staff turn an existing post into a whisper and back, and retarget its audience. |
 | `mod_whisper_badge_targeting_enabled` | `true` | Lets staff target whispers at badge holders as well as users and groups. |

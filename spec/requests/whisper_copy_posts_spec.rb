@@ -160,11 +160,15 @@ RSpec.describe "Copying a whisper into another topic" do
     expect(Guardian.new(stranger).can_whisper_in_topic?(destination)).to eq(false)
   end
 
-  it "stays hidden with the plugin switched off" do
+  it "is an ordinary post with the plugin switched off, and a whisper again once it's on" do
     SiteSetting.jtech_enabled = false
 
     copy = copy!(whisper).first
 
+    expect(DiscourseModCategories::Whisper.whisper?(copy.reload)).to eq(false)
+    expect(Guardian.new(stranger).can_see_post?(copy)).to eq(true)
+
+    SiteSetting.jtech_enabled = true
     expect(DiscourseModCategories::Whisper.whisper?(copy.reload)).to eq(true)
     expect(Guardian.new(stranger).can_see_post?(copy)).to eq(false)
   end
