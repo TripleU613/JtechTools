@@ -16,7 +16,6 @@ jtech_app_icon: true # the JTech mark as the installed app's icon: drop it for y
 discourse_no_likes_enabled: true
 dislike_hide_like_button: true
 mod_categories_enabled: true
-mod_whisper_enabled: true
 mod_notification_type_filter_enabled: true
 mod_auto_mark_notifications_seen: true
 translator_tweaks_enabled: true
