@@ -353,9 +353,12 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
     expect_no_theme_errors
   end
 
-  # Core gives a pressed row of a table list (suggested topics) nothing, and
-  # marks the row you came back to with a bar down one side of its first cell
+  # Core gives a pressed row of a table list (suggested topics with topic
+  # cards off) nothing, and marks the row you came back to with a bar down one
+  # side of its first cell
   it "sinks a pressed suggested topic's row, and tints a selected one all across" do
+    jtech_theme.update_setting(:topic_cards, false)
+    jtech_theme.save!
     sign_in(member)
     visit(topic.relative_url)
     row = ".more-topics__container .topic-list-item"
@@ -640,6 +643,8 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
   # Only the title opened a topic in a row list (New & Unread under a topic,
   # stock rows, compact density): the rest of the row did nothing
   it "opens a topic from anywhere on its row, not only its title" do
+    jtech_theme.update_setting(:topic_cards, false)
+    jtech_theme.save!
     sign_in(member)
     visit(topic.relative_url)
     row = find("#suggested-topics .topic-list-item", match: :first)
