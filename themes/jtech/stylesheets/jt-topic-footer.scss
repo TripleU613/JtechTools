@@ -4,9 +4,10 @@
 // more?" line, and on phones the row of footer buttons. Core's list is a
 // bare table with a column header, the line under it a bold heading, and on
 // phones every footer button is an icon, Reply included. Here the list is
-// the theme's divided card (its header hidden on phones, where only "Topic"
-// is left of it), the line reads as a sentence, and Reply keeps its word
-// and takes the room left on the row.
+// the home page's topic cards (api-initializers/jt-topic-cards); with
+// topic_cards off it's a divided card of rows (its header hidden on phones,
+// where only "Topic" is left of it). The line reads as a sentence, and
+// Reply keeps its word and takes the room left on the row.
 .more-topics__container {
   .more-topics__list-title {
     margin: var(--space-6) 0 var(--space-3);
@@ -17,8 +18,8 @@
     color: var(--jt-text);
   }
 
-  // The list as a card
-  .more-topics__list .topic-list {
+  // Rows (topic_cards off) as one card
+  .more-topics__list .topic-list:not(.jt-cards) {
     overflow: hidden;
     background: var(--jt-surface-raised);
     border: 1px solid var(--jt-border);
@@ -80,17 +81,22 @@
     }
 
     // one column, and the header left of it says only "Topic"
-    .more-topics__list .topic-list .topic-list-header:not(.--has-tabs) {
+    .more-topics__list
+      .topic-list:not(.jt-cards)
+      .topic-list-header:not(.--has-tabs) {
       display: none;
     }
 
-    .more-topics__list .topic-list .topic-list-header.--has-tabs th.default {
+    .more-topics__list
+      .topic-list:not(.jt-cards)
+      .topic-list-header.--has-tabs
+      th.default {
       display: none;
     }
   }
 }
 
-// ── Phone rows ────────────────────────────────────────────
+// ── Phone rows (topic_cards off) ──────────────────────────
 // Core floats a row's reply count after the title and puts the date at the
 // end of the category line, so where they landed depended on the title's
 // length: on a 320px phone (a Qin F21) most rows had the count down beside
@@ -99,7 +105,7 @@
 // date at the end, under the count.
 html.mobile-view
   .more-topics__container
-  .topic-list
+  .topic-list:not(.jt-cards)
   .topic-item-metadata.right {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;

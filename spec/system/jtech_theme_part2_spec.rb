@@ -768,8 +768,6 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
     expect_no_theme_errors
   end
 
-  # Core's suggested list is a bare table under a bold "want to read more?";
-  # the theme: a divided card and a sentence.
   # Core lifts a user card's big avatar 3.3em above the card; on the theme's
   # hairline card it slipped out of place and covered the post behind it.
   it "keeps the avatar inside the user card" do
@@ -922,26 +920,47 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
     expect_no_theme_errors
   end
 
-  it "puts the suggested topics under a topic on a card" do
+  # The list under a topic was a table of rows while the home page had cards
+  # (issue #377): now it's the same cards, not boxed in a second card
+  it "shows the suggested topics under a topic as the home page's cards" do
     sign_in(member)
     visit(topic.relative_url)
-    expect(page).to have_css(".more-topics__container .topic-list .topic-list-item")
-    border, weight = page.evaluate_script(<<~JS)
+    expect(page).to have_css(".more-topics__list .topic-list.jt-cards td.jt-card", minimum: 2)
+    expect(page).to have_no_css(".more-topics__list .topic-list .main-link")
+    list, card, weight = page.evaluate_script(<<~JS)
       [
         getComputedStyle(document.querySelector(".more-topics__list .topic-list")).borderTopWidth,
+        getComputedStyle(document.querySelector(".more-topics__list .topic-list-item")).borderTopWidth,
         getComputedStyle(document.querySelector(".more-topics__browse-more")).fontWeight,
       ]
     JS
-    expect(border).to eq("1px")
+    expect(list).to eq("0px")
+    expect(card).to eq("1px")
     expect(weight).to eq("400")
+    expect_no_theme_errors
+  end
+
+  it "puts the suggested topics' rows on one card with topic cards off" do
+    jtech_theme.update_setting(:topic_cards, false)
+    jtech_theme.save!
+    sign_in(member)
+    visit(topic.relative_url)
+    expect(page).to have_css(".more-topics__container .topic-list:not(.jt-cards) .topic-list-item")
+    border =
+      page.evaluate_script(
+        'getComputedStyle(document.querySelector(".more-topics__list .topic-list")).borderTopWidth',
+      )
+    expect(border).to eq("1px")
     expect_no_theme_errors
   end
 
   # On phones core floated a suggested topic's reply count after its title and
   # put the date at the end of the category line, so where they landed hung on
   # the title's length: at 320px (a Qin F21) a long title pushed the count down
-  # beside the date
+  # beside the date. Rows only: with topic cards on they're cards.
   it "keeps suggested topics' counts above their dates on a 320px phone", mobile: true do
+    jtech_theme.update_setting(:topic_cards, false)
+    jtech_theme.save!
     long =
       Fabricate(
         :topic,
@@ -1154,8 +1173,10 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
 
   # Core clips a post's names, the header's logo and the topic map's avatars
   # (overflow: hidden) right at the link's edge, which cut a keyboard focus
-  # ring away, and takes the ring off suggested topics' titles.
+  # ring away, and takes the ring off the titles in its row lists.
   it "shows the whole focus ring on links in boxes that clip" do
+    jtech_theme.update_setting(:topic_cards, false)
+    jtech_theme.save!
     sign_in(member)
     visit(topic.relative_url)
     expect(page).to have_css("#post_1 .names .first a")

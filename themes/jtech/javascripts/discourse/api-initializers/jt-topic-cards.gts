@@ -47,15 +47,17 @@ interface TopicListItemClickContext {
   event: MouseEvent & { target: Element };
 }
 
-// Discovery lists (latest/new/top/category/tag, group + user activity) and
-// the messages inbox become cards. Suggested/related lists at the foot of a
-// topic stay compact rows, and under a Discourse palette (lib/jt-vanilla)
-// every list is stock Discourse's rows.
+// Discovery lists (latest/new/top/category/tag, group + user activity), the
+// messages inbox and the suggested/related lists under a topic become cards,
+// so the list under a topic looks like the home page's. Under a Discourse
+// palette (lib/jt-vanilla) every list is stock Discourse's rows.
 const CARD_CONTEXTS = [
   "discovery",
   "group-activity",
   "user-activity",
   "messages",
+  "suggested",
+  "related",
 ];
 
 const isCardContext = ({ listContext, category }: TopicListContext): boolean =>
