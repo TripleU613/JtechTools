@@ -121,6 +121,9 @@ tag_banners:
 external_link_icon:
   type: bool
   default: true
+handle_logos:
+  type: bool
+  default: true
 header_home_url:
   type: string
   default: ""

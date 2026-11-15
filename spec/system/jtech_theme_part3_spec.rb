@@ -1252,6 +1252,24 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
       expect(page).to have_no_css(".post-action-menu__jt-print")
     end
 
+    it "puts a brand's logo before a mention of its handle" do
+      Fabricate(:user, username: "claude")
+      post =
+        Fabricate(:post, topic: topic, user: member, raw: "Asked @claude, @groupme and @somebody.")
+      visit("#{topic.relative_url}/#{post.post_number}")
+      at = "#post_#{post.post_number} .cooked"
+      expect(page).to have_css("#{at} a.mention.jt-handle .jt-handle-logo[data-jt-handle='claude']")
+      expect(page).to have_css(
+        "#{at} span.mention.jt-handle .jt-handle-logo[data-jt-handle='groupme']",
+      )
+      expect(page).to have_css("#{at} .mention:not(.jt-handle)", text: "@somebody")
+      image = page.evaluate_script(<<~JS)
+        getComputedStyle(document.querySelector("#{at} .jt-handle-logo")).backgroundImage
+      JS
+      expect(image).to start_with("url(")
+      expect_no_theme_errors
+    end
+
     it "shows the listed badges after a poster's name" do
       badge = Fabricate(:badge, name: "Phone Distributor", icon: "certificate")
       BadgeGranter.grant(badge, member)

@@ -1,0 +1,43 @@
+// Logos before mentions of the handles in lib/jt-handle-logos (setting
+// handle_logos). Each is a theme asset, assets/handles/<handle>.svg: the
+// brand's mark on its own colour, drawn round here.
+.jt-handle-logo {
+  display: inline-block;
+  inline-size: 1.15em;
+  block-size: 1.15em;
+  margin-inline-end: 0.25em;
+  vertical-align: -0.2em;
+  border-radius: 50%;
+  background: center / cover no-repeat;
+}
+
+$jt-handle-logos: (
+  "claude": $handle-claude,
+  "chatgpt": $handle-chatgpt,
+  "anthropic": $handle-anthropic,
+  "microsoft": $handle-microsoft,
+  "apple": $handle-apple,
+  "meta": $handle-meta,
+  "samsung": $handle-samsung,
+  "nvidia": $handle-nvidia,
+  "intel": $handle-intel,
+  "tesla": $handle-tesla,
+  "spacex": $handle-spacex,
+  "jtechforums": $handle-jtechforums,
+  "groupme": $handle-groupme,
+  "github": $handle-github,
+  "discourse": $handle-discourse,
+  "linux": $handle-linux,
+  "android": $handle-android,
+  "24six": $handle-24six,
+  "zing": $handle-zing,
+  "naki": $handle-naki,
+  "cloudflare": $handle-cloudflare,
+  "python": $handle-python,
+);
+
+@each $handle, $url in $jt-handle-logos {
+  .jt-handle-logo[data-jt-handle="#{$handle}"] {
+    background-image: url($url);
+  }
+}
