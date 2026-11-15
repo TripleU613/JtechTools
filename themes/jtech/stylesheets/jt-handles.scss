@@ -1,12 +1,29 @@
-// Logos before mentions of the handles in lib/jt-handle-logos (setting
-// handle_logos). Each is a theme asset, assets/handles/<handle>.svg: the
-// brand's mark on its own colour, drawn round here.
+// Mentions of the handles in lib/jt-handle-logos (setting handle_logos).
+// Each logo is a theme asset, assets/handles/<handle>.svg: the brand's mark
+// on its own colour, drawn round here.
+
+// A mention of a name nobody has is plain text in core (span.mention); a
+// handle's is the chip core draws for an account (a.mention), so it looks
+// the same whether or not the account exists. Core's values, repeated.
+span.mention.jt-handle {
+  display: inline-block;
+  font-size: 0.93em;
+  color: var(--primary);
+  padding: 0.2em 0.34em;
+  background: var(--mention-background-color);
+  border-radius: 0.6em;
+  text-wrap: nowrap;
+  line-height: 1;
+  unicode-bidi: plaintext;
+}
+
+// After the name, where core puts an account's status emoji, at its size
 .jt-handle-logo {
   display: inline-block;
-  inline-size: 1.15em;
-  block-size: 1.15em;
-  margin-inline-end: 0.25em;
-  vertical-align: -0.2em;
+  inline-size: 0.93em;
+  block-size: 0.93em;
+  margin-inline-start: 0.3em;
+  vertical-align: -0.1em;
   border-radius: 50%;
   background: center / cover no-repeat;
 }

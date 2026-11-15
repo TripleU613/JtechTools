@@ -167,7 +167,7 @@ en:
       quick_look: "Add a Quick look button to topic cards that previews the first post in a dialog. Signed-in members only, so it can't get round a login gate."
       reading_progress: "Thin bar under the header showing how far through a topic you are."
       external_link_icon: "Mark links in posts that go to other sites with a small arrow."
-      handle_logos: "Show a brand's logo before mentions of its handle in posts and the composer's preview: @claude, @chatgpt, @anthropic, @microsoft, @apple, @meta, @samsung, @nvidia, @intel, @tesla, @spacex, @jtechforums, @groupme, @github, @discourse, @linux, @android, @24six, @zing, @naki, @cloudflare, @python. Works whether or not an account with that username exists; create one if the mention should link to a profile. Logos are the companies' trademarks."
+      handle_logos: "Show mentions of these handles in posts and the composer's preview as a chip with the brand's logo after the name, like a mention of an account: @claude, @chatgpt, @anthropic, @microsoft, @apple, @meta, @samsung, @nvidia, @intel, @tesla, @spacex, @jtechforums, @groupme, @github, @discourse, @linux, @android, @24six, @zing, @naki, @cloudflare, @python. Works whether or not an account with that username exists; create one if the mention should link to a profile. Logos are the companies' trademarks."
       internal_hosts: "Hosts that count as this forum (no arrow). Matched exactly; the current host always counts."
       category_banners: "Show a header with the category's icon, name, description and counts on category pages."
       tag_banners: "Show a header with the tag's name and description on tag pages."

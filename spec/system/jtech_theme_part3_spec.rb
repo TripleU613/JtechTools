@@ -1267,6 +1267,10 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
         getComputedStyle(document.querySelector("#{at} .jt-handle-logo")).backgroundImage
       JS
       expect(image).to start_with("url(")
+      chip = page.evaluate_script(<<~JS)
+        getComputedStyle(document.querySelector("#{at} span.mention.jt-handle")).display
+      JS
+      expect(chip).to eq("inline-block")
       expect_no_theme_errors
     end
 

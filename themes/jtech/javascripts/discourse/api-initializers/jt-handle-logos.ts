@@ -2,7 +2,7 @@ import { settings } from "virtual:theme";
 import { apiInitializer } from "discourse/lib/api";
 import { HANDLE_LOGOS } from "../lib/jt-handle-logos.ts";
 
-// A logo before a mention of one of lib/jt-handle-logos' handles (setting
+// A logo after a mention of one of lib/jt-handle-logos' handles (setting
 // handle_logos), in posts and the composer's preview. Core cooks a mention
 // of an account as a link to /u/<name> and of a name nobody has as a span;
 // both get it, so it works whether or not the account exists. The link's
@@ -37,7 +37,7 @@ export default apiInitializer((api) => {
         logo.className = "jt-handle-logo";
         logo.dataset.jtHandle = handle;
         logo.setAttribute("aria-hidden", "true");
-        mention.prepend(logo);
+        mention.append(logo);
         mention.classList.add("jt-handle");
       }
     },
