@@ -32,7 +32,10 @@ module DiscourseDisteleplus
           .joins(:topic)
           .where(deleted_at: nil, hidden: false, post_type: ::Post.types[:regular])
           .where(topics: { deleted_at: nil, visible: true, archetype: Archetype.default })
-          .where("NOT #{DiscourseModCategories::WhisperQueryFilter.is_whisper_sql("posts")}")
+      if DiscourseModCategories::Whisper.enabled?
+        scope =
+          scope.where("NOT #{DiscourseModCategories::WhisperQueryFilter.is_whisper_sql("posts")}")
+      end
 
       category_ids = SiteSetting.disteleplus_forum_upload_category_ids_map.reject(&:zero?)
       scope = scope.where(topics: { category_id: category_ids }) if category_ids.present?

@@ -77,11 +77,10 @@ RSpec.describe "Whisper activity feed" do
     expect(ids).not_to include(whisper_post.id)
   end
 
-  it "still hides the whisper when mod_whisper_enabled is off" do
+  it "shows the former whisper when whispers are off" do
     SiteSetting.mod_whisper_enabled = false
     ids = activity_post_ids_for(stranger)
-    expect(ids).to include(regular_reply.id)
-    expect(ids).not_to include(whisper_post.id)
+    expect(ids).to include(regular_reply.id, whisper_post.id)
   end
 
   describe "UserActionWhisperFilter.apply" do
@@ -108,10 +107,10 @@ RSpec.describe "Whisper activity feed" do
       expect(DiscourseModCategories::UserActionWhisperFilter.apply([], stranger)).to eq([])
     end
 
-    it "still drops the whisper row when mod_whisper_enabled is off" do
+    it "keeps every row when whispers are off" do
       SiteSetting.mod_whisper_enabled = false
       filtered = DiscourseModCategories::UserActionWhisperFilter.apply(rows, stranger)
-      expect(filtered.map(&:post_id)).to contain_exactly(regular_reply.id, nil)
+      expect(filtered.map(&:post_id)).to eq(rows.map(&:post_id))
     end
 
     it "drops the whisper row for an anonymous viewer (nil user)" do

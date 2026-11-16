@@ -651,6 +651,7 @@ after_initialize do
     user = manager.user
     args = manager.args
     next nil if user.nil? || user.staff? || args[:topic_id].blank?
+    next nil unless DiscourseModCategories::Whisper.enabled?
 
     stub =
       DiscourseModCategories::Whisper::PostStub.new(
@@ -715,7 +716,7 @@ after_initialize do
   add_to_serializer(
     :topic_view,
     :mod_whisper_participant_ids,
-    include_condition: -> { SiteSetting.mod_whisper_enabled && scope.is_staff? },
+    include_condition: -> { DiscourseModCategories::Whisper.enabled? && scope.is_staff? },
   ) do
     raw = object.topic.custom_fields[DiscourseModCategories::TOPIC_WHISPER_PARTICIPANTS_FIELD]
     DiscourseModCategories::Whisper.normalize_ids(raw)
@@ -734,7 +735,7 @@ after_initialize do
 
   # Filter whispers out of the topic stream for viewers who are not in the
   # audience. Staff bypass this; the Guardian override is the parallel gate.
-  # Unconditional — never gated on a setting.
+  # No filter while whispers are off (WhisperQueryFilter.predicate).
   TopicView.apply_custom_default_scope do |scope, tv|
     DiscourseModCategories::WhisperQueryFilter.apply(scope, tv.guardian&.user)
   end
@@ -753,9 +754,8 @@ after_initialize do
   # set (approving a queued post, imports, some API calls).
 
   # Once the whisper exists: undo the public side effects core applied
-  # because it is a regular post, and notify its audience. A global listener
-  # (not the plugin-gated `on`), so the counter repair also runs while the
-  # bundle is switched off.
+  # because it is a regular post, and notify its audience. Nothing is a
+  # whisper while whispers are off, so this stops with them.
   DiscourseEvent.on(:post_created) do |post, opts, user|
     topic = post.topic
     next unless topic
@@ -824,8 +824,7 @@ after_initialize do
     notified.concat(::User.where(id: ids - already).to_a)
   end
 
-  # Whisper fields are serialized whether or not whispers are switched on:
-  # existing whispers stay private either way, so they keep their banner.
+  # While whispers are off no post is a whisper: no banner, no fields.
   whisper_only = -> { DiscourseModCategories::Whisper.whisper?(object) }
   add_to_serializer(:post, :mod_is_whisper) { DiscourseModCategories::Whisper.whisper?(object) }
 

@@ -42,7 +42,7 @@ So a sub-plugin file reads like any `plugin.rb` body: `after_initialize`, `on(:e
 
 Every module has an `enabled?` helper that checks both its own switch and `jtech_enabled`, for example `DiscourseMiniMod.enabled?`. Discourse turns off a disabled plugin's event hooks, serializers and assets by itself, but not its core-class patches or scheduled jobs. So every patch and job goes through the helper. `spec/lib/jtech_master_switch_spec.rb` checks this.
 
-Some things deliberately ignore the switches. Whispers stay private whatever is switched off, because turning a feature off must never make hidden posts public.
+Whispers are the one exception to "hidden stays hidden": `DiscourseModCategories::Whisper.enabled?` (`jtech_enabled` and `mod_whisper_enabled`) gates every whisper patch, and while it's off an existing whisper is an ordinary post. Running whispers is the forum's choice, at its own risk.
 
 ## Permissions
 

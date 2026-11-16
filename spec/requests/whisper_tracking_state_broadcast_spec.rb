@@ -111,13 +111,12 @@ RSpec.describe "Whisper tracking-state broadcast" do
     end
   end
 
-  it "still narrows the broadcast when mod_whisper_enabled is off" do
+  it "leaves the broadcast alone when whispers are off" do
     whisper_post.custom_fields[targets_field] = [target.id]
     whisper_post.save_custom_fields(true)
     whisper_post.reload
 
     SiteSetting.mod_whisper_enabled = false
-    expect(filtered_user_ids(whisper_post)).not_to include(stranger.id)
-    expect(filtered_user_ids(whisper_post)).to include(target.id)
+    expect(filtered_user_ids(whisper_post)).to include(stranger.id, target.id)
   end
 end
