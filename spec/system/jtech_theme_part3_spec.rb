@@ -579,11 +579,11 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
     end
   end
 
-  # Core's presence plugin lifts "… replying" 3.2em, onto the line the
-  # progress capsule used to rest on at the end of a topic. The capsule takes
-  # no line there any more, so the lift laid it over the topic map at the foot
-  # of the posts: its avatar on "12 views". (A stand-in for the bar, as one
-  # needs someone else replying.)
+  # "… replying" at the foot of a topic on a phone: under the topic map, not
+  # over it (core used to lift it onto the capsule's line, its avatar on
+  # "12 views"), and with nobody replying no empty band where it would be
+  # (core now keeps a row for it). (A stand-in for the bar, as one needs
+  # someone else replying.)
   it "puts \"replying\" under the topic map on a phone, not over it", mobile: true do
     12.times { |i| Fabricate(:post, topic: topic, raw: "Reply #{i}, with a few words in it.") }
     sign_in(admin)
