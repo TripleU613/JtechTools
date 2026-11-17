@@ -529,3 +529,36 @@ html.whos-online-ring {
       0 0 0 2px var(--jt-online);
   }
 }
+
+// A topic nobody has answered yet. Its topic map holds only the view count,
+// yet core rules it off as a band and offers Summarize for a single post. With
+// the first-reply prompt there (so no replies), Summarize goes, the band
+// loses its line and padding, and the views and the prompt read as one quiet
+// caption under the post.
+.topic-post:has(.jt-first-reply) .topic-map {
+  border-top: 0;
+  padding-block: 0;
+
+  .topic-map__additional-contents {
+    display: none;
+  }
+
+  .topic-map__stats {
+    .btn {
+      min-height: 0;
+      padding-block: 0;
+      font-size: var(--jt-text-sm);
+    }
+
+    // the count is as quiet as its word (core sets the number apart)
+    &,
+    * {
+      color: var(--jt-text-subtle);
+      font-weight: normal;
+    }
+  }
+}
+
+.topic-post:has(.jt-first-reply) .jt-first-reply {
+  margin-top: var(--space-1);
+}
