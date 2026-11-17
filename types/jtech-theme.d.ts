@@ -32,6 +32,7 @@ declare module "virtual:theme" {
     category_banners: boolean;
     tag_banners: boolean;
     external_link_icon: boolean;
+    handle_logos: boolean;
     header_home_url: string;
     color_mode_toggle: boolean;
     header_color_toggle: boolean;

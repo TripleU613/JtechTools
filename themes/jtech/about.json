@@ -10,7 +10,29 @@
   "assets": {
     "geist": "assets/Geist-Variable.woff2",
     "geist-mono": "assets/GeistMono-Variable.woff2",
-    "icons-sprite": "assets/icons-sprite.svg"
+    "icons-sprite": "assets/icons-sprite.svg",
+    "handle-claude": "assets/handles/claude.svg",
+    "handle-chatgpt": "assets/handles/chatgpt.svg",
+    "handle-anthropic": "assets/handles/anthropic.svg",
+    "handle-microsoft": "assets/handles/microsoft.svg",
+    "handle-apple": "assets/handles/apple.svg",
+    "handle-meta": "assets/handles/meta.svg",
+    "handle-samsung": "assets/handles/samsung.svg",
+    "handle-nvidia": "assets/handles/nvidia.svg",
+    "handle-intel": "assets/handles/intel.svg",
+    "handle-tesla": "assets/handles/tesla.svg",
+    "handle-spacex": "assets/handles/spacex.svg",
+    "handle-jtechforums": "assets/handles/jtechforums.svg",
+    "handle-groupme": "assets/handles/groupme.svg",
+    "handle-github": "assets/handles/github.svg",
+    "handle-discourse": "assets/handles/discourse.svg",
+    "handle-linux": "assets/handles/linux.svg",
+    "handle-android": "assets/handles/android.svg",
+    "handle-24six": "assets/handles/24six.svg",
+    "handle-zing": "assets/handles/zing.svg",
+    "handle-naki": "assets/handles/naki.svg",
+    "handle-cloudflare": "assets/handles/cloudflare.svg",
+    "handle-python": "assets/handles/python.svg"
   },
   "color_schemes": {
     "JTech Light": {
