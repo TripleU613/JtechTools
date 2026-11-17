@@ -201,8 +201,8 @@ html.jt-has-color-toggle .d-header-icons .header-color-scheme-toggle {
 }
 
 // The search field shrinks to a plain icon, the same as its neighbours, on
-// narrow screens and touch, and below 64rem while a topic's title is in the
-// header (it needs the room).
+// narrow screens and touch, and whenever a topic's title is in the header:
+// the title needs the room, and a field beside it read as a second heading.
 @mixin jt-search-icon-only {
   --jt-search-glyph: 1.125rem;
   justify-content: center;
@@ -294,10 +294,8 @@ html.jt-has-color-toggle .d-header-icons .header-color-scheme-toggle {
   }
 }
 
-@include viewport.until(lg) {
-  .d-header:has(.extra-info-wrapper) .jt-header-search__button {
-    @include jt-search-icon-only;
-  }
+.d-header:has(.extra-info-wrapper) .jt-header-search__button {
+  @include jt-search-icon-only;
 }
 
 // Unread counts: a small inverse pill on the icon's corner

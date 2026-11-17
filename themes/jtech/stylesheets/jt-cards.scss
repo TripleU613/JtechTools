@@ -295,12 +295,6 @@
     overflow-wrap: anywhere;
   }
 
-  // the newest reply (jt_latest_reply): who wrote it, in the text colour
-  // (not bold), then its start
-  &__latest-who {
-    color: var(--jt-text);
-  }
-
   &__foot {
     display: flex;
     flex-wrap: wrap;
