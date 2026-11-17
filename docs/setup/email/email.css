@@ -1,0 +1,182 @@
+// JTech email styles. Discourse inlines every rule here onto the matching
+// elements, after its own inline styles, so a rule only beats core's value
+// with !important. When two !important rules here set the same property on
+// one element, the earlier rule wins.
+//
+// Colours stay out of this file: inline !important can't be undone by the
+// dark-mode block in the template. Colours come from the template's <style>
+// and from email_accent_bg_color / email_accent_fg_color / email_link_color.
+// @media rules don't work here either (they get inlined unconditionally).
+
+$sans: Geist, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+$mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+// Post header: avatar, name, date
+.user-avatar {
+  width: 58px !important;
+}
+.user-avatar img,
+img.avatar {
+  border-radius: 50%;
+}
+.username {
+  font-family: $sans !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+}
+.notification-date {
+  font-family: $sans !important;
+  font-size: 13px !important;
+}
+.post-wrapper {
+  margin-bottom: 16px !important;
+}
+
+// Post body
+div.body {
+  padding-top: 12px !important;
+}
+div.body a {
+  font-weight: 500 !important;
+  text-decoration: underline !important;
+}
+div.body img {
+  height: auto;
+}
+blockquote {
+  margin: 0 0 16px !important;
+  padding: 12px 16px !important;
+  border-left-width: 2px !important;
+  border-radius: 0 10px 10px 0;
+}
+blockquote p {
+  margin-bottom: 0 !important;
+}
+code {
+  font-family: $mono !important;
+  font-size: 14px;
+  border-radius: 6px;
+}
+pre {
+  max-width: 100% !important;
+  margin: 0 0 16px !important;
+  white-space: pre-wrap !important;
+  word-break: break-word;
+}
+pre code {
+  padding: 12px 14px !important;
+  border: 1px solid #ebebeb;
+  border-radius: 10px;
+  line-height: 1.5;
+}
+div.onebox {
+  border-width: 1px !important;
+  border-radius: 12px;
+  padding: 12px 16px !important;
+}
+hr {
+  height: 1px !important;
+  border: 0 !important;
+  margin: 24px 0 !important;
+}
+.jt-card > h2 {
+  font-family: $mono;
+  font-size: 30px;
+  letter-spacing: 0.12em;
+  margin: 8px 0 16px;
+}
+.previous-discussion {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  margin: 24px 0 12px !important;
+}
+
+// Footer: the action button, then Discourse's own unsubscribe line
+.footer {
+  font-size: 14px;
+  line-height: 1.5;
+}
+.footer.highlight p > a:first-child {
+  border-top-width: 9px !important;
+  border-bottom-width: 9px !important;
+  border-left-width: 18px !important;
+  border-right-width: 18px !important;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600 !important;
+  line-height: 1.2;
+  margin-right: 6px;
+}
+
+// Digest. It brings its own header and grey page; the template supplies both.
+.text-header,
+.popular-post-spacer {
+  display: none !important;
+  mso-hide: all;
+}
+.digest-content,
+table.body,
+div:has(> table.spacer),
+.digest-new-topics,
+.digest-new-header,
+.header-popular-posts,
+.popular-post-excerpt,
+.popular-post-meta,
+.spacer,
+.side-spacer .with-accent-colors,
+.digest-popular-topic-wrapper,
+.summary-footer {
+  background: none !important;
+  background-color: unquote("transparent") !important;
+}
+.side-spacer {
+  width: 0 !important;
+}
+.digest-content-header {
+  border: 1px solid #ebebeb;
+  border-radius: 12px;
+}
+.header-since-last-visit,
+.header-popular-topics {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  line-height: 28px !important;
+}
+.header-popular-posts,
+.digest-new-header {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  text-align: left !important;
+  padding: 28px 16px 8px !important;
+}
+.digest-topic-title {
+  font-size: 18px !important;
+  letter-spacing: -0.01em;
+}
+.digest-topic-stats,
+.popular-post-meta {
+  border-bottom: 1px solid #ebebeb;
+}
+.post-excerpt {
+  font-size: 15px !important;
+  line-height: 1.55 !important;
+}
+.digest-button {
+  display: inline-block;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  width: auto !important;
+}
+.summary-footer td {
+  font-size: 13px;
+  line-height: 1.5;
+  padding-top: 24px;
+}
+.digest-topic-body {
+  border-bottom: 0 !important;
+}
+table:has(> tbody > tr > td.digest-popular-topic-wrapper) {
+  background: none !important;
+  background-color: unquote("transparent") !important;
+}
