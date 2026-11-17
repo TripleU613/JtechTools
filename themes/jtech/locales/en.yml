@@ -123,6 +123,7 @@ en:
       search_for: "Search all posts for “%{term}”"
       group_commands: "Go to"
       group_topics: "Topics"
+      group_related: "Related"
       group_users: "People"
       toggle_theme: "Switch light / dark"
       shortcuts: "Keyboard shortcuts"

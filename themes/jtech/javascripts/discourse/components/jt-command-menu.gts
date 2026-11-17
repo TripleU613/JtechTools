@@ -29,13 +29,19 @@ import { CORE_SHORTCUTS, JT_SHORTCUTS } from "../lib/jt-shortcuts.ts";
 const t = (key: string, opts?: Record<string, unknown>): string =>
   jtLabel(`cmdk.${key}`, opts);
 
-const LIMITS = { commands: 5, categories: 4, topics: 6, users: 3 };
+const LIMITS = { commands: 5, categories: 4, topics: 6, related: 4, users: 3 };
+
+// Search syntax (in:, @user, #category, tags:…) asks for keyword search;
+// meaning-based matches would ignore it.
+const SEARCH_SYNTAX = /[:#@]/;
 
 type CommandMenuUser = User & { can_create_topic?: boolean };
 
 interface CommandMenuSiteSettings {
   tagging_enabled: boolean;
   min_search_term_length: number;
+  // Discourse AI
+  ai_embeddings_semantic_quick_search_enabled?: boolean;
 }
 
 // A loaded Category or a category from a /search/query response
@@ -120,6 +126,8 @@ export default class JtCommandMenu extends Component<JtCommandMenuSignature> {
   @tracked selected = 0;
   @tracked results: SearchResults | null = null; // /search/query response for `resultsFor`
   @tracked resultsFor = "";
+  // Discourse AI's meaning-based matches for `resultsFor`, when it's on
+  @tracked related: SearchTopic[] = [];
   @tracked loading = false;
 
   focusInput = modifier((el: HTMLElement) => {
@@ -340,6 +348,17 @@ export default class JtCommandMenu extends Component<JtCommandMenuSignature> {
         hint: Category.findById(topic.category_id)?.name,
         url: `/t/${topic.slug}/${topic.id}`,
       }));
+    const shown = new Set(topics.map((topic) => topic.url));
+    const related = this.related
+      .map((topic) => ({
+        group: "related",
+        icon: "far-comment",
+        label: topic.title,
+        hint: Category.findById(topic.category_id)?.name,
+        url: `/t/${topic.slug}/${topic.id}`,
+      }))
+      .filter((topic) => !shown.has(topic.url))
+      .slice(0, LIMITS.related);
     const users = (this.results.users || [])
       .slice(0, LIMITS.users)
       .map((user) => ({
@@ -349,7 +368,13 @@ export default class JtCommandMenu extends Component<JtCommandMenuSignature> {
         hint: user.name !== user.username ? user.name : null,
         url: `/u/${user.username}`,
       }));
-    return [...topics, ...users];
+    // A question ("how do i block youtube") is matched better by meaning
+    // than by its words, which keyword search ranks wherever they occur:
+    // from four words on, the meaning-based matches come first.
+    if (this.term.split(/\s+/).length >= 4) {
+      return [...related, ...topics, ...users];
+    }
+    return [...topics, ...related, ...users];
   }
 
   get fullSearchItem(): MenuEntry[] {
@@ -457,9 +482,10 @@ export default class JtCommandMenu extends Component<JtCommandMenuSignature> {
       return;
     }
     try {
-      const results: SearchResults = await ajax("/search/query", {
-        data: { term },
-      });
+      const [results, related] = await Promise.all([
+        ajax("/search/query", { data: { term } }) as Promise<SearchResults>,
+        this.searchRelated(term),
+      ]);
       // With lazily loaded categories the response carries the ones its
       // topics need, as core's search menu uses them.
       results.grouped_search_result?.extra?.categories?.forEach((category) =>
@@ -467,6 +493,7 @@ export default class JtCommandMenu extends Component<JtCommandMenuSignature> {
       );
       if (term === this.term && !this.isDestroying) {
         this.results = results;
+        this.related = related;
         this.resultsFor = term;
       }
     } catch {
@@ -475,6 +502,31 @@ export default class JtCommandMenu extends Component<JtCommandMenuSignature> {
       if (term === this.term && !this.isDestroying) {
         this.loading = false;
       }
+    }
+  }
+
+  // Keyword search finds the words typed; Discourse AI's embeddings find
+  // topics about the same thing in other words ("block youtube" finds a
+  // filtered YouTube client). If it fails (rate limit, the embedding service
+  // down) the keyword results stand alone.
+  async searchRelated(term: string): Promise<SearchTopic[]> {
+    if (
+      !this.siteSettings.ai_embeddings_semantic_quick_search_enabled ||
+      SEARCH_SYNTAX.test(term)
+    ) {
+      return [];
+    }
+    try {
+      const results: SearchResults = await ajax(
+        "/discourse-ai/embeddings/quick-search",
+        { data: { q: term } }
+      );
+      results.grouped_search_result?.extra?.categories?.forEach((category) =>
+        this.site.updateCategory(category)
+      );
+      return results.topics || [];
+    } catch {
+      return [];
     }
   }
 

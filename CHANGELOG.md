@@ -6,6 +6,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **New**
 
+- JTech theme: with Discourse AI's semantic search on, the search menu (⌘K / Ctrl+K and the header's search) adds Related: topics about the same thing in other words, besides the keyword matches. For a question of four words or more they come first. Search syntax (`in:`, `@user`, `#category`, `tags:`) keeps to keyword search.
 - JTech theme: logos on @handles. A mention of @claude, @chatgpt, @microsoft, @jtechforums, @groupme, @24six, @zing, @naki and the rest of the list (22 in all) is a chip with that brand's logo after the name, like a mention of an account, in posts and the composer's preview, whether or not the account exists. Setting: `handle_logos`.
 - JTech theme: topic cards can show the newest reply under the title (who wrote it and the start of it, linking to it) instead of the first post. Each reader gets the newest reply they can read: whispers they aren't in, hidden posts and people they ignore are skipped. Setting: `jtech_topic_list_latest_reply` (off by default).
 - JTech theme: Discourse AI's conversations page fits the theme: the question box's upload and send buttons are plain icons, and the empty history note is a quiet line in the sidebar.
