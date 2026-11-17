@@ -160,6 +160,13 @@ test("inline objects are taken as they are, and missing ones are skipped", () =>
 test("a bare Yes or No says what it does", () => {
   assert.equal(actionLabel({ id: "approve_post", label: "Yes" }), "Approve");
   assert.equal(actionLabel({ id: "reject", label: "No" }), "Reject");
+  // review_queue_consistent_answers: "Yes, there's a problem" rejects
+  assert.equal(actionLabel({ id: "approve_post", label: "No" }), "Approve");
+  assert.equal(actionLabel({ id: "reject_post", label: "Yes" }), "Reject");
+  assert.equal(
+    actionLabel({ id: "x", server_action: "approve_post_closed", label: "No" }),
+    "Approve"
+  );
   assert.equal(
     actionLabel({ id: "disagree", label: "Keep post" }),
     "Keep post"
