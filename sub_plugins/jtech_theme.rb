@@ -42,6 +42,7 @@ module ::DiscourseJtechTheme
 end
 
 require_relative "../lib/discourse_jtech_theme/installer"
+require_relative "../lib/discourse_jtech_theme/latest_reply"
 
 # Whole-row click + press bounce on other themes' topic lists
 # (jtech_row_click_theme_ids); scoped by html.jtech-row-click.
@@ -57,6 +58,24 @@ after_initialize do
   reloadable_patch do
     ::MetadataController.prepend(DiscourseJtechTheme::MetadataControllerExtension)
   end
+
+  reloadable_patch do
+    ::Topic.attr_accessor(:jt_latest_reply) unless ::Topic.method_defined?(:jt_latest_reply)
+  end
+
+  TopicList.on_preload do |topics, topic_list|
+    if DiscourseJtechTheme::LatestReply.enabled?
+      DiscourseJtechTheme::LatestReply.preload!(topics, topic_list.current_user)
+    end
+  end
+
+  add_to_serializer(
+    :topic_list_item,
+    :jt_latest_reply,
+    include_condition: -> do
+      DiscourseJtechTheme::LatestReply.enabled? && object.try(:jt_latest_reply).present?
+    end,
+  ) { object.jt_latest_reply }
 
   register_user_custom_field_type(DiscourseJtechTheme::ICON_STYLE_FIELD, :string)
   register_editable_user_custom_field(DiscourseJtechTheme::ICON_STYLE_FIELD)

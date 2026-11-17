@@ -31,6 +31,11 @@ jtech:
     client: false
   # The installed app's icon (web manifest): the JTech mark on a solid square
   # instead of the uploaded manifest_icon, which is see-through.
+  # Topic cards show the newest reply under the title instead of the first
+  # post (lib/discourse_jtech_theme/latest_reply.rb). One query per list.
+  jtech_topic_list_latest_reply:
+    default: false
+    client: true
   jtech_app_icon:
     default: false
     client: false

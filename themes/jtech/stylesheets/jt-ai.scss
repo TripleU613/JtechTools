@@ -1,0 +1,35 @@
+// Discourse AI's own surfaces. Most already take the theme's buttons, menus
+// and inputs; these are the ones that didn't.
+
+// The AI conversations page (/discourse-ai/ai-bot/conversations). The upload
+// and send buttons sit inside the question box: core's button fill made each
+// a grey block at either end of it. Bare icons, as in the composer's toolbar.
+.ai-bot-conversations__input-wrapper {
+  border-color: var(--jt-border-strong);
+  border-radius: var(--jt-radius-field);
+
+  &:focus-within {
+    border-color: var(--jt-focus);
+  }
+
+  .btn {
+    background: transparent;
+    border-color: transparent;
+    color: var(--jt-text-muted);
+
+    &:hover,
+    &:focus-visible {
+      background: var(--jt-hover);
+      color: var(--jt-text);
+    }
+  }
+}
+
+// "Bot conversation history will appear here." under New Question: a quiet
+// note at the sidebar's size, lined up with its links, not body text
+.ai-bot-sidebar-empty-state {
+  padding-inline: var(--space-4);
+  font-size: var(--jt-text-sm);
+  line-height: 1.5;
+  color: var(--jt-text-muted);
+}
