@@ -94,6 +94,12 @@ body.has-ai-bot-docked-composer .jt-dismiss-unread {
   align-items: center;
   list-style: none;
 
+  // the running dots are one strip three dots wide; in the summary's flex
+  // row it shrank to the first dot, so they stopped looking like they move
+  &::after {
+    flex: none;
+  }
+
   &::-webkit-details-marker {
     display: none;
   }
