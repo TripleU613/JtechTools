@@ -1201,14 +1201,27 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
   end
 
   # Suggested topics and the search page used to stop short of the right
-  # edge the header, content and footer share
+  # edge the header, content and footer share. Beside a timeline, suggested
+  # topics stop at its column instead: its buttons hang below it and sat on
+  # the first card.
   it "runs suggested topics and the search page to the page's edges" do
     sign_in(member)
 
     visit(topic.relative_url)
     expect(page).to have_css(".more-topics__container .topic-list")
-    wall, suggested = horizontal_edges("#main-outlet", ".more-topics__container")
-    expect(suggested[1]).to be_within(1).of(wall[1])
+    if page.has_css?(".timeline-container .timeline-footer-controls", wait: 0)
+      wall, suggested, buttons =
+        horizontal_edges(
+          "#main-outlet",
+          ".more-topics__container",
+          ".timeline-container .timeline-footer-controls",
+        )
+      expect(suggested[1]).to be < buttons[0]
+      expect(wall[1] - suggested[1]).to be < 200
+    else
+      wall, suggested = horizontal_edges("#main-outlet", ".more-topics__container")
+      expect(suggested[1]).to be_within(1).of(wall[1])
+    end
 
     visit("/search?q=filter")
     expect(page).to have_css(".search-header .search-bar")
