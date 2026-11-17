@@ -295,6 +295,12 @@
     overflow-wrap: anywhere;
   }
 
+  // the newest reply (jt_latest_reply): who wrote it, then its start
+  &__latest-who {
+    font-weight: 600;
+    color: var(--jt-text);
+  }
+
   &__foot {
     display: flex;
     flex-wrap: wrap;

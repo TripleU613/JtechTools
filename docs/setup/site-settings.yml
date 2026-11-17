@@ -13,6 +13,7 @@
 jtech_enabled: true
 jtech_theme_install: true
 jtech_app_icon: true # the JTech mark as the installed app's icon: drop it for your own
+jtech_topic_list_latest_reply: true # topic cards show the newest reply instead of the first post
 discourse_no_likes_enabled: true
 dislike_hide_like_button: true
 mod_categories_enabled: true

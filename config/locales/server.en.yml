@@ -83,6 +83,12 @@ en:
       off to stop installs and updates; turning it on installs straight away and
       brings back a theme an admin deleted (which otherwise stays deleted).
 
+    jtech_topic_list_latest_reply: In the JTech theme's topic cards, show the
+      newest reply under the title (who wrote it and the start of it), instead
+      of the start of the first post. Each reader sees the newest reply they can
+      read, skipping whispers they aren't part of, hidden posts and people they ignore.
+      A topic with no replies still shows its first post.
+
     jtech_app_icon: Give the installed app (Install app / Add to Home screen)
       the JTech mark on a solid black square, so its taskbar and home-screen
       icon shows on light and dark backgrounds alike. It replaces the manifest

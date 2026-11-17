@@ -2,6 +2,7 @@ import Component from "@glimmer/component";
 import { on } from "@ember/modifier";
 import { action } from "@ember/object";
 import { service } from "@ember/service";
+import { htmlSafe } from "@ember/template";
 import type { ComponentLike } from "@glint/template";
 import { settings, themePrefix } from "virtual:theme";
 import PluginOutlet from "discourse/components/plugin-outlet";
@@ -52,7 +53,16 @@ interface CardPoster {
   moreCount?: string;
 }
 
+// The newest reply the reader can read (plugin setting
+// jtech_topic_list_latest_reply, lib/discourse_jtech_theme/latest_reply.rb)
+interface CardLatestReply {
+  post_number: number;
+  excerpt: string;
+  username: string;
+}
+
 type JtCardTopic = Topic & {
+  jt_latest_reply?: CardLatestReply | null;
   tags?: string[];
   excerpt?: string | null;
   thumbnails?: CardThumbnail[] | null;
@@ -112,6 +122,18 @@ export default class JtTopicCard extends Component<JtTopicCardSignature> {
 
   get hasExcerpt() {
     return this.topic.excerpt || this.topic.hasExcerpt;
+  }
+
+  get latestReply(): CardLatestReply | null {
+    return this.topic.jt_latest_reply || null;
+  }
+
+  get latestReplyUrl(): string {
+    return this.topic.urlForPostNumber(this.latestReply?.post_number ?? 1);
+  }
+
+  get latestReplyExcerpt() {
+    return htmlSafe(this.latestReply?.excerpt ?? "");
   }
 
   get posters(): CardPoster[] {
@@ -230,7 +252,15 @@ export default class JtTopicCard extends Component<JtTopicCardSignature> {
             />
           </div>
 
-          {{#if this.hasExcerpt}}
+          {{#if this.latestReply}}
+            <a
+              class="jt-card__excerpt jt-card__latest topic-excerpt"
+              href={{this.latestReplyUrl}}
+            ><span
+                class="jt-card__latest-who"
+              >{{this.latestReply.username}}:</span>
+              {{this.latestReplyExcerpt}}</a>
+          {{else if this.hasExcerpt}}
             <TopicExcerpt class="jt-card__excerpt" @topic={{@topic}} />
           {{/if}}
         </div>

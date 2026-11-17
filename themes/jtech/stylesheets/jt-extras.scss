@@ -95,6 +95,44 @@
     left: 0;
     right: 0;
   }
+
+  // Back (to where you left off): core's primary button, a filled accent pill
+  // drawn over the dates. A quiet raised chip like the theme's other small
+  // controls; opaque, so a date under it doesn't show through.
+  .timeline-last-read .back-button {
+    padding: 1px var(--space-2);
+    font-size: var(--font-down-2);
+    background: var(--jt-surface-raised);
+    color: var(--jt-text);
+    border: 1px solid var(--jt-border-strong);
+    border-radius: var(--jt-radius-sm);
+    box-shadow: var(--jt-shadow-menu);
+
+    &:hover,
+    &:focus-visible {
+      background: var(--jt-hover);
+    }
+  }
+}
+
+// Core hangs the timeline's buttons below it (absolutely, so short topics
+// don't grow). Its suggested list stops at 965px, clear of them; here it runs
+// to the page's right edge, so at the end of a topic the buttons sat on its
+// first card. The list keeps out of the timeline's column, and the buttons
+// stay that column's width whatever the dates make the timeline.
+html.desktop-view:has(.container.posts .with-timeline) {
+  @media screen and (width > 924px) {
+    .more-topics__container {
+      margin-inline-end: calc(6em + var(--space-8));
+    }
+
+    .timeline-container:not(.timeline-fullscreen)
+      .topic-timeline
+      .timeline-footer-controls {
+      left: auto;
+      width: 6em;
+    }
+  }
 }
 
 // On a computer the posts take the room beside the timeline. Core sets a
