@@ -33,3 +33,9 @@
   line-height: 1.5;
   color: var(--jt-text-muted);
 }
+
+// Summarize, in the topic map: core's small button, 35px beside the 39px
+// buttons under the posts and the timeline's. The same height.
+.topic-map__additional-contents .btn {
+  min-height: 2.45em;
+}
