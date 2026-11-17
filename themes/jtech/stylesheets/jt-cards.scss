@@ -295,9 +295,9 @@
     overflow-wrap: anywhere;
   }
 
-  // the newest reply (jt_latest_reply): who wrote it, then its start
+  // the newest reply (jt_latest_reply): who wrote it, in the text colour
+  // (not bold), then its start
   &__latest-who {
-    font-weight: 600;
     color: var(--jt-text);
   }
 
