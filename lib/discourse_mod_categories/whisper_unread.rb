@@ -18,8 +18,7 @@ module DiscourseModCategories
     end
 
     def self.visible_max_post_number(topic, user)
-      return nil if user.nil? || !DiscourseModCategories::Whisper.enabled?
-      return nil unless trailing_whispers?(topic)
+      return nil if user.nil? || !trailing_whispers?(topic)
       DiscourseModCategories.whisper_audience_max_post_number(topic, user)
     end
 
@@ -31,7 +30,7 @@ module DiscourseModCategories
     # their last read past the whispers they can't see fixes every surface
     # at once.
     def self.skip_hidden_whispers!(user, topic_id)
-      return unless audience_aware?
+      return unless SiteSetting.mod_whisper_audience_aware_topic_list
       return if !user.is_a?(::User) || user.admin? || !user.whisperer?
 
       # Core's process_timings only reads a number from topics, so there's no
@@ -58,14 +57,10 @@ module DiscourseModCategories
       ::TopicTrackingState.publish_read(topic_id, staff_max, user)
     end
 
-    def self.audience_aware?
-      DiscourseModCategories::Whisper.enabled? && SiteSetting.mod_whisper_audience_aware_topic_list
-    end
-
     # The same for a new whisper: whisperers outside its audience who had
     # read up to it stay caught up instead of seeing the topic turn unread.
     def self.skip_new_whisper!(post)
-      return unless audience_aware?
+      return unless SiteSetting.mod_whisper_audience_aware_topic_list
       whisper_group_ids = SiteSetting.whispers_allowed_groups_map
       return if whisper_group_ids.empty?
       audience_ids = DiscourseModCategories::Whisper.audience_user_ids(post)
@@ -110,7 +105,7 @@ module DiscourseModCategories
     module SerializerExtension
       def highest_post_number
         value = super
-        return value unless DiscourseModCategories::WhisperUnread.audience_aware?
+        return value unless SiteSetting.mod_whisper_audience_aware_topic_list
         user = scope.user
         if user&.moderator? && !user.admin?
           # A moderator is a whisperer, so core gave them the staff number,
@@ -135,7 +130,7 @@ module DiscourseModCategories
     module PostTimingExtension
       def process_timings(current_user, topic_id, topic_time, timings, opts = {})
         if current_user && !current_user.whisperer? &&
-             DiscourseModCategories::WhisperUnread.audience_aware? &&
+             SiteSetting.mod_whisper_audience_aware_topic_list &&
              (topic = ::Topic.find_by(id: topic_id)) &&
              (
                visible =

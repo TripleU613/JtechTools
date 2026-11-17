@@ -138,16 +138,16 @@ RSpec.describe "Whisper Guardian" do
         make_whisper([target.id])
       end
 
-      it "treats an existing whisper as an ordinary post" do
-        expect(Guardian.new(stranger).can_see_post?(post)).to eq(true)
-        expect(Guardian.new.can_see_post?(post)).to eq(true)
+      # Switching the feature off must never publish existing whispers.
+      it "keeps existing whispers private" do
+        expect(Guardian.new(stranger).can_see_post?(post)).to eq(false)
+        expect(Guardian.new.can_see_post?(post)).to eq(false)
         expect(Guardian.new(target).can_see_post?(post)).to eq(true)
       end
 
-      it "treats it as an ordinary post when only the whole bundle is off" do
-        SiteSetting.mod_whisper_enabled = true
+      it "keeps them private when the whole bundle is off too" do
         SiteSetting.jtech_enabled = false
-        expect(Guardian.new(stranger).can_see_post?(post)).to eq(true)
+        expect(Guardian.new(stranger).can_see_post?(post)).to eq(false)
       end
     end
   end

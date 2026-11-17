@@ -60,8 +60,9 @@ export default {
     withPluginApi((api) => {
       const siteSettings: (SiteSettings & WhisperSiteSettings) | undefined =
         api.container.lookup("service:site-settings");
-      // While whispers are off the server marks no post as a whisper, so
-      // the banner and reply handling below have nothing to act on.
+      // Switching whispers off only stops NEW ones: existing whispers stay
+      // private on the server, so they keep their banner here (and replies to
+      // them stay whispers). Only the tools for creating whispers go away.
       const whispersEnabled = !!siteSettings?.mod_whisper_enabled;
 
       const currentUser: (User & { id: number }) | null = api.getCurrentUser();

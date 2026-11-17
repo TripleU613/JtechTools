@@ -107,15 +107,16 @@ RSpec.describe "Whisper leak matrix" do
   end
 
   describe "switching the feature off" do
-    it "shows existing whispers as ordinary posts" do
+    it "keeps existing whispers private" do
       SiteSetting.mod_whisper_enabled = false
-      expect(stream_ids(stranger)).to include(whisper_to_alice.id)
-      expect(Guardian.new(bob).can_see_post?(whisper_to_alice)).to eq(true)
+      expect(stream_ids(stranger)).not_to include(whisper_to_alice.id)
+      expect(Guardian.new(bob).can_see_post?(whisper_to_alice)).to eq(false)
+      expect(stream_ids(alice)).to include(whisper_to_alice.id)
     end
 
-    it "shows them when the whole bundle is switched off" do
+    it "keeps them private when the whole bundle is switched off" do
       SiteSetting.jtech_enabled = false
-      expect(Guardian.new(stranger).can_see_post?(whisper_to_alice)).to eq(true)
+      expect(Guardian.new(stranger).can_see_post?(whisper_to_alice)).to eq(false)
     end
   end
 
