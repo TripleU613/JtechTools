@@ -29,6 +29,12 @@ module DiscourseModCategories
   module Whisper
     module_function
 
+    # Whether whispers can be written. Only that: reading an existing whisper
+    # is limited to its audience whatever this says.
+    def enabled?
+      SiteSetting.jtech_enabled && SiteSetting.mod_whisper_enabled
+    end
+
     def targets_field
       DiscourseModCategories::POST_WHISPER_TARGETS_FIELD
     end
@@ -220,7 +226,7 @@ module DiscourseModCategories
         DiscourseModCategories::Whisper.opt(opts, DiscourseModCategories::POST_WHISPER_ARMED_PARAM)
       explicitly_armed = ::ActiveModel::Type::Boolean.new.cast(armed_param) == true
       explicitly_disarmed = !armed_param.nil? && armed_param.to_s != "" && !explicitly_armed
-      explicitly_armed = false unless SiteSetting.mod_whisper_enabled
+      explicitly_armed = false unless enabled?
 
       answered = DiscourseModCategories::Whisper.answered_whispers(post, opts, author)
 

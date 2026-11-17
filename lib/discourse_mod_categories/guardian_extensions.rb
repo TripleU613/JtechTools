@@ -85,7 +85,7 @@ module DiscourseModCategories
     # non-staff whisper is never wider than the whisper it answers — see the
     # creation logic (Whisper.prepare_new_post!).
     def can_whisper_in_topic?(topic)
-      return false unless SiteSetting.mod_whisper_enabled
+      return false unless DiscourseModCategories::Whisper.enabled?
       return false unless authenticated?
       return true if is_staff?
 

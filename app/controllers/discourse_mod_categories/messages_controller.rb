@@ -263,7 +263,7 @@ module ::DiscourseModCategories
     # author. A user who didn't have permission to arm a whisper on
     # create shouldn't be able to add or remove one on edit.
     def update_post_whisper
-      raise Discourse::NotFound unless SiteSetting.mod_whisper_enabled
+      raise Discourse::NotFound unless DiscourseModCategories::Whisper.enabled?
       raise Discourse::NotFound unless SiteSetting.mod_whisper_convert_enabled
 
       post = ::Post.find_by(id: params[:id])
@@ -725,7 +725,7 @@ module ::DiscourseModCategories
     # forward, the conversation that follows it — but never other whispers
     # in the topic: a whisper is visible to exactly who its banner names.
     def add_whisper_participant
-      raise Discourse::NotFound unless SiteSetting.mod_whisper_enabled
+      raise Discourse::NotFound unless DiscourseModCategories::Whisper.enabled?
       raise Discourse::NotFound unless SiteSetting.mod_whisper_add_participant_enabled
 
       topic = find_topic!

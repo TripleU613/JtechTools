@@ -715,7 +715,7 @@ after_initialize do
   add_to_serializer(
     :topic_view,
     :mod_whisper_participant_ids,
-    include_condition: -> { SiteSetting.mod_whisper_enabled && scope.is_staff? },
+    include_condition: -> { DiscourseModCategories::Whisper.enabled? && scope.is_staff? },
   ) do
     raw = object.topic.custom_fields[DiscourseModCategories::TOPIC_WHISPER_PARTICIPANTS_FIELD]
     DiscourseModCategories::Whisper.normalize_ids(raw)

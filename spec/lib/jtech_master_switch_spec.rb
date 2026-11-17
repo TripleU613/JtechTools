@@ -10,6 +10,7 @@ RSpec.describe "Jtech master switch" do
   {
     "DiscourseMiniMod" => :mini_mod_enabled,
     "DiscourseModCategories" => :mod_categories_enabled,
+    "DiscourseModCategories::Whisper" => :mod_whisper_enabled,
     "DiscourseDisteleplus" => :disteleplus_enabled,
     "DiscourseDumbcourse" => :dumbcourse_enabled,
     "DiscourseReqpm" => :reqpm_enabled,
