@@ -610,3 +610,11 @@ html.jt-density-compact .topic-list.jt-cards {
     border-block: 1px solid var(--jt-border);
   }
 }
+
+// Discourse AI's summary in place of the excerpt (its toggle beside New
+// Topic): the sparkle marks it as written by AI
+.jt-card__gist .d-icon {
+  margin-inline-end: 0.25em;
+  vertical-align: -0.1em;
+  color: var(--jt-text-subtle);
+}
