@@ -49,6 +49,15 @@
   border-radius: 0;
 }
 
+// In the app on an iPad (DiscourseHub or an installed PWA) core puts its
+// back/forward bar across the top and moves the header below it, but leaves
+// slide-in menus at the top of the screen: the bar covered their first row,
+// the sidebar's Market and Home.
+html.footer-nav-ipad .menu-panel.slide-in {
+  top: var(--footer-nav-height);
+  height: calc(100dvh - var(--footer-nav-height));
+}
+
 .d-modal__container {
   background: var(--jt-surface-raised);
   border-radius: var(--jt-radius-xl);
