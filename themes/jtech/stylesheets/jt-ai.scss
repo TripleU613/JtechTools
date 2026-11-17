@@ -39,3 +39,62 @@
 .topic-map__additional-contents .btn {
   min-height: 2.45em;
 }
+
+// ── An AI conversation's reply box (Discourse AI's docked composer) ──────
+// Core draws it four lines tall from the start, narrower than the bot's reply
+// above it, on a transparent strip the conversation showed through, with + at
+// the top and send at the bottom of its right edge. Here it's one line that
+// grows, as wide as the posts, on the page's own background, its two
+// buttons side by side at the bottom.
+.docked-composer.ai-bot-docked-composer {
+  --docked-composer-max-width: 100%;
+  --docked-composer-input-min-height: 2.75em;
+  background: var(--secondary);
+
+  .d-editor-textarea-wrapper {
+    border-color: var(--jt-border-strong);
+    border-radius: var(--jt-radius-field);
+    box-shadow: none;
+
+    &.in-focus {
+      border-color: var(--jt-focus) !important;
+
+      // core adds a 2px ring on top of the border
+      &::after {
+        display: none;
+      }
+    }
+  }
+
+  .d-editor-input {
+    padding-right: 5.5em;
+  }
+
+  .ai-bot-docked-composer__toolbar-toggle.btn,
+  .docked-composer__submit-btn.btn {
+    top: auto;
+    bottom: 0.4em;
+  }
+
+  .ai-bot-docked-composer__toolbar-toggle.btn {
+    right: 2.75em;
+  }
+}
+
+// Mark-all-read under the topic has nothing to do in a conversation with the
+// bot
+body.has-ai-bot-docked-composer .jt-dismiss-unread {
+  display: none;
+}
+
+// The bot's "Thinking" section: the theme's chevron is the only one (core's
+// own marker showed beside it), and the dots that run while it thinks sit on
+// the word's line rather than at the top of the row
+.topic-body .cooked details.ai-thinking > summary {
+  align-items: center;
+  list-style: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+}
