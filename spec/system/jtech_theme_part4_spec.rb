@@ -1259,8 +1259,9 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
         expect(page).to have_css(open_row)
         expect(page).to have_no_css("#{post_selector} .post-action-menu__copy-link")
         expect(page).to have_css("#{post_selector} .post-action-menu__reply")
+        # several reactions across, not the one it had (a cell is 2rem)
         row = box("#{open_row} .discourse-reactions-picker-container")
-        expect(row["right"] - row["left"]).to be > 150
+        expect(row["right"] - row["left"]).to be > 3 * 32
       end
       expect_no_theme_errors
     ensure
