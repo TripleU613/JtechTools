@@ -170,6 +170,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **Fixed**
 
+- JTech theme: a topic nobody has answered yet no longer offers Summarize for its one post, and its view count and "No replies yet" read as one quiet caption under the post instead of a ruled band.
 - JTech theme: the end of a topic. The empty topic-timer box core keeps there drew a line that stopped short of the topic map; it's gone without a timer, and the topic map at the foot sits between two full-width lines like the one under the first post. Summarize is the height of the buttons around it.
 - JTech theme: at the end of a topic, the timeline's buttons no longer sit on the first suggested topic card, and the timeline's Back button is a quiet chip instead of a filled accent pill drawn over the dates.
 - JTech theme: on a phone, Reply under each post is an icon like the rest of its row. Its outline, which goes round the word Reply on a computer, made it the one boxed button there.
