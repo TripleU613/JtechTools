@@ -213,3 +213,17 @@
     color: var(--jt-text);
   }
 }
+
+// The end of a topic. Core keeps an empty topic-timer box there on every
+// topic (whitespace and a placeholder, so :empty doesn't match), drawing its
+// top border as a line that stopped short of the topic map under it. Without
+// a timer it goes; the topic map at the foot takes a full-width line of its
+// own, so the stats and Summarize sit in a ruled band like the one under the
+// first post.
+.topic-timer-info:not(:has(> *)) {
+  display: none;
+}
+
+.topic-map.--bottom {
+  border-top: 1px solid var(--jt-border);
+}
