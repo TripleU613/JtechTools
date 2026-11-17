@@ -437,6 +437,27 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
       expect_no_theme_errors
     end
 
+    # The app on an iPad puts core's back/forward bar across the top. The
+    # browser here isn't iPadOS, so the spec sets the class core adds there.
+    it "starts the slide-in menu below the iPad app's top bar" do
+      sign_in(member)
+      page.driver.with_playwright_page { |pw| pw.set_viewport_size(width: 744, height: 1100) }
+      visit("/latest")
+      page.execute_script("document.documentElement.classList.add('footer-nav-ipad')")
+      find(".d-header .btn-sidebar-toggle").click
+      expect(page).to have_css(".hamburger-panel .menu-panel.slide-in .sidebar-section-link")
+      bar, first_link = page.evaluate_script(<<~JS)
+        [
+          parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--footer-nav-height")),
+          document.querySelector(".menu-panel.slide-in .sidebar-section-link").getBoundingClientRect().top,
+        ]
+      JS
+      expect(first_link).to be >= bar
+      expect_no_theme_errors
+    ensure
+      page.driver.with_playwright_page { |pw| pw.set_viewport_size(width: 1400, height: 1400) }
+    end
+
     # Core lines the timeline up on the left of its column, so it stopped
     # about 100px short of the edge the header, title and suggested list share
     it "ends the timeline and its buttons at the page's right edge" do
