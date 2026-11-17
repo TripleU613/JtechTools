@@ -4,7 +4,7 @@ The look of every email the forum sends: the JTech logo over a rounded card, bla
 
 To apply it:
 
-1. Paste `template.html` into the HTML tab and `email.css` into the CSS tab at `/admin/customize/email_style`. Use the admin page rather than the console, because the page compiles the CSS.
+1. Paste the `html` value of `template.yml` into the HTML tab and `email.scss` into the CSS tab at `/admin/customize/email_style`. Use the admin page rather than the console, because the page compiles the CSS.
 2. Set these site settings:
    - `email_accent_bg_color`: `#000000`
    - `email_accent_fg_color`: `#FFFFFF`
