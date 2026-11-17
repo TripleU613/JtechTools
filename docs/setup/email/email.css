@@ -52,6 +52,12 @@ blockquote {
 blockquote p {
   margin-bottom: 0 !important;
 }
+pre code {
+  padding: 12px 14px !important;
+  border: 1px solid #ebebeb;
+  border-radius: 10px;
+  line-height: 1.5;
+}
 code {
   font-family: $mono !important;
   font-size: 14px;
@@ -62,12 +68,6 @@ pre {
   margin: 0 0 16px !important;
   white-space: pre-wrap !important;
   word-break: break-word;
-}
-pre code {
-  padding: 12px 14px !important;
-  border: 1px solid #ebebeb;
-  border-radius: 10px;
-  line-height: 1.5;
 }
 div.onebox {
   border-width: 1px !important;
