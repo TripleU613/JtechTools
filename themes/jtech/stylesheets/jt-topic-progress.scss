@@ -126,17 +126,15 @@
   }
 }
 
-// Core's presence plugin lifts "… replying" up onto the line the capsule
-// rests on at the end of a topic, to sit beside it (margin-top: -3.2em, room
-// on the right for the capsule, at core's 924px and under). Here the capsule
-// takes no line (above), so the lift put it over the topic map's stats: its
-// avatar on "12 views". While someone is replying it takes a line of its own
-// under the topic map, as on a computer. The rest of the time core keeps the
-// empty box lifted out of the way, so nothing moves.
+// Core puts "… replying" in a row of its own under the posts, beside where
+// the capsule rests at the end of a topic, and keeps that row's height while
+// nobody is replying so nothing moves when someone starts. Here the capsule
+// takes no room at the end (above), so on phones the row was an empty band
+// between the topic map and the buttons under the topic. It takes room only
+// while someone is replying.
 @media screen and (width <= 924px) {
-  .topic-above-footer-buttons-outlet.presence:has(.presence-users) {
-    margin-top: var(--below-topic-margin);
-    margin-right: 0;
+  .topic-footer-presence:not(:has(.presence-users)) {
+    display: none;
   }
 }
 
