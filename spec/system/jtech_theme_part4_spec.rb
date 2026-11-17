@@ -1244,10 +1244,7 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
             .new_cdp_session(pw)
             .send_message(
               "Emulation.setTouchEmulationEnabled",
-              params: {
-                enabled: on,
-                maxTouchPoints: on ? 5 : 0,
-              },
+              params: on ? { enabled: true, maxTouchPoints: 5 } : { enabled: false },
             )
         end
       end
