@@ -529,6 +529,22 @@ html:not(.jt-vanilla) {
 }
 
 // ── Reactions as a row (reaction_rollout) ─────────────────
+// While the row is open, the menu's other buttons make room for it.
+@mixin rx-step-aside {
+  .post-controls:has(.discourse-reactions-picker.is-expanded, .jt-rx-ghost) {
+    .reactions-actions-summary,
+    .show-replies,
+    .actions
+      > :not(
+        .discourse-reactions-actions-button-shim,
+        .post-action-menu__jt-reaction-rollout,
+        .post-action-menu__reply
+      ) {
+      display: none;
+    }
+  }
+}
+
 // The picker leaves its box over the post and opens in the post's menu, a
 // row rolling out to the left of the heart: in the row of buttons, so the
 // space it takes pushes what's beside it along rather than covering it. It
@@ -682,22 +698,17 @@ html.jt-reaction-rollout:not(.jt-vanilla) {
     }
   }
 
-  // Phones: while the row is open everything else in the menu steps aside
-  // but the heart, the button that opened it and Reply, so it gets the
-  // menu's width. They're back when it shuts.
+  // Phones and touch screens: while the row is open everything else in the
+  // menu steps aside but the heart, the button that opened it and Reply, so
+  // it gets the menu's width. They're back when it shuts. A touch screen in
+  // the desktop layout (a tablet, an unfolded phone) has every button on
+  // the line, which left the row one reaction wide.
   @include viewport.until(sm) {
-    .post-controls:has(.discourse-reactions-picker.is-expanded, .jt-rx-ghost) {
-      .reactions-actions-summary,
-      .show-replies,
-      .actions
-        > :not(
-          .discourse-reactions-actions-button-shim,
-          .post-action-menu__jt-reaction-rollout,
-          .post-action-menu__reply
-        ) {
-        display: none;
-      }
-    }
+    @include rx-step-aside;
+  }
+
+  @media (hover: none) {
+    @include rx-step-aside;
   }
 }
 

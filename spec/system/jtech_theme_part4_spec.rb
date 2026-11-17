@@ -1233,6 +1233,40 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
       expect_no_theme_errors
     end
 
+    # A tablet or an unfolded phone: a touch screen in the desktop layout.
+    # Every button stayed on the line beside the row, which was left one
+    # reaction wide.
+    it "makes room for the row on a touch screen in the desktop layout" do
+      touch = ->(on) do
+        page.driver.with_playwright_page do |pw|
+          pw
+            .context
+            .new_cdp_session(pw)
+            .send_message(
+              "Emulation.setTouchEmulationEnabled",
+              params: {
+                enabled: on,
+                maxTouchPoints: on ? 5 : 0,
+              },
+            )
+        end
+      end
+      touch.call(true)
+      resize_window(width: 1000, height: 900) do
+        open_reply
+        expect(page).to have_css("html.desktop-view")
+        find("#{post_selector} .post-action-menu__jt-reaction-rollout").click
+        expect(page).to have_css(open_row)
+        expect(page).to have_no_css("#{post_selector} .post-action-menu__copy-link")
+        expect(page).to have_css("#{post_selector} .post-action-menu__reply")
+        row = box("#{open_row} .discourse-reactions-picker-container")
+        expect(row["right"] - row["left"]).to be > 150
+      end
+      expect_no_theme_errors
+    ensure
+      touch&.call(false)
+    end
+
     it "leaves the plugin's picker over the post when switched off" do
       jtech_theme.update_setting(:reaction_rollout, false)
       jtech_theme.save!
