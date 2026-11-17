@@ -19,8 +19,8 @@ module DiscourseModCategories
     # field — KEY PRESENCE marks it, even an empty `[]` array. It is visible
     # only to its audience (staff, the author, its explicit user targets and
     # current members/holders of its target groups/badges); see
-    # DiscourseModCategories::Whisper. While whispers are off nothing is a
-    # whisper, so these checks leave core's answer alone.
+    # DiscourseModCategories::Whisper. Enforced regardless of any toggle:
+    # switching whispers off must never make existing whispers public.
     def can_see_post?(post)
       if post.is_a?(::Post) &&
            !DiscourseModCategories::Whisper.visible_to?(post, mod_whisper_viewer)
