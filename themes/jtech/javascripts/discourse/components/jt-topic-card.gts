@@ -1,6 +1,7 @@
 import Component from "@glimmer/component";
 import { on } from "@ember/modifier";
 import { action } from "@ember/object";
+import { getOwner } from "@ember/owner";
 import { service } from "@ember/service";
 import { htmlSafe } from "@ember/template";
 import type { ComponentLike } from "@glint/template";
@@ -61,8 +62,16 @@ interface CardLatestReply {
   username: string;
 }
 
+// Discourse AI's gists service: which list layout the reader picked with the
+// toggle beside New Topic ("table-ai" shows AI summaries)
+interface GistsService {
+  currentPreference?: string;
+}
+
 type JtCardTopic = Topic & {
   jt_latest_reply?: CardLatestReply | null;
+  // Discourse AI: a one-line summary of the topic's latest replies
+  ai_topic_gist?: string | null;
   tags?: string[];
   excerpt?: string | null;
   thumbnails?: CardThumbnail[] | null;
@@ -122,6 +131,20 @@ export default class JtTopicCard extends Component<JtTopicCardSignature> {
 
   get hasExcerpt() {
     return this.topic.excerpt || this.topic.hasExcerpt;
+  }
+
+  // With Discourse AI's summaries switched on by its toggle beside New
+  // Topic, a card shows the topic's summary where the excerpt goes, as core's
+  // list does (its outlets for it aren't in the card). Looked up, not
+  // injected: the service exists only while Discourse AI is installed.
+  get gist(): string | null {
+    const gists = getOwner(this)?.lookup("service:gists") as
+      | GistsService
+      | undefined;
+    if (gists?.currentPreference !== "table-ai") {
+      return null;
+    }
+    return this.topic.ai_topic_gist || null;
   }
 
   get latestReply(): CardLatestReply | null {
@@ -252,7 +275,12 @@ export default class JtTopicCard extends Component<JtTopicCardSignature> {
             />
           </div>
 
-          {{#if this.latestReply}}
+          {{#if this.gist}}
+            <a
+              class="jt-card__excerpt jt-card__gist topic-excerpt"
+              href={{@topic.lastUnreadUrl}}
+            >{{dIcon "discourse-sparkles"}} {{this.gist}}</a>
+          {{else if this.latestReply}}
             <a
               class="jt-card__excerpt jt-card__latest topic-excerpt"
               href={{this.latestReplyUrl}}
