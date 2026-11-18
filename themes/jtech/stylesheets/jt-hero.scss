@@ -802,7 +802,16 @@ $jt-stars-near: (
   z-index: 3;
 }
 
+// The ad space is shorter than the welcome: the hero takes the space's own
+// height (lines.scss, --jl-height) and eases to it when the ads arrive
+.jt-hero {
+  interpolate-size: allow-keywords;
+  transition: height 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .jt-hero.--lines {
+  height: clamp(14rem, 11rem + 9vw, 17rem);
+
   .jt-hero__close {
     visibility: hidden;
   }
@@ -820,6 +829,10 @@ $jt-stars-near: (
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .jt-hero {
+    transition: none;
+  }
+
   .jt-hero.--lines {
     .jt-hero__body,
     .jt-hero__planet {

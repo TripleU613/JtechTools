@@ -15,7 +15,11 @@
   --jl-accent-fg: var(--secondary);
   --jl-radius: var(--d-border-radius);
   --jl-radius-lg: var(--d-border-radius-large, var(--d-border-radius));
-  --jl-gap: clamp(0.75rem, 2.5cqi, 1.5rem);
+  --jl-gap: clamp(0.6rem, 2cqi, 1.25rem);
+
+  // The ad space's one height, set by the space, never by an ad: about
+  // 224px on a phone, 272px on a wide screen. Content is cut, not grown into.
+  --jl-height: clamp(14rem, 11rem + 9vw, 17rem);
   container: jl / inline-size;
 }
 
@@ -25,7 +29,7 @@
   overflow: hidden;
 
   // every ad gets the same room, so the billboard never moves the page
-  height: clamp(15rem, 34vw, 19rem);
+  height: var(--jl-height);
   margin: 0 0 1em;
   background: var(--secondary);
   border: 1px solid var(--jl-border);
@@ -41,7 +45,7 @@
   gap: var(--jl-gap);
   box-sizing: border-box;
   height: 100%;
-  padding: clamp(1rem, 3.5cqi, 2.25rem);
+  padding: clamp(0.9rem, 2.6cqi, 1.75rem);
   overflow: hidden;
   color: var(--jl-fg);
   animation: jl-in 0.7s cubic-bezier(0.16, 1, 0.3, 1);
@@ -170,7 +174,7 @@
 }
 
 .jl-title {
-  font-size: clamp(1.35rem, 0.9rem + 2.2cqi, 2.2rem);
+  font-size: clamp(1.2rem, 0.85rem + 1.6cqi, 1.85rem);
   font-weight: 700;
   line-height: 1.12;
   letter-spacing: -0.02em;
@@ -178,17 +182,22 @@
 }
 
 .jl-title-xl {
-  font-size: clamp(1.75rem, 0.9rem + 4.2cqi, 3.4rem);
+  font-size: clamp(1.45rem, 0.8rem + 3cqi, 2.6rem);
   font-weight: 700;
   line-height: 1.02;
   letter-spacing: -0.04em;
   text-wrap: balance;
 }
 
+// at most two lines: the space is fixed
 .jl-lead {
-  max-width: 50ch;
-  font-size: clamp(0.95rem, 0.85rem + 0.5cqi, 1.1rem);
-  line-height: 1.5;
+  display: -webkit-box;
+  max-width: 54ch;
+  overflow: hidden;
+  font-size: clamp(0.9rem, 0.82rem + 0.4cqi, 1.05rem);
+  line-height: 1.45;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   color: var(--jl-muted);
   text-wrap: pretty;
 }
@@ -228,7 +237,7 @@
 }
 
 .jl-stat {
-  font-size: clamp(1.8rem, 1.2rem + 3cqi, 3rem);
+  font-size: clamp(1.5rem, 1rem + 2.4cqi, 2.5rem);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   line-height: 1;
@@ -277,7 +286,7 @@
 }
 
 .jl-big {
-  font-size: clamp(2.5rem, 1.6rem + 5cqi, 5rem);
+  font-size: clamp(2rem, 1.4rem + 3cqi, 3.5rem);
   line-height: 1;
 }
 
