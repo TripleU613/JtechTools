@@ -55,6 +55,34 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
     expect_no_theme_errors
   end
 
+  # A welcome app (the forum's own, an app) takes the hero from the start
+  # for a new visitor, with no label, then hands over to the next ad
+  it "opens with the welcome app for a new visitor, then the next ad" do
+    SiteSetting.jtech_ads_enabled = true
+    SiteSetting.jtech_ads_welcome_seconds = 2
+    SiteSetting.jtech_ads_list = [
+      {
+        name: "welcome",
+        enabled: true,
+        headline: "Welcome",
+        card: %(<h1 class="t">Welcome</h1><div class="jl-search"></div>),
+        css: ".t { margin: 1rem }",
+        house: true,
+        intro: true,
+        audience: "visitors",
+      },
+      { name: "next", enabled: true, headline: "Next one", audience: "everyone" },
+    ].to_json
+
+    visit("/latest")
+    expect(page).to have_css(".jt-hero.--lines .jl-card--app")
+    expect(page).to have_no_css(".jt-hero__lines .jt-lines__label")
+    expect(page).to have_no_css(".jt-hero__title", visible: :visible)
+    expect(page).to have_css(".jt-hero__lines .jl-title", text: "Next one", wait: 6)
+    expect(page).to have_css(".jt-hero__lines .jt-lines__label", text: "Ad")
+    expect_no_theme_errors
+  end
+
   # Hidden touches: the planet turns by hand (held while it's dragged, and
   # the click that ends a drag sends nothing), a tap on the empty sky sends
   # a shooting star, and the Konami code a shower of them

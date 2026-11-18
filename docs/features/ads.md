@@ -82,6 +82,19 @@ Example:
 </div>
 ```
 
+## Apps
+
+An ad with **CSS** (the CSS field) is an **app**: its whole-card HTML and its CSS run inside a closed shadow root in the space, sealed off from the page. Its class names, animations and SVG ids are its own; it can't reach the page, the label, the thumbs or the space's size. This is how the forum's own welcome and its showcase ads are made.
+
+- **HTML:** block and inline tags, any classes, and inline SVG (shapes, gradients, text; no `use`, `image`, `foreignObject`, `animate`). No images, video, frames, scripts, forms or styles. Up to 8000 characters and 400 elements.
+- **CSS:** up to 8000 characters; `@keyframes`, `@media`, `@container`, `@supports`. **Refused whole** (the ad then shows as a plain kit card) if it contains `url(`, `image-set(`, `image(`, `src(`, `@import`, `@font-face`, a backslash, `expression(`, `behavior` or `-moz-binding`: nothing may load from anywhere. The app's root is a size container for `@container` queries.
+- **Colours:** the `--jl-*` variables (below) reach inside, so an app fits every theme and palette, light and dark.
+- **Reserved corners:** the label sits top right and the thumbs bottom right, above the app. Leave them clear. An app can't cover or remove them.
+- **Pieces it can ask for:** `<div class="jl-search"></div>` becomes a search box, `<div class="jl-auth"></div>` Sign up / Log in for visitors.
+- **Performance:** animate transform and opacity, few elements, slow loops. The space pauses an app's animations when it's off screen or the tab is hidden, and stops them for reduced motion. Only the ad showing is on the page (two during a swap).
+
+**The forum's own** (house) ads, for the forum's own content only, show without the Ad label and thumbs, and take no thumbs. **Welcome** ads are shown first to new visitors, for the welcome's seconds, in place of the theme's own welcome; then the next ad takes over. Give a welcome app the `visitors` audience so members go straight to the ads.
+
 ## Preview
 
 A preview shows one ad in the real space, to the admin who opens it, for an hour; nothing changes for anyone else. The Ads tab's **Preview an ad** opens a saved ad (running or paused) or a draft that isn't saved (a headline, and optionally the whole-card HTML) in a new tab, marked "Preview · only you see this". The link is `/latest?jl_preview=<token>`.
