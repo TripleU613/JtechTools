@@ -33,6 +33,14 @@ RSpec.describe "Topic list latest reply" do
     expect(latest["excerpt"]).to include("newest public reply")
   end
 
+  it "leaves emoji out of the excerpt" do
+    reply.update!(raw: "Works great :+1: thanks 🙂 a lot")
+    reply.rebake!
+    expect(reply.reload.cooked).to include("emoji")
+
+    expect(latest_reply_for(reader)["excerpt"]).to eq("Works great thanks a lot")
+  end
+
   it "gives it to visitors too" do
     expect(latest_reply_for(nil)["post_number"]).to eq(reply.post_number)
   end
