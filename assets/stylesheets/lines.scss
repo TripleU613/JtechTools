@@ -92,11 +92,26 @@
 
 // ── The kit ────────────────────────────────────────────────────
 // Layout
+// The layout is the card's, never the content's: a split always fills the
+// card, its columns are fixed shares of the width, and each column is the
+// card's full height, its content centred inside. Two ads with different
+// content still have the same boxes in the same places.
 .jl-split {
   display: grid;
+  flex: 1 1 0;
+  grid-template-rows: minmax(0, 1fr);
   grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
-  align-items: center;
+  align-items: stretch;
   gap: var(--jl-gap);
+  min-height: 0;
+
+  > * {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 0;
+    overflow: hidden;
+  }
 }
 
 .jl-row {
