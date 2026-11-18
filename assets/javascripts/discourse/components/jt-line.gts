@@ -31,7 +31,11 @@ export default class JtLine extends Component<JtLineSignature> {
 
   <template>
     <div class="jl-card">
-      <span class="jt-lines__label">{{this.lines.label}}</span>
+      <span class="jt-lines__label">{{if
+          @line.preview
+          (i18n "jt_lines.preview")
+          this.lines.label
+        }}</span>
       {{#if @line.c}}
         {{htmlSafe @line.c}}
       {{else}}

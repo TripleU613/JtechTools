@@ -64,7 +64,7 @@ export default class JtLinesFallback extends Component {
 
   <template>
     {{#if this.line}}
-      <div {{this.mount this.line}}></div>
+      <div data-jt-l {{this.mount this.line}}></div>
     {{/if}}
   </template>
 }

@@ -18,17 +18,40 @@ module ::DiscourseJtechAds
   VOTE_VALUES = [-1, 1].freeze
   AUDIENCES = %w[everyone visitors members groups].freeze
   TAGS = %w[a b strong i em u s small mark code br span sub sup].freeze
-  CARD_TAGS = (
-    TAGS + %w[div section header footer h2 h3 h4 p ul ol li blockquote hr kbd]
-  ).freeze
+  CARD_TAGS = (TAGS + %w[div section header footer h2 h3 h4 p ul ol li blockquote hr kbd]).freeze
   # The only classes a card may use: the kit's (assets/stylesheets/lines.scss,
   # docs/features/ads.md). Exact names, not a prefix.
   KIT = %w[
-    jl-split jl-row jl-stack jl-grid jl-center jl-end jl-spacer
-    jl-kicker jl-title jl-title-xl jl-lead jl-text jl-muted jl-small jl-mono jl-accent
-    jl-panel jl-glow jl-stat jl-stat-label jl-chips jl-chip jl-list jl-quote jl-big
-    jl-button jl-button-alt
-    jl-float jl-pulse jl-marquee
+    jl-split
+    jl-row
+    jl-stack
+    jl-grid
+    jl-center
+    jl-end
+    jl-spacer
+    jl-kicker
+    jl-title
+    jl-title-xl
+    jl-lead
+    jl-text
+    jl-muted
+    jl-small
+    jl-mono
+    jl-accent
+    jl-panel
+    jl-glow
+    jl-stat
+    jl-stat-label
+    jl-chips
+    jl-chip
+    jl-list
+    jl-quote
+    jl-big
+    jl-button
+    jl-button-alt
+    jl-float
+    jl-pulse
+    jl-marquee
   ].freeze
   KEY_FORMAT = /\A[0-9a-f]{12}\z/
 
@@ -167,7 +190,9 @@ module ::DiscourseJtechAds
           kept = node["class"].split & KIT
           kept.empty? ? node.remove_attribute("class") : node["class"] = kept.join(" ")
         end
-      fragment.css("[dir]").each { |node| node.remove_attribute("dir") unless %w[ltr rtl auto].include?(node["dir"]) }
+      fragment
+        .css("[dir]")
+        .each { |node| node.remove_attribute("dir") if %w[ltr rtl auto].exclude?(node["dir"]) }
       safe_links(fragment)
       fragment.to_html
     end

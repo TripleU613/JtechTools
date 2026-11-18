@@ -147,6 +147,7 @@ en:
       up: I like this
       down: Not for me
       counts: "%{up} up · %{down} down"
+      preview: "Preview · only you see this"
     reqpm:
       title: REQ-PM
       button:
@@ -934,6 +935,14 @@ en:
           title: Elections
           published: "published %{date}"
       jtech_tools:
+        lines_preview:
+          title: Preview an ad
+          about: Opens the home page in a new tab with one ad in the ad space, for you only, for an hour. Nothing changes for anyone else.
+          saved: Saved ad
+          or_draft: Or a draft that isn't saved
+          headline: Headline
+          card: Whole card HTML (optional)
+          open: Preview
         actions:
           title: Maintenance actions
           register_webhook:

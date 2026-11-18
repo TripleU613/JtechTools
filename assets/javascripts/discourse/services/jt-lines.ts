@@ -1,5 +1,6 @@
 import { tracked } from "@glimmer/tracking";
 import { action } from "@ember/object";
+import type Owner from "@ember/owner";
 import Service, { service } from "@ember/service";
 import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
@@ -27,6 +28,7 @@ export interface JtLine {
   e?: string | null; // ends
   v?: number | null; // this member's thumbs (members only)
   n?: JtLineCounts; // counts (staff only)
+  preview?: boolean; // an admin's preview (?jl_preview=…), seen by them only
 }
 
 export interface JtLines {
@@ -63,7 +65,7 @@ function reducedMotion(): boolean {
 
 export default class JtLinesService extends Service {
   @service declare site: LinesSite;
-  @service declare currentUser: User | null;
+  @service declare currentUser: (User & { admin?: boolean }) | null;
 
   // The key of the line showing, once rotation has moved on from the first
   @tracked current: string | null = null;
@@ -74,6 +76,8 @@ export default class JtLinesService extends Service {
   @tracked counts: Record<string, JtLineCounts> = {};
   // The welcome's time is up and the ads have slid in
   @tracked introOver = false;
+  // An admin's preview (?jl_preview=…): this one ad only, for them only
+  @tracked preview: JtLine | null = null;
 
   // A theme that carries the line itself says so at startup (the JTech
   // theme's hero does, when it's on); then the plugin's card stays out.
@@ -88,6 +92,11 @@ export default class JtLinesService extends Service {
   #introPlanned: boolean | null = null;
   #introTimer: ReturnType<typeof setTimeout> | null = null;
 
+  constructor(owner: Owner) {
+    super(owner);
+    this.#loadPreview();
+  }
+
   get data(): JtLines | null {
     return this.site.jt_lines ?? null;
   }
@@ -99,6 +108,9 @@ export default class JtLinesService extends Service {
   // Started and not ended, by this browser's clock: the page may come from
   // a cache that's older than an ad's start or end
   get items(): JtLine[] {
+    if (this.preview) {
+      return [this.preview];
+    }
     const now = Date.now();
     return (this.data?.items ?? []).filter(
       (line) =>
@@ -128,6 +140,9 @@ export default class JtLinesService extends Service {
   get stage(): "welcome" | "ads" {
     if (!this.items.length) {
       return "welcome";
+    }
+    if (this.preview) {
+      return "ads";
     }
     return this.#planIntro() && !this.introOver ? "welcome" : "ads";
   }
@@ -258,6 +273,18 @@ export default class JtLinesService extends Service {
         Date.now() - seen < fresh;
     }
     return this.#introPlanned;
+  }
+
+  async #loadPreview() {
+    const token = new URLSearchParams(window.location.search).get("jl_preview");
+    if (!token || !this.currentUser?.admin || !/^[0-9a-f]{24}$/.test(token)) {
+      return;
+    }
+    try {
+      this.preview = await ajax(`/jtech-lines/preview/${token}`);
+    } catch (error) {
+      popupAjaxError(error);
+    }
   }
 
   #firstPick(items: JtLine[]): string | null {

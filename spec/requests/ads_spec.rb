@@ -105,4 +105,36 @@ RSpec.describe "Ads in the welcome area" do
       expect(lines["items"].find { it["k"] == key }["n"]).to eq({ "up" => 1, "down" => 1 })
     end
   end
+
+  describe "admin previews" do
+    it "lists, makes and opens previews for admins only" do
+      sign_in(member)
+      get "/jtech-lines/preview.json"
+      expect(response.status).to eq(403)
+      post "/jtech-lines/preview.json", params: { name: "spring" }
+      expect(response.status).to eq(403)
+
+      sign_in(admin)
+      get "/jtech-lines/preview.json"
+      expect(response.parsed_body["names"]).to eq(%w[spring members-only])
+
+      post "/jtech-lines/preview.json",
+           params: {
+             name: "draft",
+             headline: "Draft",
+             card: %(<p class="jl-lead">x</p>),
+           }
+      token = response.parsed_body["token"]
+      get "/jtech-lines/preview/#{token}.json"
+      expect(response.parsed_body).to include(
+        "h" => "Draft",
+        "c" => %(<p class="jl-lead">x</p>),
+        "preview" => true,
+      )
+
+      sign_in(member)
+      get "/jtech-lines/preview/#{token}.json"
+      expect(response.status).to eq(403)
+    end
+  end
 end

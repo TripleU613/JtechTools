@@ -46,6 +46,22 @@ RSpec.describe DiscourseJtechAds do
     end
   end
 
+  describe ".clean_card" do
+    it "keeps block tags and the kit's classes only" do
+      html =
+        %(<section class="jl-split jl-sneaky"><h2 class="jl-title-xl" onclick="x()">Big</h2>) +
+          %(<form><input name="q"><button>Go</button></form><svg><circle r="4"/></svg>) +
+          %(<ul class="jl-list"><li>One</li></ul><a class="jl-button" href="javascript:x">Bad</a>) +
+          %(<style>.x{}</style><p class="other" style="color:red" dir="rtl">Text</p></section>)
+
+      expect(described_class.clean_card(html)).to eq(
+        %(<section class="jl-split"><h2 class="jl-title-xl">Big</h2>Go) +
+          %(<ul class="jl-list"><li>One</li></ul>\n<a class="jl-button">Bad</a>) +
+          %(<p dir="rtl">Text</p></section>),
+      )
+    end
+  end
+
   describe ".visible_to" do
     it "follows each ad's audience" do
       ads(
