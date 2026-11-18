@@ -48,6 +48,7 @@ enabled_site_setting :jtech_enabled
   jtech_badges
   market_accounts
   fair_scores
+  ads
 ].each do |sub|
   path = File.expand_path("sub_plugins/#{sub}.rb", __dir__)
   instance_eval(File.read(path), path, 1)

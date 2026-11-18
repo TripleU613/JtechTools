@@ -1,0 +1,96 @@
+// The welcome area's line for any theme (docs/features/ads.md). Built from
+// core's colour and size variables only, so it takes the look of whatever
+// theme is active. Neutral class names on purpose ("Naming" in the docs).
+.jt-lines {
+  --jt-lines-bg: var(--secondary);
+  --jt-lines-fg: var(--primary);
+  --jt-lines-muted: var(--primary-medium);
+  --jt-lines-border: var(--primary-low);
+  --jt-lines-radius: var(--d-border-radius-large, var(--d-border-radius));
+  display: flex;
+  align-items: center;
+  gap: 0.75em 1em;
+
+  // two lines' worth reserved, so a rotation never moves the list below
+  min-height: 4.5em;
+  margin: 0 0 1em;
+  padding: 0.75em 1em;
+  color: var(--jt-lines-fg);
+  background: var(--jt-lines-bg);
+  border: 1px solid var(--jt-lines-border);
+  border-radius: var(--jt-lines-radius);
+
+  &__body {
+    flex: 1 1 auto;
+    min-width: 0;
+    animation: jt-lines-in 0.4s ease-out;
+  }
+
+  &__label {
+    display: inline-block;
+    margin-inline-end: 0.5em;
+    font-size: var(--font-down-2);
+    font-weight: 600;
+    color: var(--jt-lines-muted);
+  }
+
+  &__head {
+    display: inline;
+    margin: 0;
+    font-weight: 600;
+  }
+
+  &__text {
+    margin: 0.25em 0 0;
+    color: var(--primary-high);
+  }
+
+  a {
+    color: var(--tertiary);
+  }
+
+  &__thumbs {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.125em;
+  }
+
+  &__thumb {
+    color: var(--jt-lines-muted);
+
+    &[aria-pressed="true"] {
+      color: var(--tertiary);
+    }
+  }
+
+  &__tally {
+    margin-inline-start: 0.25em;
+    font-size: var(--font-down-2);
+    color: var(--jt-lines-muted);
+    white-space: nowrap;
+  }
+}
+
+// On a phone the thumbs go under the text
+@media (width <= 600px) {
+  .jt-lines {
+    flex-wrap: wrap;
+
+    &__thumbs {
+      margin-inline-start: auto;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jt-lines__body {
+    animation: none;
+  }
+}
+
+@keyframes jt-lines-in {
+  from {
+    opacity: 0;
+  }
+}

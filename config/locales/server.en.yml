@@ -995,6 +995,21 @@ en:
       days.
 
     # ── Jtech — Listing format ─────────────────────────────────────────────
+    jtech_ads_enabled: Show ads in the welcome area at the top of the home
+      page (Latest, Categories and the homepage), on desktop and phones. Ads
+      are text and links only, and match the theme. In the JTech theme an ad
+      takes the welcome hero's headline and line; elsewhere it's a card in the
+      same place. Each ad picks who sees it. Off by default.
+    jtech_ads_rotate_seconds: With more than one ad for the same person, how
+      many seconds each stays before the next. Rotation pauses while the
+      pointer or keyboard focus is on the ad, and doesn't happen for people
+      who ask for reduced motion.
+    jtech_ads_label: The small word shown before every ad so people know it's
+      one, such as "Ad" or "Sponsored".
+    jtech_ads_list: The ads. Add, edit, pause (Running) or schedule (Starts,
+      Ends) them here; changes reach visitors right away and logged-in
+      members on their next page load. Members can give each ad a thumbs up
+      or down; staff see the counts under the ad on the site.
     listing_format_enabled: Makes posts in the topics below follow a set
       format, for sale threads where every post is a listing. Replying opens
       a form with a box per field. A post that doesn't follow the format is

@@ -20,6 +20,42 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
     expect(page).to have_no_css(".jt-hero")
   end
 
+  # With jtech-tools' ads on, the hero carries the ad: its label and
+  # headline in place of the welcome, the globe still there, no ✕. Someone
+  # who closed the hero before gets the ad as a slim strip. The plugin's own
+  # card stays out.
+  it "carries an ad in the hero, and keeps it for people who closed the welcome" do
+    visit("/latest")
+    find(".jt-hero__close").click
+    expect(page).to have_no_css(".jt-hero")
+
+    SiteSetting.jtech_ads_enabled = true
+    SiteSetting.jtech_ads_list = [
+      {
+        name: "spring",
+        enabled: true,
+        headline: "Spring sale",
+        text: "Ends Friday",
+        audience: "everyone",
+      },
+    ].to_json
+
+    visit("/latest")
+    expect(page).to have_css(".jt-hero.--line.--slim .jt-hero__title", text: "Spring sale")
+    expect(page).to have_css(".jt-hero__tag", text: "Ad")
+    expect(page).to have_no_css(".jt-hero__planet")
+    expect(page).to have_no_css(".jt-hero__close")
+    expect(page).to have_no_css(".jt-lines")
+
+    page.execute_script("localStorage.clear()")
+    visit("/latest")
+    expect(page).to have_css(".jt-hero.--line:not(.--slim) .jt-hero__subtitle", text: "Ends Friday")
+    expect(page).to have_css(".jt-hero__planet")
+    expect(page).to have_no_css(".jt-hero__close")
+    expect(page).to have_no_css(".jt-lines")
+    expect_no_theme_errors
+  end
+
   # Hidden touches: the planet turns by hand (held while it's dragged, and
   # the click that ends a drag sends nothing), a tap on the empty sky sends
   # a shooting star, and the Konami code a shower of them

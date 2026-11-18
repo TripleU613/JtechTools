@@ -1,0 +1,108 @@
+# frozen_string_literal: true
+
+require "rails_helper"
+
+RSpec.describe "Ads in the welcome area" do
+  fab!(:member) { Fabricate(:user, trust_level: TrustLevel[1]) }
+  fab!(:other) { Fabricate(:user, trust_level: TrustLevel[1]) }
+  fab!(:admin)
+
+  let(:key) { DiscourseJtechAds.key_for("spring") }
+  let(:members_key) { DiscourseJtechAds.key_for("members-only") }
+
+  before do
+    SiteSetting.jtech_enabled = true
+    SiteSetting.jtech_ads_enabled = true
+    SiteSetting.jtech_ads_list = [
+      {
+        name: "spring",
+        enabled: true,
+        headline: "<b>Spring</b> sale",
+        text: "Ends Friday",
+        audience: "everyone",
+      },
+      { name: "members-only", enabled: true, headline: "For members", audience: "members" },
+    ].to_json
+  end
+
+  def lines
+    get "/site.json"
+    expect(response.status).to eq(200)
+    response.parsed_body["jt_lines"]
+  end
+
+  it "puts the ads for each person in the site data, under neutral keys" do
+    data = lines
+    expect(data["label"]).to eq("Ad")
+    expect(data["items"].map { it["h"] }).to eq(["<b>Spring</b> sale"])
+    expect(data["items"].first).not_to have_key("v")
+
+    sign_in(member)
+    expect(lines["items"].map { it["k"] }).to eq([key, members_key])
+  end
+
+  it "sends nothing with ads off, or with Jtech off" do
+    SiteSetting.jtech_ads_enabled = false
+    expect(lines).to be_nil
+
+    SiteSetting.jtech_ads_enabled = true
+    SiteSetting.jtech_enabled = false
+    expect(lines).to be_nil
+  end
+
+  it "shows visitors a changed ad straight away" do
+    expect(lines["items"].first["h"]).to eq("<b>Spring</b> sale")
+    SiteSetting.jtech_ads_list = [{ name: "summer", enabled: true, headline: "Summer" }].to_json
+    expect(lines["items"].map { it["h"] }).to eq(["Summer"])
+  end
+
+  describe "thumbs" do
+    it "needs a member" do
+      put "/jtech-lines/#{key}.json", params: { value: 1 }
+      expect(response.status).to eq(403)
+    end
+
+    it "sets, changes and takes back a member's thumb, one per member and ad" do
+      sign_in(member)
+
+      put "/jtech-lines/#{key}.json", params: { value: 1 }
+      expect(response.parsed_body).to eq({ "v" => 1 })
+      put "/jtech-lines/#{key}.json", params: { value: -1 }
+      expect(DiscourseJtechAds::Vote.where(ad_key: key).pluck(:user_id, :value)).to eq(
+        [[member.id, -1]],
+      )
+      expect(lines["items"].find { it["k"] == key }["v"]).to eq(-1)
+
+      put "/jtech-lines/#{key}.json", params: { value: 0 }
+      expect(response.parsed_body).to eq({ "v" => nil })
+      expect(DiscourseJtechAds::Vote.count).to eq(0)
+    end
+
+    it "only takes thumbs on an ad the member can see" do
+      SiteSetting.jtech_ads_list = [
+        { name: "spring", enabled: true, headline: "Hi", audience: "visitors" },
+      ].to_json
+      sign_in(member)
+
+      put "/jtech-lines/#{key}.json", params: { value: 1 }
+      expect(response.status).to eq(404)
+    end
+
+    it "rejects other values" do
+      sign_in(member)
+      put "/jtech-lines/#{key}.json", params: { value: 5 }
+      expect(response.status).to eq(400)
+    end
+
+    it "shows staff the counts, and members only their own" do
+      DiscourseJtechAds::Vote.create!(user: member, ad_key: key, value: 1)
+      DiscourseJtechAds::Vote.create!(user: other, ad_key: key, value: -1)
+
+      sign_in(member)
+      expect(lines["items"].find { it["k"] == key }).not_to have_key("n")
+
+      sign_in(admin)
+      expect(lines["items"].find { it["k"] == key }["n"]).to eq({ "up" => 1, "down" => 1 })
+    end
+  end
+end

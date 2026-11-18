@@ -143,6 +143,10 @@ en:
         sold: Sold
         mark_sold: Mark as sold
         mark_available: Mark as available
+    jt_lines:
+      up: I like this
+      down: Not for me
+      counts: "%{up} up · %{down} down"
     reqpm:
       title: REQ-PM
       button:
