@@ -55,7 +55,8 @@ export default class JtechLinesPreview extends Component {
           : { name: this.name },
       });
       if (tab) {
-        tab.location.href = result.url;
+        // the path, so it opens on whatever address this admin is using
+        tab.location.href = result.path;
       }
     } catch (error) {
       tab?.close();

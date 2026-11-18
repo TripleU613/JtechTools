@@ -78,7 +78,8 @@ module ::DiscourseJtechAds
         entry = normalize(entry.merge("enabled" => true))
         token = SecureRandom.hex(12)
         Discourse.redis.setex(redis_key(token), PREVIEW_TTL.to_i, entry.to_json)
-        { token:, url: "#{Discourse.base_url}/latest?jl_preview=#{token}" }
+        path = "/latest?jl_preview=#{token}"
+        { token:, path:, url: "#{Discourse.base_url}#{path}" }
       end
 
       def preview_line(token)
