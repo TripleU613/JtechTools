@@ -110,4 +110,17 @@ html .leaderboard {
       font-variant-numeric: tabular-nums;
     }
   }
+
+  // With the period picker turned off (the leaderboard's "period filter
+  // disabled"), the plugin still draws its arrow, so it looked like a menu that
+  // wouldn't open. It's a plain heading then.
+  .leaderboard__period-chooser.is-disabled {
+    .angle-icon {
+      display: none;
+    }
+
+    .select-kit-header {
+      cursor: default;
+    }
+  }
 }
