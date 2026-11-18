@@ -69,18 +69,134 @@
   contain: strict;
 }
 
-// A swap keeps both ads mounted: the one leaving lies over the one
-// arriving until it's gone. The space's size never changes.
+// A swap is a billboard panel change: one seam sweeps left to right, the
+// leaving ad is cut away ahead of it and the arriving one is uncovered
+// behind it, with a thin light edge riding the seam.
+//
+// Cards have no background of their own, so the two are clipped to
+// complementary sides of the seam; otherwise one would show through the
+// other. clip-path is in each card's own box, so each inset is offset by
+// that card's translate, which keeps the seam at the same screen x on both.
+// That only holds while both run the same duration, easing and start, and
+// while every geometric value sits in from/to only (a middle keyframe would
+// re-ease its segment), so dimming is a second animation. No scale: it
+// can't be compensated in the inset.
+//
+// The leaving card drifts 2% right as if pushed, and its last 2% is pushed
+// past the space's edge. The arriving one trails in from 1.25% left, less
+// than a card's padding, so its content is never sliced at the left edge.
+// Finishes at 1000ms, inside the 1100ms the swap keeps both mounted.
 .jl-card--out {
   position: absolute;
   inset: 0;
   z-index: 1;
   pointer-events: none;
-  animation: jl-out 0.6s ease forwards;
+  animation:
+    jl-wipe-out 1s cubic-bezier(0.5, 0, 0.25, 1) forwards,
+    jl-dim-out 1s linear forwards;
 }
 
 .jl-card--in {
-  animation: jl-in 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  animation: jl-wipe-in 1s cubic-bezier(0.5, 0, 0.25, 1) both;
+
+  // the light edge on the revealed side of the seam, above an app's root
+  &::after {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    content: "";
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      transparent calc(100% - 7rem),
+      color-mix(in srgb, var(--jl-fg) 7%, transparent) calc(100% - 2px),
+      color-mix(in srgb, var(--jl-fg) 50%, transparent) calc(100% - 1.5px)
+    );
+    opacity: 0;
+    animation:
+      jl-seam 1s cubic-bezier(0.5, 0, 0.25, 1) both,
+      jl-seam-glow 1s linear both;
+  }
+}
+
+// Said here too, so the swap is a plain cut wherever this file lands in the
+// cascade: the leaving card stays whole on top until it's removed.
+@media (prefers-reduced-motion: reduce) {
+  .jl-card--out,
+  .jl-card--in {
+    animation: none;
+  }
+
+  .jl-card--in::after {
+    display: none;
+    animation: none;
+  }
+}
+
+@keyframes jl-wipe-out {
+  from {
+    translate: 0 0;
+    clip-path: inset(0 0 0 0);
+  }
+
+  to {
+    translate: 2% 0;
+    clip-path: inset(0 0 0 98%);
+  }
+}
+
+@keyframes jl-dim-out {
+  0% {
+    opacity: 1;
+  }
+
+  60% {
+    opacity: 0.6;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes jl-wipe-in {
+  from {
+    translate: -1.25% 0;
+    clip-path: inset(0 98.75% 0 0);
+  }
+
+  to {
+    translate: 0 0;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes jl-seam {
+  from {
+    translate: -98.75% 0;
+  }
+
+  to {
+    translate: 0 0;
+  }
+}
+
+@keyframes jl-seam-glow {
+  0% {
+    opacity: 0;
+  }
+
+  8% {
+    opacity: 1;
+  }
+
+  75% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
 }
 
 .jl-card--still {
@@ -407,12 +523,6 @@
   .jl-pulse,
   .jl-marquee > * {
     animation: none;
-  }
-}
-
-@keyframes jl-out {
-  to {
-    opacity: 0;
   }
 }
 
