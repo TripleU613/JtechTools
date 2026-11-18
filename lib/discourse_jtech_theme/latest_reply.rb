@@ -74,13 +74,15 @@ module DiscourseJtechTheme
       excerpt =
         Discourse
           .cache
-          .fetch("jt-latest-reply:#{post.id}:#{post.updated_at.to_i}", expires_in: 1.day) do
-            post.excerpt(
+          .fetch("jt-latest-reply:v2:#{post.id}:#{post.updated_at.to_i}", expires_in: 1.day) do
+            ::Post.excerpt(
+              without_emoji(post.cooked),
               SiteSetting.topic_excerpt_maxlength,
               strip_links: true,
               strip_images: true,
               text_entities: true,
-            )
+              post: post,
+            ).squish
           end
 
       {
@@ -91,6 +93,16 @@ module DiscourseJtechTheme
         name: author.name,
         avatar_template: author.avatar_template,
       }
+    end
+
+    # Core's excerpt writes an emoji out as its code (":smile:"), which reads
+    # as noise in a one-line preview; the card leaves emoji out instead.
+    def without_emoji(cooked)
+      return cooked if cooked.blank? || !cooked.include?("emoji")
+
+      doc = Nokogiri::HTML5.fragment(cooked)
+      doc.css("img.emoji").each(&:remove)
+      doc.to_html
     end
   end
 end
