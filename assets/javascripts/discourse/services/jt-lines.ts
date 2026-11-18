@@ -28,8 +28,22 @@ export interface JtLine {
   e?: string | null; // ends
   v?: number | null; // this member's thumbs (members only)
   n?: JtLineCounts; // counts (staff only)
+  x?: string | null; // the card's own CSS: then it's an app (shadow root)
+  o?: boolean | null; // the forum's own (house): no label, no thumbs
+  i?: boolean | null; // the welcome: shown first to new visitors
   preview?: boolean; // an admin's preview (?jl_preview=…), seen by them only
 }
+
+// One ad on the page and its part in a swap: arriving, leaving, or just
+// there. Both stay mounted for the length of a transition.
+export interface JtShown {
+  line: JtLine;
+  state: "in" | "out" | "still";
+}
+
+// How long the outgoing ad stays mounted during a swap (lines.scss times
+// its transition inside this)
+const SWAP_MS = 1100;
 
 export interface JtLines {
   label: string;
@@ -78,6 +92,8 @@ export default class JtLinesService extends Service {
   @tracked introOver = false;
   // An admin's preview (?jl_preview=…): this one ad only, for them only
   @tracked preview: JtLine | null = null;
+  // The ad on its way out during a swap
+  @tracked leaving: JtLine | null = null;
 
   // A theme that carries the line itself says so at startup (the JTech
   // theme's hero does, when it's on); then the plugin's card stays out.
@@ -91,6 +107,7 @@ export default class JtLinesService extends Service {
   #first: string | null = null;
   #introPlanned: boolean | null = null;
   #introTimer: ReturnType<typeof setTimeout> | null = null;
+  #leaveTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(owner: Owner) {
     super(owner);
@@ -119,10 +136,18 @@ export default class JtLinesService extends Service {
     );
   }
 
+  // The welcome app, if there is one for this person
+  get introLine(): JtLine | null {
+    return this.items.find((line) => line.i) ?? null;
+  }
+
   get line(): JtLine | null {
     const items = this.items;
     if (!items.length) {
       return null;
+    }
+    if (this.stage === "welcome" && this.introLine) {
+      return this.introLine;
     }
     // The first pick is made once per page load and isn't tracked: reading
     // the line mustn't change what the page is rendering
@@ -145,6 +170,21 @@ export default class JtLinesService extends Service {
       return "ads";
     }
     return this.#planIntro() && !this.introOver ? "welcome" : "ads";
+  }
+
+  // The ads on the page now: the one showing, and during a swap the one
+  // leaving too
+  get shown(): JtShown[] {
+    const line = this.line;
+    const leaving = this.leaving;
+    const shown: JtShown[] = [];
+    if (leaving && leaving.k !== line?.k) {
+      shown.push({ line: leaving, state: "out" });
+    }
+    if (line) {
+      shown.push({ line, state: shown.length ? "in" : "still" });
+    }
+    return shown;
   }
 
   get canVote(): boolean {
@@ -172,7 +212,15 @@ export default class JtLinesService extends Service {
     const seconds = Math.max(0, this.data?.intro ?? 0);
     this.#introTimer = setTimeout(() => {
       this.#introTimer = null;
-      this.introOver = true;
+      const intro = this.introLine;
+      if (intro) {
+        // the welcome app hands over to another ad, as a swap
+        const next = this.#pick(this.items, intro.k);
+        this.introOver = true;
+        this.#swapTo(next?.k ?? null, intro);
+      } else {
+        this.introOver = true;
+      }
     }, seconds * 1000);
     return () => {
       if (this.#introTimer) {
@@ -205,10 +253,10 @@ export default class JtLinesService extends Service {
     const timer = setInterval(() => {
       const box = element.getBoundingClientRect();
       const onScreen = box.bottom > 0 && box.top < window.innerHeight;
-      if (paused || document.hidden || !onScreen) {
+      if (paused || document.hidden || !onScreen || this.stage === "welcome") {
         return;
       }
-      this.current = this.#pick(this.items, this.line?.k ?? null)?.k ?? null;
+      this.#swapTo(this.#pick(this.items, this.line?.k ?? null)?.k ?? null);
     }, every);
 
     return () => {
@@ -265,8 +313,9 @@ export default class JtLinesService extends Service {
       const intro = this.data?.intro ?? 0;
       const fresh = (this.data?.fresh ?? 0) * 1000;
       const seen = this.currentUser ? null : firstSeen();
+      const introApp = (this.data?.items ?? []).some((line) => line.i);
       this.#introPlanned =
-        this.themeHosted &&
+        (this.themeHosted || introApp) &&
         !this.currentUser &&
         intro > 0 &&
         seen !== null &&
@@ -285,6 +334,17 @@ export default class JtLinesService extends Service {
     } catch (error) {
       popupAjaxError(error);
     }
+  }
+
+  // Shows another ad, keeping the one before mounted while they swap
+  #swapTo(key: string | null, from: JtLine | null = this.line) {
+    this.current = key;
+    if (!from || from.k === key || reducedMotion()) {
+      return;
+    }
+    this.leaving = from;
+    clearTimeout(this.#leaveTimer);
+    this.#leaveTimer = setTimeout(() => (this.leaving = null), SWAP_MS);
   }
 
   #firstPick(items: JtLine[]): string | null {

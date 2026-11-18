@@ -48,7 +48,8 @@ RSpec.describe "Ads in the welcome area" do
         name: "long",
         enabled: true,
         headline: "Long",
-        card: "<div class=\"jl-stack\">#{%(<h2 class="jl-title-xl">#{"Big " * 60}</h2><p class="jl-lead">#{"word " * 300}</p>) * 2}</div>",
+        card:
+          "<div class=\"jl-stack\">#{%(<h2 class="jl-title-xl">#{"Big " * 60}</h2><p class="jl-lead">#{"word " * 300}</p>) * 2}</div>",
       },
     ].to_json
     visit "/latest"
@@ -99,6 +100,68 @@ RSpec.describe "Ads in the welcome area" do
       document.head.append(style);
     JS
     expect(page).to have_css("[data-jt-l]", wait: 5)
+  end
+
+  # An app trying everything: it can't touch the page, the space's size or
+  # the label, and nothing loads from anywhere else
+  it "seals an app off from the page and the network" do
+    SiteSetting.jtech_ads_list = [
+      {
+        name: "hostile",
+        enabled: true,
+        headline: "Hostile",
+        card:
+          %(<div class="big"><h2 class="t">Inside</h2><div class="fix">Everywhere</div></div>) +
+            %(<svg viewBox="0 0 10 10"><image href="https://evil.example/x.png"/></svg><img src="https://evil.example/y.png">),
+        css:
+          ":host { height: 2000px !important; width: 3000px !important } * { display: block } " \
+            ".fix { position: fixed; inset: 0; z-index: 99999; background: red } .big { height: 5000px } " \
+            "@keyframes jl-in { from { opacity: 0 } } body, html, #main-outlet { display: none !important }",
+      },
+    ].to_json
+
+    outside = []
+    page.driver.with_playwright_page do |pw|
+      pw.on(
+        "request",
+        ->(request) { outside << request.url unless request.url.start_with?(Discourse.base_url) },
+      )
+    end
+
+    visit "/latest"
+    expect(page).to have_css(".jt-lines .jl-app")
+    expect(page).to have_css("#main-outlet .topic-list")
+    expect(page).to have_css(".jt-lines__label", text: "Ad")
+
+    space =
+      page.evaluate_script(
+        "(() => { const r = document.querySelector('.jt-lines').getBoundingClientRect(); return [r.width, r.height]; })()",
+      )
+    expect(space[1]).to be < 300
+    expect(
+      page.evaluate_script(
+        "document.elementFromPoint(5, window.innerHeight - 5).closest('.jl-app') === null",
+      ),
+    ).to eq(true)
+    expect(outside.select { it.include?("evil.example") }).to eq([])
+  end
+
+  it "hides the label and thumbs on the forum's own ads" do
+    SiteSetting.jtech_ads_list = [
+      {
+        name: "own",
+        enabled: true,
+        headline: "Ours",
+        card: %(<p class="x">Ours</p>),
+        css: ".x{color:inherit}",
+        house: true,
+      },
+    ].to_json
+    sign_in(member)
+    visit "/latest"
+    expect(page).to have_css(".jt-lines .jl-app")
+    expect(page).to have_no_css(".jt-lines__label")
+    expect(page).to have_no_css(".jt-lines__thumb")
   end
 
   it "keeps out of the class names blockers look for" do

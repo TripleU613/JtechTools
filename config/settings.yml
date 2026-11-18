@@ -1675,9 +1675,26 @@ jtech_ads:
           type: string
           textarea: true
           label: "Whole card (optional)"
-          description: "Fills the whole card instead of the headline and text: HTML built from the ad kit's classes (jl-title, jl-lead, jl-button, jl-split, jl-panel, jl-stat…; list and examples in docs/features/ads.md). Block and inline tags only; no images, video, styles or scripts. The headline and text above are still shown where the card can't be."
+          description: "Fills the whole space instead of the headline and text. Without CSS below: HTML built from the ad kit's classes (jl-title, jl-lead, jl-button, jl-split…). With CSS: an app, any classes and inline SVG. No images, video, scripts, forms or styles in the HTML. Details in docs/features/ads.md. The headline and text above are still shown where the card can't be."
           validations:
-            max_length: 4000
+            max_length: 8000
+        css:
+          type: string
+          textarea: true
+          label: "CSS (optional, makes it an app)"
+          description: "The card's own CSS. It runs sealed off from the page, inside the fixed space, so it can't change anything else or the space's size. Use the --jl-* colour variables to match the theme. Refused whole if it could load anything from anywhere: url(), @import, fonts, backslashes."
+          validations:
+            max_length: 8000
+        house:
+          type: boolean
+          default: false
+          label: "The forum's own"
+          description: "For the forum's own content only (its welcome, its own services): no Ad label and no thumbs."
+        intro:
+          type: boolean
+          default: false
+          label: "Welcome"
+          description: "Shown first to new visitors, for the welcome's seconds, in place of the theme's own welcome."
         audience:
           type: enum
           default: everyone

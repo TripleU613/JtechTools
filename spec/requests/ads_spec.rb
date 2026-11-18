@@ -88,6 +88,15 @@ RSpec.describe "Ads in the welcome area" do
       expect(response.status).to eq(404)
     end
 
+    it "takes no thumbs on the forum's own (house) ads" do
+      SiteSetting.jtech_ads_list = [
+        { name: "spring", enabled: true, headline: "Hi", house: true },
+      ].to_json
+      sign_in(member)
+      put "/jtech-lines/#{key}.json", params: { value: 1 }
+      expect(response.status).to eq(404)
+    end
+
     it "rejects other values" do
       sign_in(member)
       put "/jtech-lines/#{key}.json", params: { value: 5 }

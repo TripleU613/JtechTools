@@ -12,7 +12,9 @@ module DiscourseJtechAds
       raise Discourse::NotFound unless DiscourseJtechAds.enabled?
 
       key = params.require(:key).to_s
-      raise Discourse::NotFound unless DiscourseJtechAds.visible?(guardian, key)
+      ad = DiscourseJtechAds.visible_to(guardian).find { it.key == key }
+      # the forum's own (house) content has no thumbs
+      raise Discourse::NotFound if ad.nil? || ad.house
 
       value = params.require(:value).to_i
       raise Discourse::InvalidParameters.new(:value) if [0, *VOTE_VALUES].exclude?(value)

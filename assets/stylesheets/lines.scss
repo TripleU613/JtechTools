@@ -55,9 +55,42 @@
   }
 }
 
+// An app fills the whole card, edge to edge, in its own shadow root
+// (components/jt-line.gts); the label and thumbs sit above it
+.jl-card--app {
+  padding: 0;
+}
+
+.jl-app {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  contain: strict;
+}
+
+// A swap keeps both ads mounted: the one leaving lies over the one
+// arriving until it's gone. The space's size never changes.
+.jl-card--out {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  animation: jl-out 0.6s ease forwards;
+}
+
+.jl-card--in {
+  animation: jl-in 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.jl-card--still {
+  animation: none;
+}
+
 // "Ad", always there, in the corner
 .jt-lines__label {
   position: absolute;
+  z-index: 2;
   top: 0.75rem;
   right: 0.9rem;
   padding: 0.15em 0.55em;
@@ -71,6 +104,7 @@
 
 .jt-lines__thumbs {
   position: absolute;
+  z-index: 2;
   right: 0.6rem;
   bottom: 0.5rem;
   display: flex;
@@ -367,10 +401,18 @@
 
 @media (prefers-reduced-motion: reduce) {
   .jl-card,
+  .jl-card--in,
+  .jl-card--out,
   .jl-float,
   .jl-pulse,
   .jl-marquee > * {
     animation: none;
+  }
+}
+
+@keyframes jl-out {
+  to {
+    opacity: 0;
   }
 }
 

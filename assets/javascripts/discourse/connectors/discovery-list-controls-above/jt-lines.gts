@@ -17,17 +17,13 @@ export default class JtLinesOutlet extends Component<JtLinesOutletSignature> {
   @service declare router: RouterService;
 
   live = modifier((element: HTMLElement) => {
-    const stopRotating = this.lines.rotate(element);
-    const stopWatching = this.lines.watch(element);
-    return () => {
-      stopRotating();
-      stopWatching();
-    };
+    const stops = [
+      this.lines.startIntro(),
+      this.lines.rotate(element),
+      this.lines.watch(element),
+    ];
+    return () => stops.forEach((stop) => stop());
   });
-
-  get shown() {
-    return this.lines.line ? [this.lines.line] : [];
-  }
 
   get shows(): boolean {
     return (
@@ -45,8 +41,8 @@ export default class JtLinesOutlet extends Component<JtLinesOutletSignature> {
     {{#if this.shows}}
       <aside class="jt-lines" {{this.live}}>
         {{! keyed, so each new line is drawn fresh and fades in }}
-        {{#each this.shown key="k" as |line|}}
-          <JtLine @line={{line}} />
+        {{#each this.lines.shown key="line.k" as |item|}}
+          <JtLine @line={{item.line}} @state={{item.state}} />
         {{/each}}
       </aside>
     {{/if}}

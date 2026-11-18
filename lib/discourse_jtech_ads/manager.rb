@@ -12,7 +12,21 @@ module ::DiscourseJtechAds
       "new_visitor_seconds" => :jtech_ads_new_visitor_seconds,
       "label" => :jtech_ads_label,
     }.freeze
-    FIELDS = %w[name enabled headline text card audience groups weight starts_at ends_at].freeze
+    FIELDS = %w[
+      name
+      enabled
+      headline
+      text
+      card
+      css
+      house
+      intro
+      audience
+      groups
+      weight
+      starts_at
+      ends_at
+    ].freeze
     PREVIEW_TTL = 1.hour
 
     class Error < StandardError
@@ -61,14 +75,25 @@ module ::DiscourseJtechAds
       # why something didn't come through
       def report(entry)
         entry = normalize(entry)
+        css, refused = App.clean_css(entry["css"])
+        if css
+          card, dropped = App.clean_html(entry["card"])
+          kind = "app"
+        else
+          card = DiscourseJtechAds.clean_card(entry["card"])
+          dropped = dropped(entry["card"])
+          kind = entry["card"].present? ? "kit card" : "headline and text"
+        end
+        dropped += dropped(entry["headline"], card: false) + dropped(entry["text"], card: false)
+        dropped << refused if refused
         {
+          kind:,
           headline: DiscourseJtechAds.clean(entry["headline"]),
           text: DiscourseJtechAds.clean(entry["text"]),
-          card: DiscourseJtechAds.clean_card(entry["card"]).presence,
-          dropped:
-            dropped(entry["card"]) + dropped(entry["headline"], card: false) +
-              dropped(entry["text"], card: false),
-        }.then { it.merge(dropped: it[:dropped].uniq) }
+          card: card.presence,
+          css:,
+          dropped: dropped.uniq,
+        }
       end
 
       # A preview kept for an hour: a saved ad by name, or a draft that
@@ -87,11 +112,14 @@ module ::DiscourseJtechAds
 
         stored = Discourse.redis.get(redis_key(token)) or return nil
         entry = JSON.parse(stored)
+        made = DiscourseJtechAds.card_and_css(entry)
         {
           k: DiscourseJtechAds.key_for(entry["name"]),
           h: DiscourseJtechAds.clean(entry["headline"]),
           t: DiscourseJtechAds.clean(entry["text"]),
-          c: DiscourseJtechAds.clean_card(entry["card"]).presence,
+          c: made[:card].presence,
+          x: made[:css],
+          o: entry["house"] == true || nil,
           w: 1,
           preview: true,
         }

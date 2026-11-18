@@ -148,6 +148,7 @@ en:
       down: Not for me
       counts: "%{up} up · %{down} down"
       preview: "Preview · only you see this"
+      search: "Search the forum"
     reqpm:
       title: REQ-PM
       button:

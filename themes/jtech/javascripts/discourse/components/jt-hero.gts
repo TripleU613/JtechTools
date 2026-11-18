@@ -31,9 +31,17 @@ type HeroSite = Site & { can_search: boolean };
 interface HeroLine {
   k: string;
 }
-type HeroCard = ComponentLike<{ Args: { line: HeroLine } }>;
+interface HeroShown {
+  line: HeroLine;
+  state: "in" | "out" | "still";
+}
+type HeroCard = ComponentLike<{
+  Args: { line: HeroLine; state?: "in" | "out" | "still" };
+}>;
 interface HeroLines {
   line: HeroLine | null;
+  introLine: HeroLine | null;
+  shown: HeroShown[];
   hidden: boolean;
   stage: "welcome" | "ads";
   card: HeroCard;
@@ -225,9 +233,10 @@ export default class JtHero extends Component<JtHeroSignature> {
     return lines && !lines.hidden ? lines.line : null;
   }
 
-  // keyed by the template, so each ad slides in fresh
-  get lineList(): HeroLine[] {
-    return this.line ? [this.line] : [];
+  // The ads on the card now: the one showing, and during a swap the one
+  // leaving (keyed by the template)
+  get shown(): HeroShown[] {
+    return this.#lines?.shown ?? [];
   }
 
   get card(): HeroCard | null {
@@ -237,8 +246,14 @@ export default class JtHero extends Component<JtHeroSignature> {
   // The ads have the card: right away for members, anyone who closed the
   // welcome or has been here a while; after the welcome's seconds for a
   // new visitor
+  // A welcome app (an ad that is the welcome) takes the whole card from
+  // the start; otherwise the hero's own welcome first, for a new visitor
   get onAds(): boolean {
-    return !!this.line && (this.dismissed || this.#lines?.stage === "ads");
+    const lines = this.#lines;
+    return (
+      !!this.line &&
+      (this.dismissed || lines?.stage === "ads" || !!lines?.introLine)
+    );
   }
 
   get shouldShow(): boolean {
@@ -419,8 +434,8 @@ export default class JtHero extends Component<JtHeroSignature> {
         {{#if this.onAds}}
           <div class="jt-hero__lines">
             {{#let this.card as |Card|}}
-              {{#each this.lineList key="k" as |line|}}
-                <Card @line={{line}} />
+              {{#each this.shown key="line.k" as |item|}}
+                <Card @line={{item.line}} @state={{item.state}} />
               {{/each}}
             {{/let}}
           </div>

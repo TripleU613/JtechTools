@@ -7,6 +7,7 @@
 # jtech_ads_rotate_seconds, jtech_ads_label, jtech_ads_list
 
 require_relative "../lib/discourse_jtech_ads"
+require_relative "../lib/discourse_jtech_ads/app"
 require_relative "../lib/discourse_jtech_ads/manager"
 
 register_asset "stylesheets/lines.scss"
@@ -152,7 +153,7 @@ after_initialize do
       implementation: tools::Preview,
       input_schema: {
         type: "object",
-        properties: ad.slice(:name, :headline, :text, :card),
+        properties: ad.slice(:name, :headline, :text, :card, :css, :house),
         additionalProperties: false,
       },
       required_scopes: tools::Preview::REQUIRED_SCOPES,

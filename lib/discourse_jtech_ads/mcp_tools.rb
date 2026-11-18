@@ -30,9 +30,23 @@ module ::DiscourseJtechAds
       },
       card: {
         type: "string",
-        maxLength: 4000,
+        maxLength: 8000,
         description:
-          "Optional whole-card HTML built from the kit (see jtech_ads_get: kit). Fills the fixed ad space; never changes its size.",
+          "Optional whole-card HTML. Without css: built from the kit's classes. With css: an app (see jtech_ads_get: app). Fills the fixed ad space; never changes its size.",
+      },
+      css: {
+        type: "string",
+        maxLength: 8000,
+        description:
+          "Optional CSS for the card, making it an app in its own shadow root. Refused whole if it could load anything (url(), @import, fonts, backslashes…). Use the --jl-* variables to match the theme.",
+      },
+      house: {
+        type: "boolean",
+        description: "The forum's own content only: no Ad label, no thumbs.",
+      },
+      intro: {
+        type: "boolean",
+        description: "Shown first to new visitors, as the welcome.",
       },
       audience: {
         type: "string",
@@ -87,6 +101,20 @@ module ::DiscourseJtechAds
         Support.result(
           settings: Manager.settings,
           ads: Manager.entries,
+          app: {
+            how:
+              "An app is card HTML plus css. It runs in a closed shadow root inside the fixed ad space (about 224px tall on phones, 272px on wide screens, the content column's width; it never grows: anything that doesn't fit is cut). Use your own class names. Theme colours: var(--jl-fg), --jl-muted, --jl-border, --jl-raised, --jl-accent, --jl-accent-fg, --jl-radius, --jl-radius-lg; the page's fonts inherit. The kit's classes work inside too.",
+            reserved:
+              "The space draws its own label ('Ad', top right corner, about 40x22px) and thumbs (bottom right corner, about 90x34px) above the app, unless the ad is house. Leave those corners clear; the app can't remove or cover them.",
+            widgets:
+              "<div class=\"jl-search\"></div> becomes a search box; <div class=\"jl-auth\"></div> becomes Sign up / Log in for visitors (nothing for members). Forms and inputs are otherwise not allowed.",
+            html:
+              "Block and inline tags, inline SVG (shapes, gradients, text; no use/image/foreignObject/animate), links. No images, video, iframes, scripts, styles, forms. Up to #{App::MAX_HTML} characters and #{App::MAX_ELEMENTS} elements.",
+            css:
+              "Up to #{App::MAX_CSS} characters. Allowed at-rules: #{App::AT_RULES.join(", ")}. Refused whole if it contains url(), image-set(), image(), src(), @import, @font-face, a backslash, expression(), behavior or -moz-binding: nothing may load from anywhere.",
+            performance:
+              "Animate transform and opacity only, a few elements at a time; no huge blurs or shadows animated. Animations pause when the space is off screen or the tab is hidden, and stop for reduced motion.",
+          },
           kit: {
             classes: KIT,
             card_tags: CARD_TAGS,

@@ -61,6 +61,9 @@ module ::DiscourseJtechAds
       :headline,
       :text,
       :card,
+      :css,
+      :house,
+      :intro,
       :audience,
       :group_ids,
       :weight,
@@ -147,6 +150,9 @@ module ::DiscourseJtechAds
               h: ad.headline,
               t: ad.text,
               c: ad.card.presence,
+              x: ad.css,
+              o: ad.house || nil,
+              i: ad.intro || nil,
               w: ad.weight,
               s: ad.starts_at&.iso8601,
               e: ad.ends_at&.iso8601,
@@ -197,6 +203,18 @@ module ::DiscourseJtechAds
       fragment.to_html
     end
 
+    # An app (card with CSS of its own) is cleaned as an app: free classes
+    # and safe SVG, run in a shadow root. CSS that's refused leaves the card
+    # cleaned as a kit card instead.
+    def card_and_css(entry)
+      css, = App.clean_css(entry["css"])
+      if css
+        { card: App.clean_html(entry["card"]).first, css: }
+      else
+        { card: clean_card(entry["card"]), css: nil }
+      end
+    end
+
     def clear_cache!
       @all_raw = nil
       Site.clear_anon_cache!
@@ -218,7 +236,9 @@ module ::DiscourseJtechAds
           key: key_for(entry["name"]),
           headline: headline,
           text: clean(entry["text"]),
-          card: clean_card(entry["card"]),
+          **card_and_css(entry),
+          house: entry["house"] == true,
+          intro: entry["intro"] == true,
           audience: AUDIENCES.include?(audience) ? audience : "everyone",
           group_ids: Array(entry["groups"]).map(&:to_i),
           weight: entry["weight"].to_i.clamp(1, 10),
