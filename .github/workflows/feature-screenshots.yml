@@ -15,8 +15,8 @@ on:
 
 jobs:
   screenshots:
-    # Two runs on the same setup: the screenshot gallery (allowed to fail),
-    # and the JTech theme's browser specs, which have a job of their own
+    # The screenshot gallery (allowed to fail) and four theme partitions
+    # use the same setup. The theme's browser specs have their own jobs
     # because they don't fit in the plugin workflow's 30-minute system-test
     # job beside the rest (they skip themselves there, without
     # JTECH_THEME_SPECS).
@@ -39,11 +39,26 @@ jobs:
               plugins/jtech-tools/spec/system/popup_notifications_screenshots_spec.rb
               plugins/jtech-tools/spec/system/popup_notifications_stacking_screenshots_spec.rb
               plugins/jtech-tools/spec/system/popup_notifications_click_through_spec.rb
-          - name: jtech_theme
-            timeout: 60
+          - name: jtech_theme_part1
+            timeout: 30
             theme_specs: "1"
             allow_failure: false
-            specs: plugins/jtech-tools/spec/system/jtech_theme_part*_spec.rb
+            specs: plugins/jtech-tools/spec/system/jtech_theme_part1_spec.rb
+          - name: jtech_theme_part2
+            timeout: 30
+            theme_specs: "1"
+            allow_failure: false
+            specs: plugins/jtech-tools/spec/system/jtech_theme_part2_spec.rb
+          - name: jtech_theme_part3
+            timeout: 30
+            theme_specs: "1"
+            allow_failure: false
+            specs: plugins/jtech-tools/spec/system/jtech_theme_part3_spec.rb
+          - name: jtech_theme_part4
+            timeout: 30
+            theme_specs: "1"
+            allow_failure: false
+            specs: plugins/jtech-tools/spec/system/jtech_theme_part4_spec.rb
 
     env:
       RUBY_GLOBAL_METHOD_CACHE_SIZE: 131072
