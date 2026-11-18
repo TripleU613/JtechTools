@@ -48,7 +48,7 @@ RSpec.describe "Ads in the welcome area" do
         name: "long",
         enabled: true,
         headline: "Long",
-        card: "<div class=\"jl-stack\">#{%(<p class="jl-lead">#{"word " * 300}</p>) * 3}</div>",
+        card: "<div class=\"jl-stack\">#{%(<h2 class="jl-title-xl">#{"Big " * 60}</h2><p class="jl-lead">#{"word " * 300}</p>) * 2}</div>",
       },
     ].to_json
     visit "/latest"
