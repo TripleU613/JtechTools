@@ -31,7 +31,13 @@ html .leaderboard {
       border-radius: var(--jt-radius-md);
     }
 
+    // one line: a long name ends in "…" instead of breaking at its hyphens
     &__name {
+      display: block;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
       color: var(--jt-text-muted);
     }
 
