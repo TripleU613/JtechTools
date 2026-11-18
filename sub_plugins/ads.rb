@@ -9,6 +9,8 @@
 require_relative "../lib/discourse_jtech_ads"
 
 register_asset "stylesheets/lines.scss"
+register_svg_icon "thumbs-up"
+register_svg_icon "thumbs-down"
 
 after_initialize do
   # Inside the page's preloaded site data: no request of the ads' own
