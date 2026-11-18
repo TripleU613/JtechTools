@@ -47,7 +47,7 @@ jtech:
   # Badge thresholds sized for this forum (lib/discourse_badge_thresholds.rb).
   # On by default: with it off, every rebuild puts core's numbers back.
   jtech_badge_thresholds:
-    default: true
+    default: false
     client: false
   # Leaderboard points with daily caps (lib/discourse_fair_scores.rb).
   jtech_fair_scores:
