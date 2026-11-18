@@ -1576,3 +1576,11 @@ jtech_mod_elections:
     client: false
     depends_on:
       - "mod_elections_enabled"
+
+jtech_market_accounts:
+  jtech_market_account_retention:
+    default: false
+    client: false
+  jtech_market_origin:
+    default: "https://market.jtechforums.org"
+    client: false

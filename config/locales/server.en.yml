@@ -61,6 +61,8 @@ en:
       disteleplus_telegram: "Disteleplus could not deliver to Telegram (%{at}): <code>%{description}</code> — %{hint}"
 
   site_settings:
+    jtech_market_account_retention: Protect accounts linked to Jtech Market from inactive-user deletion. Other inactive accounts still follow the forum cleanup policy. Requires Jtech Tools to be enabled.
+    jtech_market_origin: Exact HTTPS origin of Jtech Market. Only a signed sign-in to its marketplace callback marks a member as protected.
     # NOTE: core renders `site_settings.<name>` as the setting's DESCRIPTION;
     # the label is derived from the setting name and is not translatable.
     # There is no `<name>_description` key — core never reads one.

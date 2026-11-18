@@ -25,12 +25,14 @@ jobs:
     # SCSS bug came back in this PR's system_tests.
     with:
       name: jtech-tools
+      runs_on: jtechtools-ci
 
   # Dumbcourse is written in TypeScript and shipped as a prebuilt ES5 bundle
   # in public/. Type-check it, run its unit tests, and fail if the committed
   # bundle doesn't match the sources (run `pnpm dumbcourse:build`).
   dumbcourse:
-    runs-on: ubuntu-latest
+    runs-on: jtechtools-ci
+    container: discourse/discourse_test:slim
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
@@ -46,7 +48,8 @@ jobs:
   # pipeline, not the plugin build, so the reusable workflow's lint doesn't see
   # it. Lint it on its own (ESLint, Prettier, stylelint).
   theme:
-    runs-on: ubuntu-latest
+    runs-on: jtechtools-ci
+    container: discourse/discourse_test:slim
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
@@ -62,7 +65,8 @@ jobs:
   # a developer's machine, so nothing else type-checks them. Also holds the
   # repo to Ruby, TypeScript and SCSS (AGENTS.md).
   scripts:
-    runs-on: ubuntu-latest
+    runs-on: jtechtools-ci
+    container: discourse/discourse_test:slim
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7

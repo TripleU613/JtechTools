@@ -12,8 +12,8 @@ require_relative "../../db/migrate/20261015000002_keep_jtech_words_for_existing_
 # Screenshots workflow).
 #
 # Shared by spec/system/jtech_theme_part*_spec.rb. They run only with
-# JTECH_THEME_SPECS=1, in a CI job of their own (the jtech_theme job in
-# .github/workflows/feature-screenshots.yml): some 200 examples at ~11 s,
+# JTECH_THEME_SPECS=1, in four CI partitions of their own (jtech_theme_part1–4
+# in .github/workflows/feature-screenshots.yml): some 250 examples at ~11 s,
 # they pushed the plugin's system-test job past its fixed 30 minutes. Locally:
 #   JTECH_THEME_SPECS=1 LOAD_PLUGINS=1 bin/rspec plugins/jtech-tools/spec/system/jtech_theme_part*_spec.rb
 RSpec.shared_context "jtech theme" do
@@ -104,22 +104,22 @@ RSpec.shared_context "jtech theme" do
   end
 
   shared_examples "renders the main pages" do
-    it "renders without theme errors" do
-      sign_in(user) if user
-
-      visit_and_check("/latest", ".jt-hero", ".jt-card", ".jt-footer", name: "#{role}-latest")
-      visit_and_check("/categories", ".jt-footer", name: "#{role}-categories")
-      visit_and_check(
-        "/c/#{category.slug}/#{category.id}",
-        ".jt-banner",
-        ".jt-card",
-        name: "#{role}-category",
-      )
-      visit_and_check("/tag/#{tag.name}", ".jt-banner", name: "#{role}-tag")
-      visit_and_check(topic.relative_url, ".topic-post", name: "#{role}-topic")
-      visit_and_check("/u", ".directory-table", name: "#{role}-users")
-      visit_and_check("/u/#{member.username}/summary", ".user-main", name: "#{role}-profile")
-      visit_and_check("/search?q=filter", ".search-container", name: "#{role}-search")
+    # Eight navigations shared one 45-second example deadline. Give each page
+    # its own example so slower CI still checks every page with the same limit.
+    {
+      "latest" => [-> { "/latest" }, %w[.jt-hero .jt-card .jt-footer]],
+      "categories" => [-> { "/categories" }, %w[.jt-footer]],
+      "category" => [-> { "/c/#{category.slug}/#{category.id}" }, %w[.jt-banner .jt-card]],
+      "tag" => [-> { "/tag/#{tag.name}" }, %w[.jt-banner]],
+      "topic" => [-> { topic.relative_url }, %w[.topic-post]],
+      "users" => [-> { "/u" }, %w[.directory-table]],
+      "profile" => [-> { "/u/#{member.username}/summary" }, %w[.user-main]],
+      "search" => [-> { "/search?q=filter" }, %w[.search-container]],
+    }.each do |name, (path, selectors)|
+      it "renders #{name} without theme errors" do
+        sign_in(user) if user
+        visit_and_check(instance_exec(&path), *selectors, name: "#{role}-#{name}")
+      end
     end
   end
 

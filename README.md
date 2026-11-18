@@ -113,3 +113,5 @@ Found a security problem? Please report it privately; see [SECURITY.md](SECURITY
 ## License
 
 [GPL-3.0](LICENSE). Made by TripleU, Shalom Karr and Ars18 for JTech Forums.
+
+[Market account retention](docs/features/market-accounts.md) protects marketplace members from inactive-user deletion while keeping ordinary cleanup enabled.

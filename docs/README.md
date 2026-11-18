@@ -4,6 +4,7 @@
 
 | | |
 | --- | --- |
+| [Market accounts](features/market-accounts.md) | Protect marketplace-linked members from inactive-user cleanup |
 | [Moderator tools](features/moderator-tools.md) | Whispers, private notes, staff alerts, checklists, topic tools |
 | [Mini-mod](features/mini-mod.md) | Extra rights, or fewer, for category moderators |
 | [Listing format](features/listing-format.md) | Sale threads: a set format, no outside links, REQ-PM instead of replies |
