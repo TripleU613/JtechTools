@@ -31,10 +31,12 @@ html .leaderboard {
       border-radius: var(--jt-radius-md);
     }
 
-    // one line: a long name ends in "…" instead of breaking at its hyphens
+    // one short line: a long name ends in "…" after about 8 characters
+    // instead of breaking at its hyphens or running the avatar's width
     &__name {
       display: block;
-      max-width: 100%;
+      max-width: 8ch;
+      margin-inline: auto;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
