@@ -62,7 +62,8 @@ const BASE = `
   :host { all: initial; display: block; position: absolute; inset: 0;
     contain: strict; color: var(--jl-fg); font: inherit; }
   .jl-app-root { position: absolute; inset: 0; overflow: hidden;
-    contain: paint; box-sizing: border-box; font-family: inherit; }
+    contain: paint; container-type: size; box-sizing: border-box;
+    font-family: inherit; }
   .jl-app-root *, .jl-app-root *::before, .jl-app-root *::after { box-sizing: border-box; }
   .jl-still, .jl-still * { animation-play-state: paused !important; }
   @media (prefers-reduced-motion: reduce) {
