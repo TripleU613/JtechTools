@@ -996,10 +996,12 @@ en:
 
     # ── Jtech — Listing format ─────────────────────────────────────────────
     jtech_ads_enabled: Show ads in the welcome area at the top of the home
-      page (Latest, Categories and the homepage), on desktop and phones. Ads
-      are text and links only, and match the theme. In the JTech theme an ad
-      takes the welcome hero's headline and line; elsewhere it's a card in the
-      same place. Each ad picks who sees it. Off by default.
+      page (Latest, Categories and the homepage), on desktop and phones, like
+      a billboard. Ads are text and links only, fill a space of fixed size and
+      match the theme and palette. In the JTech theme the hero card becomes
+      the ad space; elsewhere it's a card in the same place. Each ad picks
+      who sees it. Admin → Plugins → Jtech Tools → Ads has every setting and
+      a preview. Off by default.
     jtech_ads_rotate_seconds: With more than one ad for the same person, how
       many seconds each stays before the next slides in, like a billboard.
       Rotation pauses while the pointer or keyboard focus is on the ad, and
