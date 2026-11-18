@@ -114,6 +114,20 @@ en:
       again after. Turning it off takes effect on the next rebuild, and
       badges whose numbers go back up are taken away on the next daily badge
       run.
+    jtech_fair_scores: Leaderboard points (discourse-gamification) count
+      taking part, not volume. Each day only the first replies a person
+      writes, a few likes from any one person, and the first likes a person
+      gives earn points; the limits are the three settings below. Points per
+      reply or like are still the plugin's own settings. Scores already
+      counted change at the plugin's next recalculation; recalculate from
+      Admin → Plugins → Gamification to apply it to past days.
+    jtech_fair_scores_replies_per_day: With fair scores on, how many replies
+      a day earn points for the person who wrote them.
+    jtech_fair_scores_likes_per_person_per_day: With fair scores on, how many
+      likes a day from any one person count toward the points of the person
+      they liked.
+    jtech_fair_scores_likes_given_per_day: With fair scores on, how many likes
+      a day earn points for the person who gave them.
 
     # ── Jtech — Dislike ────────────────────────────────────────────────────
     discourse_no_likes_enabled: Turn on phantom reactions. When off, likes and

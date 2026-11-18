@@ -49,6 +49,22 @@ jtech:
   jtech_badge_thresholds:
     default: true
     client: false
+  # Leaderboard points with daily caps (lib/discourse_fair_scores.rb).
+  jtech_fair_scores:
+    default: false
+    client: false
+  jtech_fair_scores_replies_per_day:
+    default: 10
+    min: 1
+    client: false
+  jtech_fair_scores_likes_per_person_per_day:
+    default: 3
+    min: 1
+    client: false
+  jtech_fair_scores_likes_given_per_day:
+    default: 10
+    min: 1
+    client: false
 
 # ───────────────────────────────────────────────────────────────────────────
 # Jtech — Dislike (phantom reactions in restricted categories)
