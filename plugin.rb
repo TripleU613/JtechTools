@@ -46,6 +46,7 @@ enabled_site_setting :jtech_enabled
   trust_level_flair
   badge_thresholds
   jtech_badges
+  market_accounts
 ].each do |sub|
   path = File.expand_path("sub_plugins/#{sub}.rb", __dir__)
   instance_eval(File.read(path), path, 1)

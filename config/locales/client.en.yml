@@ -796,6 +796,7 @@ en:
           reqpm: REQ-PM
           listing_format: Listing format
           mod_elections: Mod elections
+          market_accounts: Market accounts
           all_settings: All settings
   admin_js:
     admin:
@@ -972,6 +973,7 @@ en:
           jtech_dumbcourse: Jtech — Dumbcourse
           jtech_disteleplus: Jtech — Disteleplus
           jtech_translator: Jtech — Translator tweaks
+          jtech_market_accounts: Jtech — Market accounts
           jtech_smart_search: Jtech — Smart search
           jtech_popup_notifications: Jtech — Desktop pop-ups
           jtech_mod_whispers: "Jtech — Mod: Whispers"
