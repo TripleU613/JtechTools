@@ -95,8 +95,6 @@ en:
       bottom: "Jump to the last post"
     hero:
       search: "Search"
-      up: "I like this"
-      down: "Not for me"
     footer:
       label: "Footer"
       account: "Account"

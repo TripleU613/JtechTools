@@ -1,96 +1,376 @@
-// The welcome area's line for any theme (docs/features/ads.md). Built from
-// core's colour and size variables only, so it takes the look of whatever
-// theme is active. Neutral class names on purpose ("Naming" in the docs).
+// Ads in the home page's welcome area (docs/features/ads.md): the plain card
+// any theme gets, and the kit a whole-card ad is built from. Neutral class
+// names on purpose ("Naming" in the docs).
+//
+// Everything is drawn from the --jl-* variables. Here they come from core's
+// colour scheme, so any theme and palette fits; a theme that carries the
+// ads itself (the JTech hero) only sets these variables to its own tokens.
+.jt-lines,
+.jt-hero__lines {
+  --jl-fg: var(--primary);
+  --jl-muted: var(--primary-medium);
+  --jl-border: var(--primary-low);
+  --jl-raised: var(--primary-very-low);
+  --jl-accent: var(--tertiary);
+  --jl-accent-fg: var(--secondary);
+  --jl-radius: var(--d-border-radius);
+  --jl-radius-lg: var(--d-border-radius-large, var(--d-border-radius));
+  --jl-gap: clamp(0.75rem, 2.5cqi, 1.5rem);
+  container: jl / inline-size;
+}
+
+// ── The plain card (any theme) ─────────────────────────────────
 .jt-lines {
-  --jt-lines-bg: var(--secondary);
-  --jt-lines-fg: var(--primary);
-  --jt-lines-muted: var(--primary-medium);
-  --jt-lines-border: var(--primary-low);
-  --jt-lines-radius: var(--d-border-radius-large, var(--d-border-radius));
-  display: flex;
-  align-items: center;
-  gap: 0.75em 1em;
+  position: relative;
+  overflow: hidden;
 
-  // two lines' worth reserved, so a rotation never moves the list below
-  min-height: 4.5em;
+  // every ad gets the same room, so the billboard never moves the page
+  height: clamp(15rem, 34vw, 19rem);
   margin: 0 0 1em;
-  padding: 0.75em 1em;
-  color: var(--jt-lines-fg);
-  background: var(--jt-lines-bg);
-  border: 1px solid var(--jt-lines-border);
-  border-radius: var(--jt-lines-radius);
+  background: var(--secondary);
+  border: 1px solid var(--jl-border);
+  border-radius: var(--jl-radius-lg);
+}
 
-  &__body {
-    flex: 1 1 auto;
-    min-width: 0;
-    animation: jt-lines-in 0.4s ease-out;
-  }
+// ── One ad, filling its card ───────────────────────────────────
+.jl-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--jl-gap);
+  box-sizing: border-box;
+  height: 100%;
+  padding: clamp(1rem, 3.5cqi, 2.25rem);
+  overflow: hidden;
+  color: var(--jl-fg);
+  animation: jl-in 0.7s cubic-bezier(0.16, 1, 0.3, 1);
 
-  &__label {
-    display: inline-block;
-    margin-inline-end: 0.5em;
-    font-size: var(--font-down-2);
-    font-weight: 600;
-    color: var(--jt-lines-muted);
-  }
-
-  &__head {
-    display: inline;
-    margin: 0;
-    font-weight: 600;
-  }
-
-  &__text {
-    margin: 0.25em 0 0;
-    color: var(--primary-high);
-  }
-
-  a {
-    color: var(--tertiary);
-  }
-
-  &__thumbs {
-    display: flex;
-    flex: none;
-    align-items: center;
-    gap: 0.125em;
-  }
-
-  &__thumb {
-    color: var(--jt-lines-muted);
-
-    &[aria-pressed="true"] {
-      color: var(--tertiary);
-    }
-  }
-
-  &__tally {
-    margin-inline-start: 0.25em;
-    font-size: var(--font-down-2);
-    color: var(--jt-lines-muted);
-    white-space: nowrap;
+  a:not(.jl-button, .jl-button-alt) {
+    color: var(--jl-accent);
   }
 }
 
-// On a phone the thumbs go under the text
-@media (width <= 600px) {
-  .jt-lines {
-    flex-wrap: wrap;
+// "Ad", always there, in the corner
+.jt-lines__label {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.9rem;
+  padding: 0.15em 0.55em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--jl-muted);
+  border: 1px solid var(--jl-border);
+  border-radius: 999px;
+}
 
-    &__thumbs {
-      margin-inline-start: auto;
+.jt-lines__thumbs {
+  position: absolute;
+  right: 0.6rem;
+  bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.125em;
+}
+
+.jt-lines__thumb {
+  color: var(--jl-muted);
+
+  &[aria-pressed="true"] {
+    color: var(--jl-accent);
+  }
+}
+
+.jt-lines__tally {
+  margin-inline-start: 0.25em;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--jl-muted);
+  white-space: nowrap;
+}
+
+// ── The kit ────────────────────────────────────────────────────
+// Layout
+.jl-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  align-items: center;
+  gap: var(--jl-gap);
+}
+
+.jl-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.jl-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.jl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.75rem;
+}
+
+.jl-center {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.jl-end {
+  margin-inline-start: auto;
+  text-align: end;
+}
+
+.jl-spacer {
+  flex: 1;
+}
+
+// Type
+.jl-kicker,
+.jl-title,
+.jl-title-xl,
+.jl-lead,
+.jl-text,
+.jl-stat,
+.jl-big,
+.jl-quote {
+  margin: 0;
+}
+
+.jl-kicker {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--jl-muted);
+}
+
+.jl-title {
+  font-size: clamp(1.35rem, 0.9rem + 2.2cqi, 2.2rem);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.jl-title-xl {
+  font-size: clamp(1.75rem, 0.9rem + 4.2cqi, 3.4rem);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.jl-lead {
+  max-width: 50ch;
+  font-size: clamp(0.95rem, 0.85rem + 0.5cqi, 1.1rem);
+  line-height: 1.5;
+  color: var(--jl-muted);
+  text-wrap: pretty;
+}
+
+.jl-muted {
+  color: var(--jl-muted);
+}
+
+.jl-small {
+  font-size: 0.85em;
+}
+
+.jl-mono {
+  font-family: var(--d-font-family--monospace, ui-monospace, monospace);
+}
+
+.jl-accent {
+  color: var(--jl-accent);
+}
+
+// Blocks
+.jl-panel {
+  padding: 1rem 1.1rem;
+  background: var(--jl-raised);
+  border: 1px solid var(--jl-border);
+  border-radius: var(--jl-radius-lg);
+}
+
+.jl-glow {
+  background:
+    radial-gradient(
+      circle at 30% 20%,
+      color-mix(in srgb, var(--jl-accent) 24%, transparent),
+      transparent 65%
+    ),
+    var(--jl-raised);
+}
+
+.jl-stat {
+  font-size: clamp(1.8rem, 1.2rem + 3cqi, 3rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.jl-stat-label {
+  font-size: 0.85em;
+  color: var(--jl-muted);
+}
+
+.jl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.jl-chip {
+  padding: 0.2em 0.75em;
+  font-size: 0.85em;
+  border: 1px solid var(--jl-border);
+  border-radius: 999px;
+}
+
+.jl-list {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+
+  li::before {
+    margin-inline-end: 0.5em;
+    color: var(--jl-accent);
+    content: "✓";
+  }
+}
+
+.jl-quote {
+  padding-inline-start: 0.85em;
+  font-style: italic;
+  border-inline-start: 3px solid var(--jl-accent);
+}
+
+.jl-big {
+  font-size: clamp(2.5rem, 1.6rem + 5cqi, 5rem);
+  line-height: 1;
+}
+
+// Actions
+.jl-button,
+.jl-button-alt {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.6em 1.15em;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  border-radius: var(--jl-radius);
+}
+
+.jl-button {
+  color: var(--jl-accent-fg);
+  background: var(--jl-accent);
+  border: 1px solid var(--jl-accent);
+
+  &:hover,
+  &:focus-visible {
+    color: var(--jl-accent-fg);
+    filter: brightness(1.08);
+  }
+}
+
+.jl-button-alt {
+  color: var(--jl-fg);
+  background: transparent;
+  border: 1px solid var(--jl-border);
+
+  &:hover,
+  &:focus-visible {
+    color: var(--jl-fg);
+    background: var(--jl-raised);
+  }
+}
+
+// Motion: gentle, and none for reduced motion
+.jl-float {
+  animation: jl-float 6s ease-in-out infinite;
+}
+
+.jl-pulse {
+  animation: jl-pulse 3s ease-in-out infinite;
+}
+
+.jl-marquee {
+  overflow: hidden;
+  white-space: nowrap;
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 8%,
+    #000 92%,
+    transparent
+  );
+
+  > * {
+    display: inline-block;
+    padding-inline-start: 100%;
+    animation: jl-marquee 22s linear infinite;
+  }
+}
+
+// A phone-wide card: a split's side goes, the main column stays
+@container jl (width < 520px) {
+  .jl-split {
+    grid-template-columns: minmax(0, 1fr);
+
+    > :nth-child(n + 2) {
+      display: none;
     }
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .jt-lines__body {
+  .jl-card,
+  .jl-float,
+  .jl-pulse,
+  .jl-marquee > * {
     animation: none;
   }
 }
 
-@keyframes jt-lines-in {
+@keyframes jl-in {
   from {
     opacity: 0;
+    translate: 12% 0;
+  }
+}
+
+@keyframes jl-float {
+  50% {
+    translate: 0 -0.35rem;
+  }
+}
+
+@keyframes jl-pulse {
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes jl-marquee {
+  to {
+    translate: -100% 0;
   }
 }

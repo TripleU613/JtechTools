@@ -1,12 +1,11 @@
 import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
-import { fn } from "@ember/helper";
 import { on } from "@ember/modifier";
 import { action } from "@ember/object";
 import { getOwner } from "@ember/owner";
 import type RouterService from "@ember/routing/router-service";
 import { service } from "@ember/service";
-import { htmlSafe } from "@ember/template";
+import type { ComponentLike } from "@glint/template";
 import { modifier } from "ember-modifier";
 import { settings, themePrefix } from "virtual:theme";
 import routeAction from "discourse/helpers/route-action";
@@ -27,21 +26,18 @@ const SEEN_KEY = "jt-hero-seen";
 
 type HeroSite = Site & { can_search: boolean };
 
-// jtech-tools' ads service (docs/features/ads.md), when the plugin is on
+// jtech-tools' ads (docs/features/ads.md), when the plugin is on: the hero
+// is then a billboard, the welcome first for a new visitor, then the ads
 interface HeroLine {
   k: string;
-  h: string;
-  t: string;
 }
+type HeroCard = ComponentLike<{ Args: { line: HeroLine } }>;
 interface HeroLines {
   line: HeroLine | null;
-  label: string;
   hidden: boolean;
-  canVote: boolean;
-  isStaff: boolean;
-  vote(line: HeroLine): number | null;
-  tally(line: HeroLine): { up: number; down: number } | null;
-  setVote(line: HeroLine, value: number): void;
+  stage: "welcome" | "ads";
+  card: HeroCard;
+  startIntro(): () => void;
   rotate(element: HTMLElement): () => void;
   watch(element: HTMLElement): () => void;
 }
@@ -56,22 +52,6 @@ export interface JtHeroSignature {
     category?: Category | null;
     tag?: Tag | null;
   };
-}
-
-function eq(a: unknown, b: unknown): boolean {
-  return a === b;
-}
-
-function and(a: unknown, b: unknown): boolean {
-  return !!a && !!b;
-}
-
-function not(a: unknown): boolean {
-  return !a;
-}
-
-function or(a: unknown, b: unknown): boolean {
-  return !!a || !!b;
 }
 
 function reducedMotion(): boolean {
@@ -222,18 +202,15 @@ export default class JtHero extends Component<JtHeroSignature> {
     return () => clearInterval(timer);
   });
 
-  // While the hero carries a line: rotate it, and check it isn't hidden
-  carry = modifier((hero: HTMLElement) => {
+  // The ads' timers, while the hero carries them: the welcome's seconds,
+  // the turns, and the check that the hero isn't hidden
+  billboard = modifier((hero: HTMLElement) => {
     const lines = this.#lines;
     if (!lines || !this.line) {
       return;
     }
-    const stopRotating = lines.rotate(hero);
-    const stopWatching = lines.watch(hero);
-    return () => {
-      stopRotating();
-      stopWatching();
-    };
+    const stops = [lines.startIntro(), lines.rotate(hero), lines.watch(hero)];
+    return () => stops.forEach((stop) => stop());
   });
 
   #lines = (getOwner(this)?.lookup("service:jt-lines") ??
@@ -242,43 +219,26 @@ export default class JtHero extends Component<JtHeroSignature> {
   #firstView = this.entering;
   #planet: JtPlanet | null = null;
 
-  // The line (ad) the hero shows instead of its welcome text, if any
+  // The ad showing, if the plugin has one for this person
   get line(): HeroLine | null {
     const lines = this.#lines;
     return lines && !lines.hidden ? lines.line : null;
   }
 
-  // keyed by the template, so each new line fades in
+  // keyed by the template, so each ad slides in fresh
   get lineList(): HeroLine[] {
     return this.line ? [this.line] : [];
   }
 
-  get lineLabel(): string {
-    return this.#lines?.label ?? "";
+  get card(): HeroCard | null {
+    return this.#lines?.card ?? null;
   }
 
-  get canVote(): boolean {
-    return !!this.#lines?.canVote;
-  }
-
-  get lineVote(): number | null {
-    return this.line && this.#lines ? this.#lines.vote(this.line) : null;
-  }
-
-  get lineTally(): { up: number; down: number } | null {
-    const lines = this.#lines;
-    return this.line && lines?.isStaff ? lines.tally(this.line) : null;
-  }
-
-  // Someone who closed the hero still gets the line, as a slim strip:
-  // no sky, planet or search
-  get slim(): boolean {
-    return this.dismissed && !!this.line;
-  }
-
-  // An ad can't be closed; the ✕ is the welcome's
-  get closable(): boolean {
-    return settings.hero_dismissible && !this.line;
+  // The ads have the card: right away for members, anyone who closed the
+  // welcome or has been here a while; after the welcome's seconds for a
+  // new visitor
+  get onAds(): boolean {
+    return !!this.line && (this.dismissed || this.#lines?.stage === "ads");
   }
 
   get shouldShow(): boolean {
@@ -299,9 +259,8 @@ export default class JtHero extends Component<JtHeroSignature> {
   get heroClass(): string {
     return [
       "jt-hero",
-      settings.hero_planet && !this.slim && "--planet",
-      this.line && "--line",
-      this.slim && "--slim",
+      settings.hero_planet && "--planet",
+      this.onAds && "--lines",
       this.entering && "--enter",
       this.searching && "--searching",
     ]
@@ -314,11 +273,6 @@ export default class JtHero extends Component<JtHeroSignature> {
       this.siteSettings.allow_new_registrations &&
       !this.siteSettings.invite_only
     );
-  }
-
-  @action
-  voteLine(line: HeroLine, value: number) {
-    this.#lines?.setVote(line, value);
   }
 
   @action
@@ -423,97 +377,70 @@ export default class JtHero extends Component<JtHeroSignature> {
         {{this.arrive}}
         {{this.away}}
         {{this.quirks}}
-        {{this.carry}}
+        {{this.billboard}}
       >
-        {{#unless this.slim}}
-          <div aria-hidden="true" class="jt-hero__sky">
-            <span class="jt-hero__stars" {{this.flare}}>
-              <span class="jt-hero__sparkle"></span>
-              <span class="jt-hero__sparkle"></span>
-              <span class="jt-hero__sparkle"></span>
-              <span class="jt-hero__sparkle"></span>
+        <div aria-hidden="true" class="jt-hero__sky">
+          <span class="jt-hero__stars" {{this.flare}}>
+            <span class="jt-hero__sparkle"></span>
+            <span class="jt-hero__sparkle"></span>
+            <span class="jt-hero__sparkle"></span>
+            <span class="jt-hero__sparkle"></span>
+          </span>
+          <span class="jt-hero__light"></span>
+          <span class="jt-hero__meteor"></span>
+          {{#if settings.hero_planet}}
+            <span class="jt-hero__planet" {{this.planet}}>
+              <canvas data-layer="aura"></canvas>
+              <canvas data-layer="back"></canvas>
+              <canvas data-layer="dots"></canvas>
+              <canvas data-layer="front"></canvas>
             </span>
-            <span class="jt-hero__light"></span>
-            <span class="jt-hero__meteor"></span>
-            {{#if settings.hero_planet}}
-              <span class="jt-hero__planet" {{this.planet}}>
-                <canvas data-layer="aura"></canvas>
-                <canvas data-layer="back"></canvas>
-                <canvas data-layer="dots"></canvas>
-                <canvas data-layer="front"></canvas>
-              </span>
-            {{/if}}
-          </div>
-          <span aria-hidden="true" class="jt-hero__edge"><span
-              class="jt-hero__comet"
-            ></span></span>
-        {{/unless}}
+          {{/if}}
+        </div>
+        <span aria-hidden="true" class="jt-hero__edge"><span
+            class="jt-hero__comet"
+          ></span></span>
 
-        {{#if this.closable}}
+        {{! kept while the ads show (hidden, inert): the headline makes room
+          for it, and taking it away could re-wrap the headline and change
+          the card's height }}
+        {{#if settings.hero_dismissible}}
           <button
             aria-label={{i18n (themePrefix "jt.dismiss")}}
             class="jt-hero__close btn-flat no-text"
+            inert={{if this.onAds ""}}
             type="button"
             {{on "click" this.dismiss}}
           >{{dIcon "xmark"}}</button>
         {{/if}}
 
-        <div class="jt-hero__body">
-          <div class="jt-hero__copy">
-            {{#if this.line}}
+        {{! the ads, over the whole card; the welcome stays under them,
+          inert, so the card keeps its height }}
+        {{#if this.onAds}}
+          <div class="jt-hero__lines">
+            {{#let this.card as |Card|}}
               {{#each this.lineList key="k" as |line|}}
-                <div class="jt-hero__line">
-                  <h1 class="jt-hero__title" dir="auto" id="jt-hero-title"><span
-                      class="jt-hero__tag"
-                    >{{this.lineLabel}}</span>{{htmlSafe line.h}}</h1>
-                  {{#if line.t}}
-                    <p class="jt-hero__subtitle" dir="auto">{{htmlSafe
-                        line.t
-                      }}</p>
-                  {{/if}}
-                  {{#if this.canVote}}
-                    <div class="jt-hero__thumbs">
-                      <button
-                        aria-label={{i18n (themePrefix "jt.hero.up")}}
-                        aria-pressed={{if (eq this.lineVote 1) "true" "false"}}
-                        class="btn-flat no-text jt-hero__thumb"
-                        title={{i18n (themePrefix "jt.hero.up")}}
-                        type="button"
-                        {{on "click" (fn this.voteLine line 1)}}
-                      >{{dIcon "thumbs-up"}}</button>
-                      <button
-                        aria-label={{i18n (themePrefix "jt.hero.down")}}
-                        aria-pressed={{if (eq this.lineVote -1) "true" "false"}}
-                        class="btn-flat no-text jt-hero__thumb"
-                        title={{i18n (themePrefix "jt.hero.down")}}
-                        type="button"
-                        {{on "click" (fn this.voteLine line -1)}}
-                      >{{dIcon "thumbs-down"}}</button>
-                      {{#if this.lineTally}}
-                        <span class="jt-hero__tally">{{this.lineTally.up}}
-                          ↑ ·
-                          {{this.lineTally.down}}
-                          ↓</span>
-                      {{/if}}
-                    </div>
-                  {{/if}}
-                </div>
+                <Card @line={{line}} />
               {{/each}}
-            {{else}}
-              <h1
-                class="jt-hero__title"
+            {{/let}}
+          </div>
+        {{/if}}
+
+        <div class="jt-hero__body" inert={{if this.onAds ""}}>
+          <div class="jt-hero__copy">
+            <h1
+              class="jt-hero__title"
+              dir="auto"
+              id="jt-hero-title"
+            >{{settings.hero_title}}</h1>
+            {{#if settings.hero_subtitle}}
+              <p
+                class="jt-hero__subtitle"
                 dir="auto"
-                id="jt-hero-title"
-              >{{settings.hero_title}}</h1>
-              {{#if settings.hero_subtitle}}
-                <p
-                  class="jt-hero__subtitle"
-                  dir="auto"
-                >{{settings.hero_subtitle}}</p>
-              {{/if}}
+              >{{settings.hero_subtitle}}</p>
             {{/if}}
 
-            {{#if (and this.site.can_search (not this.slim))}}
+            {{#if this.site.can_search}}
               <form
                 class="jt-hero__search"
                 role="search"
@@ -541,7 +468,7 @@ export default class JtHero extends Component<JtHeroSignature> {
               </form>
             {{/if}}
 
-            {{#unless (or this.currentUser this.slim)}}
+            {{#unless this.currentUser}}
               <div class="jt-hero__actions">
                 {{#if this.canSignUp}}
                   <DButton

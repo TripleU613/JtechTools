@@ -5,6 +5,7 @@ import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 import type Site from "discourse/models/site";
 import type User from "discourse/models/user";
+import JtLineCard from "../components/jt-line.gts";
 
 // The ads for the home page's welcome area (lib/discourse_jtech_ads.rb,
 // docs/features/ads.md). They arrive inside the preloaded site data as
@@ -20,6 +21,7 @@ export interface JtLine {
   k: string; // key
   h: string; // headline, cleaned HTML
   t: string; // text, cleaned HTML
+  c?: string | null; // the whole card, cleaned HTML of the kit (optional)
   w: number; // weight
   s?: string | null; // starts
   e?: string | null; // ends
@@ -29,8 +31,28 @@ export interface JtLine {
 
 export interface JtLines {
   label: string;
-  every: number;
+  every: number; // seconds per line
+  intro: number; // seconds of the welcome for a new visitor
+  fresh: number; // seconds a logged-out visitor counts as new
   items: JtLine[];
+}
+
+// When this browser first came to the site (milliseconds), kept in the
+// browser only. Neutral name, like everything here.
+const FIRST_SEEN = "jt-l-first";
+
+function firstSeen(): number | null {
+  try {
+    const stored = Number(window.localStorage.getItem(FIRST_SEEN));
+    if (stored > 0) {
+      return stored;
+    }
+    const now = Date.now();
+    window.localStorage.setItem(FIRST_SEEN, String(now));
+    return now;
+  } catch {
+    return null;
+  }
 }
 
 type LinesSite = Site & { jt_lines?: JtLines };
@@ -50,13 +72,21 @@ export default class JtLinesService extends Service {
   @tracked hidden = false;
   @tracked votes: Record<string, number | null> = {};
   @tracked counts: Record<string, JtLineCounts> = {};
+  // The welcome's time is up and the ads have slid in
+  @tracked introOver = false;
 
   // A theme that carries the line itself says so at startup (the JTech
   // theme's hero does, when it's on); then the plugin's card stays out.
   // Decided before anything renders, so the two never trade places.
   themeHosted = false;
 
+  // The component that draws one line (the card); a theme renders it too,
+  // so a line looks the same wherever it's drawn
+  card = JtLineCard;
+
   #first: string | null = null;
+  #introPlanned: boolean | null = null;
+  #introTimer: ReturnType<typeof setTimeout> | null = null;
 
   get data(): JtLines | null {
     return this.site.jt_lines ?? null;
@@ -92,6 +122,16 @@ export default class JtLinesService extends Service {
     );
   }
 
+  // What the welcome area shows: the forum's own welcome first, for a new
+  // logged-out visitor on a theme that has one, else the ads. Members and
+  // anyone here for longer go straight to the ads.
+  get stage(): "welcome" | "ads" {
+    if (!this.items.length) {
+      return "welcome";
+    }
+    return this.#planIntro() && !this.introOver ? "welcome" : "ads";
+  }
+
   get canVote(): boolean {
     return !!this.currentUser;
   }
@@ -108,6 +148,25 @@ export default class JtLinesService extends Service {
     return this.counts[line.k] ?? line.n ?? null;
   }
 
+  // Started by the theme's welcome once it's on the page: after the
+  // welcome's seconds, the ads slide in
+  startIntro(): () => void {
+    if (!this.#planIntro() || this.introOver || this.#introTimer) {
+      return () => {};
+    }
+    const seconds = Math.max(0, this.data?.intro ?? 0);
+    this.#introTimer = setTimeout(() => {
+      this.#introTimer = null;
+      this.introOver = true;
+    }, seconds * 1000);
+    return () => {
+      if (this.#introTimer) {
+        clearTimeout(this.#introTimer);
+        this.#introTimer = null;
+      }
+    };
+  }
+
   hostInTheme() {
     this.themeHosted = true;
   }
@@ -116,7 +175,7 @@ export default class JtLinesService extends Service {
   // screen, the tab is visible and nobody is pointing at or focused on it.
   // Under reduced motion it stays on one. Returns the cleanup.
   rotate(element: HTMLElement): () => void {
-    const every = Math.max(3, this.data?.every ?? 8) * 1000;
+    const every = Math.max(5, this.data?.every ?? 60) * 1000;
     if (this.items.length < 2 || reducedMotion()) {
       return () => {};
     }
@@ -182,6 +241,23 @@ export default class JtLinesService extends Service {
     } catch (error) {
       popupAjaxError(error);
     }
+  }
+
+  // Decided once per page load and not tracked: reading the stage mustn't
+  // change what the page is rendering
+  #planIntro(): boolean {
+    if (this.#introPlanned === null) {
+      const intro = this.data?.intro ?? 0;
+      const fresh = (this.data?.fresh ?? 0) * 1000;
+      const seen = this.currentUser ? null : firstSeen();
+      this.#introPlanned =
+        this.themeHosted &&
+        !this.currentUser &&
+        intro > 0 &&
+        seen !== null &&
+        Date.now() - seen < fresh;
+    }
+    return this.#introPlanned;
   }
 
   #firstPick(items: JtLine[]): string | null {

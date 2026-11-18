@@ -14,8 +14,9 @@ interface JtLineSignature {
   Args: { line: Line };
 }
 
-// One line's content: the label, headline, text, and the thumbs. Shared by
-// the plain card and the fallback; the JTech theme's hero draws its own.
+// One ad, filling its card: the label, then either the whole-card HTML or
+// the headline and text, and the thumbs. Drawn by the plugin's plain card
+// and, through the service, by a theme that carries the ads (the JTech hero).
 // Class names stay neutral (docs/features/ads.md, "Naming").
 export default class JtLine extends Component<JtLineSignature> {
   @service("jt-lines") declare lines: JtLinesService;
@@ -29,40 +30,46 @@ export default class JtLine extends Component<JtLineSignature> {
   }
 
   <template>
-    <div class="jt-lines__body">
+    <div class="jl-card">
       <span class="jt-lines__label">{{this.lines.label}}</span>
-      <p class="jt-lines__head" dir="auto">{{htmlSafe @line.h}}</p>
-      {{#if @line.t}}
-        <p class="jt-lines__text" dir="auto">{{htmlSafe @line.t}}</p>
+      {{#if @line.c}}
+        {{htmlSafe @line.c}}
+      {{else}}
+        <div class="jl-stack">
+          <h2 class="jl-title" dir="auto">{{htmlSafe @line.h}}</h2>
+          {{#if @line.t}}
+            <p class="jl-lead" dir="auto">{{htmlSafe @line.t}}</p>
+          {{/if}}
+        </div>
+      {{/if}}
+      {{#if this.lines.canVote}}
+        <div class="jt-lines__thumbs">
+          <button
+            aria-label={{i18n "jt_lines.up"}}
+            aria-pressed={{if (eq this.vote 1) "true" "false"}}
+            class="btn-flat no-text jt-lines__thumb"
+            title={{i18n "jt_lines.up"}}
+            type="button"
+            {{on "click" (fn this.lines.setVote @line 1)}}
+          >{{icon "thumbs-up"}}</button>
+          <button
+            aria-label={{i18n "jt_lines.down"}}
+            aria-pressed={{if (eq this.vote -1) "true" "false"}}
+            class="btn-flat no-text jt-lines__thumb"
+            title={{i18n "jt_lines.down"}}
+            type="button"
+            {{on "click" (fn this.lines.setVote @line -1)}}
+          >{{icon "thumbs-down"}}</button>
+          {{#if this.tally}}
+            <span class="jt-lines__tally">{{i18n
+                "jt_lines.counts"
+                up=this.tally.up
+                down=this.tally.down
+              }}</span>
+          {{/if}}
+        </div>
       {{/if}}
     </div>
-    {{#if this.lines.canVote}}
-      <div class="jt-lines__thumbs">
-        <button
-          aria-label={{i18n "jt_lines.up"}}
-          aria-pressed={{if (eq this.vote 1) "true" "false"}}
-          class="btn-flat no-text jt-lines__thumb"
-          title={{i18n "jt_lines.up"}}
-          type="button"
-          {{on "click" (fn this.lines.setVote @line 1)}}
-        >{{icon "thumbs-up"}}</button>
-        <button
-          aria-label={{i18n "jt_lines.down"}}
-          aria-pressed={{if (eq this.vote -1) "true" "false"}}
-          class="btn-flat no-text jt-lines__thumb"
-          title={{i18n "jt_lines.down"}}
-          type="button"
-          {{on "click" (fn this.lines.setVote @line -1)}}
-        >{{icon "thumbs-down"}}</button>
-        {{#if this.tally}}
-          <span class="jt-lines__tally">{{i18n
-              "jt_lines.counts"
-              up=this.tally.up
-              down=this.tally.down
-            }}</span>
-        {{/if}}
-      </div>
-    {{/if}}
   </template>
 }
 

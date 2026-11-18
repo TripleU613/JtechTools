@@ -1001,9 +1001,17 @@ en:
       takes the welcome hero's headline and line; elsewhere it's a card in the
       same place. Each ad picks who sees it. Off by default.
     jtech_ads_rotate_seconds: With more than one ad for the same person, how
-      many seconds each stays before the next. Rotation pauses while the
-      pointer or keyboard focus is on the ad, and doesn't happen for people
-      who ask for reduced motion.
+      many seconds each stays before the next slides in, like a billboard.
+      Rotation pauses while the pointer or keyboard focus is on the ad, and
+      doesn't happen for people who ask for reduced motion.
+    jtech_ads_welcome_seconds: A new visitor (not logged in, first minute on
+      the site, see below) first sees the forum's own welcome for this many
+      seconds, then the ads slide in. 0 goes straight to the ads. Members
+      always go straight to the ads, and so does a theme without a welcome.
+    jtech_ads_new_visitor_seconds: For how many seconds after their first
+      page a logged-out visitor counts as new and gets the welcome first.
+      Remembered in their browser only; nothing is sent to the server. A
+      browser that doesn't keep it counts as not new.
     jtech_ads_label: The small word shown before every ad so people know it's
       one, such as "Ad" or "Sponsored".
     jtech_ads_list: The ads. Add, edit, pause (Running) or schedule (Starts,

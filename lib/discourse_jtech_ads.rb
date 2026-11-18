@@ -8,13 +8,28 @@
 # asset or URL of the ads' own for a blocker to match. Nothing the browser
 # sees is named after ads (see "Naming" in the docs).
 #
-# Ads are text and links only: what admins type is cleaned to inline tags on
-# the way out, so no image, video, script or style gets through, and an ad
-# always takes the theme's own look.
+# Ads are text and links only. A simple ad is a headline and a line, cleaned
+# to inline tags. An ad can instead fill the whole card ("card"): HTML built
+# from block tags and the kit's classes (KIT, styled in lines.scss from the
+# theme's variables), so it can be laid out like a small page yet still
+# takes every theme's and palette's look. No image, video, script, style,
+# form or id gets through either way.
 module ::DiscourseJtechAds
   VOTE_VALUES = [-1, 1].freeze
   AUDIENCES = %w[everyone visitors members groups].freeze
   TAGS = %w[a b strong i em u s small mark code br span sub sup].freeze
+  CARD_TAGS = (
+    TAGS + %w[div section header footer h2 h3 h4 p ul ol li blockquote hr kbd]
+  ).freeze
+  # The only classes a card may use: the kit's (assets/stylesheets/lines.scss,
+  # docs/features/ads.md). Exact names, not a prefix.
+  KIT = %w[
+    jl-split jl-row jl-stack jl-grid jl-center jl-end jl-spacer
+    jl-kicker jl-title jl-title-xl jl-lead jl-text jl-muted jl-small jl-mono jl-accent
+    jl-panel jl-glow jl-stat jl-stat-label jl-chips jl-chip jl-list jl-quote jl-big
+    jl-button jl-button-alt
+    jl-float jl-pulse jl-marquee
+  ].freeze
   KEY_FORMAT = /\A[0-9a-f]{12}\z/
 
   Ad =
@@ -22,6 +37,7 @@ module ::DiscourseJtechAds
       :key,
       :headline,
       :text,
+      :card,
       :audience,
       :group_ids,
       :weight,
@@ -99,12 +115,15 @@ module ::DiscourseJtechAds
       {
         label: SiteSetting.jtech_ads_label,
         every: SiteSetting.jtech_ads_rotate_seconds,
+        intro: SiteSetting.jtech_ads_welcome_seconds,
+        fresh: SiteSetting.jtech_ads_new_visitor_seconds,
         items:
           ads.map do |ad|
             item = {
               k: ad.key,
               h: ad.headline,
               t: ad.text,
+              c: ad.card.presence,
               w: ad.weight,
               s: ad.starts_at&.iso8601,
               e: ad.ends_at&.iso8601,
@@ -126,17 +145,30 @@ module ::DiscourseJtechAds
       sanitized =
         Rails::Html::SafeListSanitizer.new.sanitize(pruned, tags: TAGS, attributes: %w[href title])
       fragment = Nokogiri::HTML5.fragment(sanitized)
+      safe_links(fragment)
+      fragment.to_html
+    end
+
+    # A full-card ad's HTML: block and inline tags, the kit's classes only
+    def clean_card(html)
+      return "" if html.blank?
+
+      pruned = Loofah.html5_fragment(html.to_s).scrub!(:prune).to_s
+      sanitized =
+        Rails::Html::SafeListSanitizer.new.sanitize(
+          pruned,
+          tags: CARD_TAGS,
+          attributes: %w[href title class dir],
+        )
+      fragment = Nokogiri::HTML5.fragment(sanitized)
       fragment
-        .css("a")
-        .each do |link|
-          href = link["href"].to_s.strip
-          if safe_href?(href)
-            link["rel"] = "nofollow noopener"
-            link["target"] = "_blank" if href.match?(%r{\A(https?:)?//}i)
-          else
-            link.remove_attribute("href")
-          end
+        .css("[class]")
+        .each do |node|
+          kept = node["class"].split & KIT
+          kept.empty? ? node.remove_attribute("class") : node["class"] = kept.join(" ")
         end
+      fragment.css("[dir]").each { |node| node.remove_attribute("dir") unless %w[ltr rtl auto].include?(node["dir"]) }
+      safe_links(fragment)
       fragment.to_html
     end
 
@@ -161,6 +193,7 @@ module ::DiscourseJtechAds
           key: key_for(entry["name"]),
           headline: headline,
           text: clean(entry["text"]),
+          card: clean_card(entry["card"]),
           audience: AUDIENCES.include?(audience) ? audience : "everyone",
           group_ids: Array(entry["groups"]).map(&:to_i),
           weight: entry["weight"].to_i.clamp(1, 10),
@@ -176,6 +209,20 @@ module ::DiscourseJtechAds
       value.present? ? Time.zone.parse(value.to_s) : nil
     rescue ArgumentError
       nil
+    end
+
+    def safe_links(fragment)
+      fragment
+        .css("a")
+        .each do |link|
+          href = link["href"].to_s.strip
+          if safe_href?(href)
+            link["rel"] = "nofollow noopener"
+            link["target"] = "_blank" if href.match?(%r{\A(https?:)?//}i)
+          else
+            link.remove_attribute("href")
+          end
+        end
     end
 
     def safe_href?(href)

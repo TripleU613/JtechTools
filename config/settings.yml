@@ -1610,9 +1610,23 @@ jtech_ads:
     default: false
     client: false
   jtech_ads_rotate_seconds:
-    default: 8
-    min: 3
+    default: 60
+    min: 5
+    max: 600
+    client: false
+    depends_on:
+      - "jtech_ads_enabled"
+  jtech_ads_welcome_seconds:
+    default: 10
+    min: 0
     max: 120
+    client: false
+    depends_on:
+      - "jtech_ads_enabled"
+  jtech_ads_new_visitor_seconds:
+    default: 60
+    min: 0
+    max: 3600
     client: false
     depends_on:
       - "jtech_ads_enabled"
@@ -1622,7 +1636,7 @@ jtech_ads:
     depends_on:
       - "jtech_ads_enabled"
   jtech_ads_list:
-    default: '[{"name":"your-ad-here","enabled":true,"headline":"Your ad here","text":"Reach the people who read this forum. <a href=\"/about\">Get in touch</a>.","audience":"everyone","groups":[],"weight":1}]'
+    default: '[{"name":"your-ad-here","enabled":true,"headline":"Your ad here","text":"Reach the people who read this forum. <a href=\"/about\">Get in touch</a>.","card":"<div class=\"jl-split\"><div class=\"jl-stack\"><p class=\"jl-kicker\">Your ad here</p><h2 class=\"jl-title-xl\">Reach the people who read this forum.</h2><p class=\"jl-lead\">One card, every page view on the home page, in your words.</p><div class=\"jl-row\"><a class=\"jl-button\" href=\"/about\">Get in touch</a></div></div><div class=\"jl-panel jl-glow jl-center\"><p class=\"jl-big jl-float\">◎</p><p class=\"jl-muted jl-small\">This space</p></div></div>","audience":"everyone","groups":[],"weight":1}]'
     client: false
     type: objects
     depends_on:
@@ -1657,6 +1671,13 @@ jtech_ads:
           description: "The line under the headline. Same rules: text and inline tags such as <a href>, <b>, <i>, <br>."
           validations:
             max_length: 400
+        card:
+          type: string
+          textarea: true
+          label: "Whole card (optional)"
+          description: "Fills the whole card instead of the headline and text: HTML built from the ad kit's classes (jl-title, jl-lead, jl-button, jl-split, jl-panel, jl-stat…; list and examples in docs/features/ads.md). Block and inline tags only; no images, video, styles or scripts. The headline and text above are still shown where the card can't be."
+          validations:
+            max_length: 4000
         audience:
           type: enum
           default: everyone

@@ -783,103 +783,47 @@ $jt-stars-near: (
   }
 }
 
-// ── Carrying an ad (jtech-tools, docs/features/ads.md) ──────────────
-// The ad takes the headline and the line under it. Classes stay the hero's
-// own and neutral: a rule that hides the ad hides the welcome with it.
-.jt-hero.--line {
-  .jt-hero__line {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-    animation: jt-hero-line-in 0.5s ease-out;
-  }
-
-  // An ad's headline is longer than the welcome's: a size down
-  .jt-hero__title {
-    font-size: clamp(1.75rem, 1rem + 3cqw, 3.25rem);
-    line-height: 1.05;
-  }
-
-  // The small word before it ("Ad"), in plain colour, not the headline's fill
-  .jt-hero__tag {
-    display: inline-block;
-    vertical-align: 0.35em;
-    margin-right: 0.6em;
-    padding: 0.2em 0.55em;
-    font-size: var(--jt-text-xs);
-    font-weight: 600;
-    line-height: 1.2;
-    letter-spacing: normal;
-    color: var(--jt-text-muted);
-    -webkit-text-fill-color: var(--jt-text-muted);
-    background: none;
-    border: 1px solid var(--jt-border);
-    border-radius: var(--jt-radius-pill, 999px);
-  }
-
-  .jt-hero__subtitle a,
-  .jt-hero__title a {
-    text-decoration: underline;
-    text-underline-offset: 0.15em;
-  }
-
-  .jt-hero__thumbs {
-    display: flex;
-    align-items: center;
-    gap: var(--space-1);
-  }
-
-  .jt-hero__thumb {
-    color: var(--jt-text-muted);
-
-    &[aria-pressed="true"] {
-      color: var(--jt-text);
-    }
-  }
-
-  .jt-hero__tally {
-    margin-left: var(--space-2);
-    font-size: var(--jt-text-xs);
-    font-variant-numeric: tabular-nums;
-    color: var(--jt-text-muted);
-  }
+// ── The billboard (jtech-tools' ads, docs/features/ads.md) ──────────
+// With the ads on, the card is theirs: the welcome slides away under them
+// (still there, inert, so the card keeps its height) and each ad slides in.
+// The kit (jtech-tools' lines.scss) is drawn from the --jl-* variables;
+// here they're the theme's own tokens, so every palette fits.
+.jt-hero .jt-hero__lines {
+  --jl-fg: var(--jt-text);
+  --jl-muted: var(--jt-text-muted);
+  --jl-border: var(--jt-border);
+  --jl-raised: color-mix(in srgb, var(--jt-surface) 70%, transparent);
+  --jl-accent: var(--jt-text);
+  --jl-accent-fg: var(--jt-surface);
+  --jl-radius: var(--jt-radius-control);
+  --jl-radius-lg: var(--jt-radius-lg);
+  position: absolute;
+  inset: 0;
+  z-index: 3;
 }
 
-// Closed by this person before: the ad alone, as a slim strip
-.jt-hero.--slim {
-  padding: var(--space-3) var(--space-4);
-
-  .jt-hero__line {
-    flex-flow: row wrap;
-    align-items: baseline;
-    gap: var(--space-1) var(--space-3);
+.jt-hero.--lines {
+  .jt-hero__close {
+    visibility: hidden;
   }
 
-  .jt-hero__title {
-    font-size: var(--jt-text-lg, 1.15rem);
-    letter-spacing: -0.01em;
-  }
-
-  .jt-hero__subtitle {
-    flex-basis: 100%;
-    max-width: none;
-    font-size: var(--jt-text-sm);
-  }
-
-  .jt-hero__thumbs {
-    margin-left: auto;
-  }
-}
-
-@keyframes jt-hero-line-in {
-  from {
+  .jt-hero__body,
+  .jt-hero__planet {
     opacity: 0;
-    translate: 0 0.25em;
+    translate: -8% 0;
+    visibility: hidden;
+    transition:
+      opacity 0.5s ease,
+      translate 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+      visibility 0s linear 0.7s;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .jt-hero.--line .jt-hero__line {
-    animation: none;
+  .jt-hero.--lines {
+    .jt-hero__body,
+    .jt-hero__planet {
+      transition: none;
+    }
   }
 }
