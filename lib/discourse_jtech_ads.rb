@@ -63,7 +63,10 @@ module ::DiscourseJtechAds
           user.present?
         when "groups"
           next false if user.nil? || ad.group_ids.empty?
-          group_ids ||= user.group_ids.to_set << Group::AUTO_GROUPS[:everyone]
+          group_ids ||=
+            GroupUser.where(user_id: user.id).pluck(:group_id).to_set << Group::AUTO_GROUPS[
+              :everyone
+            ]
           ad.group_ids.any? { group_ids.include?(it) }
         else
           true
@@ -117,12 +120,11 @@ module ::DiscourseJtechAds
     def clean(html)
       return "" if html.blank?
 
+      # Tags that carry content of their own (script, style, iframe…) go
+      # with their content; the allowlist then strips the rest to their text
+      pruned = Loofah.html5_fragment(html.to_s).scrub!(:prune).to_s
       sanitized =
-        Rails::Html::SafeListSanitizer.new.sanitize(
-          html.to_s,
-          tags: TAGS,
-          attributes: %w[href title],
-        )
+        Rails::Html::SafeListSanitizer.new.sanitize(pruned, tags: TAGS, attributes: %w[href title])
       fragment = Nokogiri::HTML5.fragment(sanitized)
       fragment
         .css("a")

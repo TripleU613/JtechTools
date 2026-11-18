@@ -31,7 +31,7 @@ module DiscourseJtechAds
             created_at: Time.zone.now,
           },
           unique_by: %i[user_id ad_key],
-          update_only: %i[value updated_at],
+          update_only: %i[value],
         )
       end
 
