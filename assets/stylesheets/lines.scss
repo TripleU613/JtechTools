@@ -243,7 +243,9 @@
   border-radius: 999px;
 }
 
-.jt-lines__thumb.btn {
+// Stronger than the theme's flat-button rules (which colour the icon and
+// keep the background clear), so the chosen thumb really shows
+.jt-lines__thumbs .jt-lines__thumb.btn-flat {
   min-height: 0;
   padding: 0.35em 0.55em;
   color: var(--jl-fg);
@@ -255,9 +257,28 @@
     background: var(--jl-raised);
   }
 
+  // the theme colours a button's icon itself; here it follows the button,
+  // so the chosen state shows
+  .d-icon {
+    color: inherit;
+  }
+
   &[aria-pressed="true"] {
     color: var(--jl-accent-fg);
     background: var(--jl-accent);
+    animation: jl-thumb-pop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    &:hover,
+    &:focus-visible {
+      color: var(--jl-accent-fg);
+      background: var(--jl-accent);
+    }
+  }
+}
+
+@keyframes jl-thumb-pop {
+  40% {
+    scale: 1.25;
   }
 }
 
@@ -554,13 +575,14 @@
     bottom: auto;
     gap: 0;
 
-    .btn {
+    .jt-lines__thumb.btn-flat {
       padding: 0.35em 0.45em;
     }
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .jt-lines__thumbs .jt-lines__thumb.btn-flat[aria-pressed="true"],
   .jl-card,
   .jl-card--in,
   .jl-card--out,
