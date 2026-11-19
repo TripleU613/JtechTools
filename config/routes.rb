@@ -267,10 +267,8 @@ end
 # ── Ads (lib/discourse_jtech_ads.rb) ────────────────────────────────────────
 # A neutral path: blockers match "ad"-like URLs.
 Discourse::Application.routes.append do
-  get "/jtech-lines/preview" => "discourse_jtech_ads/previews#index",
-      :defaults => {
-        format: :json,
-      }
+  get "/jtech-lines/votes" => "discourse_jtech_ads/previews#votes", :defaults => { format: :json }
+  get "/jtech-lines/preview" => "discourse_jtech_ads/previews#index", :defaults => { format: :json }
   post "/jtech-lines/preview" => "discourse_jtech_ads/previews#create",
        :defaults => {
          format: :json,

@@ -246,14 +246,6 @@
   }
 }
 
-.jt-lines__tally {
-  margin-inline-start: 0.25em;
-  font-size: 0.75rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--jl-muted);
-  white-space: nowrap;
-}
-
 // ── The kit ────────────────────────────────────────────────────
 // Layout
 // The layout is the card's, never the content's: a split always fills the
@@ -526,8 +518,7 @@
 }
 
 // On a phone the label and thumbs share one small bar at the top right,
-// leaving the bottom of the card to the ad (its button, full width); the
-// staff counts don't fit there and stay on wider screens
+// leaving the bottom of the card to the ad (its button, full width)
 @container jl (width < 520px) {
   .jt-lines__label {
     top: 0.6rem;
@@ -543,10 +534,6 @@
     .btn {
       padding: 0.35em 0.45em;
     }
-  }
-
-  .jt-lines__tally {
-    display: none;
   }
 }
 

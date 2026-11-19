@@ -144,10 +144,6 @@ export default class JtLine extends Component<JtLineSignature> {
     return this.lines.vote(this.args.line);
   }
 
-  get tally() {
-    return this.lines.isStaff ? this.lines.tally(this.args.line) : null;
-  }
-
   get cardClass(): string {
     return [
       "jl-card",
@@ -266,13 +262,6 @@ export default class JtLine extends Component<JtLineSignature> {
             type="button"
             {{on "click" (fn this.lines.setVote @line -1)}}
           >{{icon "thumbs-down"}}</button>
-          {{#if this.tally}}
-            <span class="jt-lines__tally">{{i18n
-                "jt_lines.counts"
-                up=this.tally.up
-                down=this.tally.down
-              }}</span>
-          {{/if}}
         </div>
       {{/if}}
     </div>

@@ -13,11 +13,6 @@ import JtLineCard from "../components/jt-line.gts";
 // site.jt_lines. Nothing in the browser is named after ads: blockers hide
 // elements and requests by names like that.
 
-export interface JtLineCounts {
-  up: number;
-  down: number;
-}
-
 export interface JtLine {
   k: string; // key
   h: string; // headline, cleaned HTML
@@ -27,7 +22,6 @@ export interface JtLine {
   s?: string | null; // starts
   e?: string | null; // ends
   v?: number | null; // this member's thumbs (members only)
-  n?: JtLineCounts; // counts (staff only)
   x?: string | null; // the card's own CSS: then it's an app (shadow root)
   o?: boolean | null; // the forum's own (house): no label, no thumbs
   i?: boolean | null; // the welcome: shown first to new visitors
@@ -87,7 +81,6 @@ export default class JtLinesService extends Service {
   // line in the fallback place instead
   @tracked hidden = false;
   @tracked votes: Record<string, number | null> = {};
-  @tracked counts: Record<string, JtLineCounts> = {};
   // The welcome's time is up and the ads have slid in
   @tracked introOver = false;
   // An admin's preview (?jl_preview=…): this one ad only, for them only
@@ -199,10 +192,6 @@ export default class JtLinesService extends Service {
     return line.k in this.votes ? this.votes[line.k] : (line.v ?? null);
   }
 
-  tally(line: JtLine): JtLineCounts | null {
-    return this.counts[line.k] ?? line.n ?? null;
-  }
-
   // Started by the theme's welcome once it's on the page: after the
   // welcome's seconds, the ads slide in
   startIntro(): () => void {
@@ -298,9 +287,6 @@ export default class JtLinesService extends Service {
         data: { value: next },
       });
       this.votes = { ...this.votes, [line.k]: result.v ?? null };
-      if (result.n) {
-        this.counts = { ...this.counts, [line.k]: result.n };
-      }
     } catch (error) {
       popupAjaxError(error);
     }

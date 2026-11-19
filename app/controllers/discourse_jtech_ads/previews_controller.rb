@@ -11,6 +11,11 @@ module DiscourseJtechAds
       render json: { names: Manager.entries.map { it["name"] } }
     end
 
+    # Thumbs per ad and who gave them: admins only
+    def votes
+      render json: { ads: Manager.votes }
+    end
+
     def create
       preview =
         if params[:name].present? && params[:headline].blank?

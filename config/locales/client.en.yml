@@ -146,7 +146,6 @@ en:
     jt_lines:
       up: I like this
       down: Not for me
-      counts: "%{up} up · %{down} down"
       preview: "Preview · only you see this"
       search: "Search the forum"
     reqpm:
@@ -936,6 +935,12 @@ en:
           title: Elections
           published: "published %{date}"
       jtech_tools:
+        lines_votes:
+          title: Thumbs
+          about: Who gave each ad a thumb up or down. Only admins see these; nobody sees counts on the ads.
+          none: No thumbs yet.
+          up: up
+          down: down
         lines_preview:
           title: Preview an ad
           about: Opens the home page in a new tab with one ad in the ad space, for you only, for an hour. Nothing changes for anyone else.
