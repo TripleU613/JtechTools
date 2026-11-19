@@ -6,7 +6,7 @@ Off by default. Turn on `jtech_ads_enabled`: **Admin → Plugins → Jtech Tools
 
 ## The space
 
-The space has one fixed size, set by the space and never by an ad: about 224px tall on a phone, up to 272px on a wide screen, the width of the content column. An ad fills it; anything that doesn't fit is cut, never grown into. Switching ads never moves the page.
+The space has one fixed size, set by the space and never by an ad: up to 272px tall on a wide screen, the width of the content column; on a phone (600px wide or less) a card of its own, 320px tall, so an ad can stack a picture band over its words. An ad fills it; anything that doesn't fit is cut, never grown into. Switching ads never moves the page.
 
 - **JTech theme, hero on** (`hero_enabled`): the hero card is the space. While ads show, the whole card is theirs: no welcome text, search, sign-up buttons, globe or ✕.
 - **Any other theme, or the JTech theme with its hero off**: a card in the same place, built from core's colour scheme.
@@ -89,7 +89,8 @@ An ad with **CSS** (the CSS field) is an **app**: its whole-card HTML and its CS
 - **HTML:** block and inline tags, any classes, and inline SVG (shapes, gradients, text; no `use`, `image`, `foreignObject`, `animate`). No images, video, frames, scripts, forms or styles. Up to 8000 characters and 400 elements.
 - **CSS:** up to 8000 characters; `@keyframes`, `@media`, `@container`, `@supports`. **Refused whole** (the ad then shows as a plain kit card) if it contains `url(`, `image-set(`, `image(`, `src(`, `@import`, `@font-face`, a backslash, `expression(`, `behavior` or `-moz-binding`: nothing may load from anywhere. The app's root is a size container for `@container` queries.
 - **Colours:** the `--jl-*` variables (below) reach inside, so an app fits every theme and palette, light and dark.
-- **Reserved corners:** the label sits top right and the thumbs bottom right, above the app. Leave them clear. An app can't cover or remove them.
+- **Reserved corners:** on wide screens the label sits top right and the thumbs bottom right; on a phone (card under 520px wide) both share one small bar at the top right and the bottom is free for the ad's button. Leave them clear. An app can't cover or remove them.
+- **Phones get their own layout.** Design the phone card (about 360–400px wide, 320px tall) as its own layout: a picture band, then the words, then a full-width button. Not the wide layout with pieces removed.
 - **Pieces it can ask for:** `<div class="jl-search"></div>` becomes a search box, `<div class="jl-auth"></div>` Sign up / Log in for visitors.
 - **Performance:** animate transform and opacity, few elements, slow loops. The space pauses an app's animations when it's off screen or the tab is hidden, and stops them for reduced motion. Only the ad showing is on the page (two during a swap).
 
