@@ -1600,3 +1600,128 @@ jtech_market_accounts:
   jtech_market_origin:
     default: "https://market.jtechforums.org"
     client: false
+
+# ───────────────────────────────────────────────────────────────────────────
+# Jtech — Ads (one placement: the welcome area on the home page;
+# lib/discourse_jtech_ads.rb, docs/features/ads.md)
+# ───────────────────────────────────────────────────────────────────────────
+jtech_ads:
+  jtech_ads_enabled:
+    default: false
+    client: false
+  jtech_ads_rotate_seconds:
+    default: 60
+    min: 5
+    max: 600
+    client: false
+    depends_on:
+      - "jtech_ads_enabled"
+  jtech_ads_welcome_seconds:
+    default: 10
+    min: 0
+    max: 120
+    client: false
+    depends_on:
+      - "jtech_ads_enabled"
+  jtech_ads_new_visitor_seconds:
+    default: 60
+    min: 0
+    max: 3600
+    client: false
+    depends_on:
+      - "jtech_ads_enabled"
+  jtech_ads_label:
+    default: "Ad"
+    client: false
+    depends_on:
+      - "jtech_ads_enabled"
+  jtech_ads_list:
+    default: '[{"name":"your-ad-here","enabled":true,"headline":"Your ad here","text":"Reach the people who read this forum. <a href=\"/about\">Get in touch</a>.","card":"<div class=\"jl-split\"><div class=\"jl-stack\"><p class=\"jl-kicker\">Your ad here</p><h2 class=\"jl-title-xl\">Reach the people who read this forum.</h2><p class=\"jl-lead\">One card, every page view on the home page, in your words.</p><div class=\"jl-row\"><a class=\"jl-button\" href=\"/about\">Get in touch</a></div></div><div class=\"jl-panel jl-glow jl-center\"><p class=\"jl-big jl-float\">◎</p><p class=\"jl-muted jl-small\">This space</p></div></div>","audience":"everyone","groups":[],"weight":1}]'
+    client: false
+    type: objects
+    depends_on:
+      - "jtech_ads_enabled"
+    schema:
+      name: Ad
+      identifier: name
+      properties:
+        name:
+          type: string
+          required: true
+          label: "Name"
+          description: "Your name for this ad, unique. Shown nowhere on the site. Thumbs up and down are counted per name, so renaming an ad starts its count over."
+          validations:
+            max_length: 60
+        enabled:
+          type: boolean
+          default: true
+          label: "Running"
+          description: "Off keeps the ad saved here without showing it."
+        headline:
+          type: string
+          required: true
+          label: "Headline"
+          description: "The big line. Text, with <b>, <i>, <a href> and similar inline tags if you want them. No images, video or styles."
+          validations:
+            max_length: 120
+        text:
+          type: string
+          textarea: true
+          label: "Text"
+          description: "The line under the headline. Same rules: text and inline tags such as <a href>, <b>, <i>, <br>."
+          validations:
+            max_length: 400
+        card:
+          type: string
+          textarea: true
+          label: "Whole card (optional)"
+          description: "Fills the whole space instead of the headline and text. Without CSS below: HTML built from the ad kit's classes (jl-title, jl-lead, jl-button, jl-split…). With CSS: an app, any classes and inline SVG. No images, video, scripts, forms or styles in the HTML. Details in docs/features/ads.md. The headline and text above are still shown where the card can't be."
+          validations:
+            max_length: 8000
+        css:
+          type: string
+          textarea: true
+          label: "CSS (optional, makes it an app)"
+          description: "The card's own CSS. It runs sealed off from the page, inside the fixed space, so it can't change anything else or the space's size. Use the --jl-* colour variables to match the theme. Refused whole if it could load anything from anywhere: url(), @import, fonts, backslashes."
+          validations:
+            max_length: 8000
+        house:
+          type: boolean
+          default: false
+          label: "The forum's own"
+          description: "For the forum's own content only (its welcome, its own services): no Ad label and no thumbs."
+        intro:
+          type: boolean
+          default: false
+          label: "Welcome"
+          description: "Shown first to new visitors, for the welcome's seconds, in place of the theme's own welcome."
+        audience:
+          type: enum
+          default: everyone
+          choices:
+            - everyone
+            - visitors
+            - members
+            - groups
+          label: "Who sees it"
+          description: "everyone; visitors (not logged in); members (logged in); groups (only members of the groups below)."
+        groups:
+          type: groups
+          label: "Groups"
+          description: "With 'groups' above: who sees this ad."
+        weight:
+          type: integer
+          default: 1
+          label: "Weight"
+          description: "How often it comes up next to the others someone can see. 2 shows twice as often as 1."
+          validations:
+            min: 1
+            max: 10
+        starts_at:
+          type: datetime
+          label: "Starts"
+          description: "Optional. Not shown before this time."
+        ends_at:
+          type: datetime
+          label: "Ends"
+          description: "Optional. Not shown after this time."

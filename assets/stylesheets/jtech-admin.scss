@@ -16,3 +16,30 @@
     gap: 0.5em;
   }
 }
+
+// The Ads tab's preview panel (admin/…/jtech-lines-preview.gts)
+.jtech-lines-preview {
+  display: grid;
+  gap: 0.75em;
+  max-width: 40rem;
+  margin-bottom: 1.5em;
+
+  h3,
+  p {
+    margin: 0;
+  }
+
+  label {
+    display: grid;
+    gap: 0.25em;
+  }
+
+  textarea {
+    width: 100%;
+    font-family: var(--d-font-family--monospace, monospace);
+  }
+
+  .btn {
+    justify-self: start;
+  }
+}

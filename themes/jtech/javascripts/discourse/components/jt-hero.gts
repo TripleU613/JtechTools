@@ -2,8 +2,10 @@ import Component from "@glimmer/component";
 import { tracked } from "@glimmer/tracking";
 import { on } from "@ember/modifier";
 import { action } from "@ember/object";
+import { getOwner } from "@ember/owner";
 import type RouterService from "@ember/routing/router-service";
 import { service } from "@ember/service";
+import type { ComponentLike } from "@glint/template";
 import { modifier } from "ember-modifier";
 import { settings, themePrefix } from "virtual:theme";
 import routeAction from "discourse/helpers/route-action";
@@ -23,6 +25,30 @@ const DISMISS_KEY = "jt-hero-dismissed";
 const SEEN_KEY = "jt-hero-seen";
 
 type HeroSite = Site & { can_search: boolean };
+
+// jtech-tools' ads (docs/features/ads.md), when the plugin is on: the hero
+// is then a billboard, the welcome first for a new visitor, then the ads
+interface HeroLine {
+  k: string;
+}
+interface HeroShown {
+  line: HeroLine;
+  state: "in" | "out" | "still";
+}
+type HeroCard = ComponentLike<{
+  Args: { line: HeroLine; state?: "in" | "out" | "still" };
+}>;
+interface HeroLines {
+  line: HeroLine | null;
+  introLine: HeroLine | null;
+  shown: HeroShown[];
+  hidden: boolean;
+  stage: "welcome" | "ads";
+  card: HeroCard;
+  startIntro(): () => void;
+  rotate(element: HTMLElement): () => void;
+  watch(element: HTMLElement): () => void;
+}
 
 interface HeroSiteSettings {
   allow_new_registrations: boolean;
@@ -184,11 +210,54 @@ export default class JtHero extends Component<JtHeroSignature> {
     return () => clearInterval(timer);
   });
 
+  // The ads' timers, while the hero carries them: the welcome's seconds,
+  // the turns, and the check that the hero isn't hidden
+  billboard = modifier((hero: HTMLElement) => {
+    const lines = this.#lines;
+    if (!lines || !this.line) {
+      return;
+    }
+    const stops = [lines.startIntro(), lines.rotate(hero), lines.watch(hero)];
+    return () => stops.forEach((stop) => stop());
+  });
+
+  #lines = (getOwner(this)?.lookup("service:jt-lines") ??
+    null) as HeroLines | null;
+
   #firstView = this.entering;
   #planet: JtPlanet | null = null;
 
+  // The ad showing, if the plugin has one for this person
+  get line(): HeroLine | null {
+    const lines = this.#lines;
+    return lines && !lines.hidden ? lines.line : null;
+  }
+
+  // The ads on the card now: the one showing, and during a swap the one
+  // leaving (keyed by the template)
+  get shown(): HeroShown[] {
+    return this.#lines?.shown ?? [];
+  }
+
+  get card(): HeroCard | null {
+    return this.#lines?.card ?? null;
+  }
+
+  // The ads have the card: right away for members, anyone who closed the
+  // welcome or has been here a while; after the welcome's seconds for a
+  // new visitor
+  // A welcome app (an ad that is the welcome) takes the whole card from
+  // the start; otherwise the hero's own welcome first, for a new visitor
+  get onAds(): boolean {
+    const lines = this.#lines;
+    return (
+      !!this.line &&
+      (this.dismissed || lines?.stage === "ads" || !!lines?.introLine)
+    );
+  }
+
   get shouldShow(): boolean {
-    if (!settings.hero_enabled || this.dismissed) {
+    if (!settings.hero_enabled || (this.dismissed && !this.line)) {
       return false;
     }
     if (this.args.category || this.args.tag) {
@@ -206,6 +275,7 @@ export default class JtHero extends Component<JtHeroSignature> {
     return [
       "jt-hero",
       settings.hero_planet && "--planet",
+      this.onAds && "--lines",
       this.entering && "--enter",
       this.searching && "--searching",
     ]
@@ -322,6 +392,7 @@ export default class JtHero extends Component<JtHeroSignature> {
         {{this.arrive}}
         {{this.away}}
         {{this.quirks}}
+        {{this.billboard}}
       >
         <div aria-hidden="true" class="jt-hero__sky">
           <span class="jt-hero__stars" {{this.flare}}>
@@ -345,16 +416,32 @@ export default class JtHero extends Component<JtHeroSignature> {
             class="jt-hero__comet"
           ></span></span>
 
+        {{! kept while the ads show (hidden, inert): the headline makes room
+          for it, and taking it away could re-wrap the headline and change
+          the card's height }}
         {{#if settings.hero_dismissible}}
           <button
             aria-label={{i18n (themePrefix "jt.dismiss")}}
             class="jt-hero__close btn-flat no-text"
+            inert={{if this.onAds ""}}
             type="button"
             {{on "click" this.dismiss}}
           >{{dIcon "xmark"}}</button>
         {{/if}}
 
-        <div class="jt-hero__body">
+        {{! the ads, over the whole card; the welcome stays under them,
+          inert, so the card keeps its height }}
+        {{#if this.onAds}}
+          <div class="jt-hero__lines">
+            {{#let this.card as |Card|}}
+              {{#each this.shown key="line.k" as |item|}}
+                <Card @line={{item.line}} @state={{item.state}} />
+              {{/each}}
+            {{/let}}
+          </div>
+        {{/if}}
+
+        <div class="jt-hero__body" inert={{if this.onAds ""}}>
           <div class="jt-hero__copy">
             <h1
               class="jt-hero__title"

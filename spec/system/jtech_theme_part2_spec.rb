@@ -20,6 +20,69 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
     expect(page).to have_no_css(".jt-hero")
   end
 
+  # With jtech-tools' ads on, the hero is the ad space: a returning visitor
+  # gets the ad over the whole card (no welcome, search or ✕) at the space's
+  # own fixed height; a new visitor gets the welcome first, then the ad
+  it "turns the hero into the ad space, after the welcome for a new visitor" do
+    SiteSetting.jtech_ads_enabled = true
+    SiteSetting.jtech_ads_welcome_seconds = 2
+    SiteSetting.jtech_ads_list = [
+      {
+        name: "spring",
+        enabled: true,
+        headline: "Spring sale",
+        card: %(<h2 class="jl-title-xl">Spring sale</h2><p class="jl-lead">#{"long " * 200}</p>),
+        audience: "everyone",
+      },
+    ].to_json
+
+    visit("/srv/status")
+    page.execute_script("localStorage.setItem('jt-l-first', String(Date.now() - 3600e3))")
+    visit("/latest")
+    expect(page).to have_css(".jt-hero.--lines .jt-hero__lines .jl-title-xl", text: "Spring sale")
+    expect(page).to have_css(".jt-hero__lines .jt-lines__label", text: "Ad")
+    expect(page).to have_no_css(".jt-hero__close", visible: :visible)
+    expect(page).to have_no_css(".jt-hero__search", visible: :visible)
+    expect(page).to have_no_css(".jt-lines")
+    height =
+      page.evaluate_script("document.querySelector('.jt-hero').getBoundingClientRect().height")
+    expect(height).to be < 300
+
+    page.execute_script("localStorage.clear()")
+    visit("/latest")
+    expect(page).to have_css(".jt-hero:not(.--lines) .jt-hero__title")
+    expect(page).to have_css(".jt-hero.--lines .jl-title-xl", text: "Spring sale", wait: 5)
+    expect_no_theme_errors
+  end
+
+  # A welcome app (the forum's own, an app) takes the hero from the start
+  # for a new visitor, with no label, then hands over to the next ad
+  it "opens with the welcome app for a new visitor, then the next ad" do
+    SiteSetting.jtech_ads_enabled = true
+    SiteSetting.jtech_ads_welcome_seconds = 2
+    SiteSetting.jtech_ads_list = [
+      {
+        name: "welcome",
+        enabled: true,
+        headline: "Welcome",
+        card: %(<h1 class="t">Welcome</h1><div class="jl-search"></div>),
+        css: ".t { margin: 1rem }",
+        house: true,
+        intro: true,
+        audience: "visitors",
+      },
+      { name: "next", enabled: true, headline: "Next one", audience: "everyone" },
+    ].to_json
+
+    visit("/latest")
+    expect(page).to have_css(".jt-hero.--lines .jl-card--app")
+    expect(page).to have_no_css(".jt-hero__lines .jt-lines__label")
+    expect(page).to have_no_css(".jt-hero__title", visible: :visible)
+    expect(page).to have_css(".jt-hero__lines .jl-title", text: "Next one", wait: 6)
+    expect(page).to have_css(".jt-hero__lines .jt-lines__label", text: "Ad")
+    expect_no_theme_errors
+  end
+
   # Hidden touches: the planet turns by hand (held while it's dragged, and
   # the click that ends a drag sends nothing), a tap on the empty sky sends
   # a shooting star, and the Konami code a shower of them

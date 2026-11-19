@@ -263,3 +263,30 @@ Discourse::Application.routes.append do
   # Ember entry point (hard loads and links from notifications).
   get "/elections" => "discourse_mod_elections/elections#page"
 end
+
+# ── Ads (lib/discourse_jtech_ads.rb) ────────────────────────────────────────
+# A neutral path: blockers match "ad"-like URLs.
+Discourse::Application.routes.append do
+  get "/jtech-lines/preview" => "discourse_jtech_ads/previews#index",
+      :defaults => {
+        format: :json,
+      }
+  post "/jtech-lines/preview" => "discourse_jtech_ads/previews#create",
+       :defaults => {
+         format: :json,
+       }
+  get "/jtech-lines/preview/:token" => "discourse_jtech_ads/previews#show",
+      :constraints => {
+        token: /[0-9a-f]{24}/,
+      },
+      :defaults => {
+        format: :json,
+      }
+  put "/jtech-lines/:key" => "discourse_jtech_ads/votes#update",
+      :constraints => {
+        key: /[0-9a-f]{12}/,
+      },
+      :defaults => {
+        format: :json,
+      }
+end

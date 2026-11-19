@@ -184,6 +184,7 @@ export const JT_ICON_MAP: Record<string, string> = {
   table: "table",
   "table-cells": "grid-3x3",
   tag: "tag",
+  "thumbs-down": "thumbs-down",
   "thumbs-up": "thumbs-up",
   thumbtack: "pin",
   "trash-can": "trash-2",

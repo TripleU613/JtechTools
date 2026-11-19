@@ -143,6 +143,12 @@ en:
         sold: Sold
         mark_sold: Mark as sold
         mark_available: Mark as available
+    jt_lines:
+      up: I like this
+      down: Not for me
+      counts: "%{up} up · %{down} down"
+      preview: "Preview · only you see this"
+      search: "Search the forum"
     reqpm:
       title: REQ-PM
       button:
@@ -797,6 +803,7 @@ en:
           listing_format: Listing format
           mod_elections: Mod elections
           market_accounts: Market accounts
+          ads: Ads
           all_settings: All settings
   admin_js:
     admin:
@@ -929,6 +936,14 @@ en:
           title: Elections
           published: "published %{date}"
       jtech_tools:
+        lines_preview:
+          title: Preview an ad
+          about: Opens the home page in a new tab with one ad in the ad space, for you only, for an hour. Nothing changes for anyone else.
+          saved: Saved ad
+          or_draft: Or a draft that isn't saved
+          headline: Headline
+          card: Whole card HTML (optional)
+          open: Preview
         actions:
           title: Maintenance actions
           register_webhook:
@@ -974,6 +989,7 @@ en:
           jtech_disteleplus: Jtech — Disteleplus
           jtech_translator: Jtech — Translator tweaks
           jtech_market_accounts: Jtech — Market accounts
+          jtech_ads: Jtech — Ads
           jtech_smart_search: Jtech — Smart search
           jtech_popup_notifications: Jtech — Desktop pop-ups
           jtech_mod_whispers: "Jtech — Mod: Whispers"

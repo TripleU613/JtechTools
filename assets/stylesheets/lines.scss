@@ -1,0 +1,552 @@
+// Ads in the home page's welcome area (docs/features/ads.md): the plain card
+// any theme gets, and the kit a whole-card ad is built from. Neutral class
+// names on purpose ("Naming" in the docs).
+//
+// Everything is drawn from the --jl-* variables. Here they come from core's
+// colour scheme, so any theme and palette fits; a theme that carries the
+// ads itself (the JTech hero) only sets these variables to its own tokens.
+.jt-lines,
+.jt-hero__lines {
+  --jl-fg: var(--primary);
+  --jl-muted: var(--primary-medium);
+  --jl-border: var(--primary-low);
+  --jl-raised: var(--primary-very-low);
+  --jl-accent: var(--tertiary);
+  --jl-accent-fg: var(--secondary);
+  --jl-radius: var(--d-border-radius);
+  --jl-radius-lg: var(--d-border-radius-large, var(--d-border-radius));
+  --jl-gap: clamp(0.6rem, 2cqi, 1.25rem);
+
+  // The ad space's one height, set by the space, never by an ad: about
+  // 224px on a phone, 272px on a wide screen. Content is cut, not grown into.
+  --jl-height: clamp(14rem, 11rem + 9vw, 17rem);
+  container: jl / inline-size;
+}
+
+// ── The plain card (any theme) ─────────────────────────────────
+.jt-lines {
+  position: relative;
+  overflow: hidden;
+
+  // every ad gets the same room, so the billboard never moves the page
+  height: var(--jl-height);
+  margin: 0 0 1em;
+  background: var(--secondary);
+  border: 1px solid var(--jl-border);
+  border-radius: var(--jl-radius-lg);
+}
+
+// ── One ad, filling its card ───────────────────────────────────
+.jl-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--jl-gap);
+  box-sizing: border-box;
+  height: 100%;
+  padding: clamp(0.9rem, 2.6cqi, 1.75rem);
+  overflow: hidden;
+  color: var(--jl-fg);
+  animation: jl-in 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+
+  a:not(.jl-button, .jl-button-alt) {
+    color: var(--jl-accent);
+  }
+}
+
+// An app fills the whole card, edge to edge, in its own shadow root
+// (components/jt-line.gts); the label and thumbs sit above it
+.jl-card--app {
+  padding: 0;
+}
+
+.jl-app {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  contain: strict;
+}
+
+// A swap is a billboard panel change: one seam sweeps left to right, the
+// leaving ad is cut away ahead of it and the arriving one is uncovered
+// behind it, with a thin light edge riding the seam.
+//
+// Cards have no background of their own, so the two are clipped to
+// complementary sides of the seam; otherwise one would show through the
+// other. clip-path is in each card's own box, so each inset is offset by
+// that card's translate, which keeps the seam at the same screen x on both.
+// That only holds while both run the same duration, easing and start, and
+// while every geometric value sits in from/to only (a middle keyframe would
+// re-ease its segment), so dimming is a second animation. No scale: it
+// can't be compensated in the inset.
+//
+// The leaving card drifts 2% right as if pushed, and its last 2% is pushed
+// past the space's edge. The arriving one trails in from 1.25% left, less
+// than a card's padding, so its content is never sliced at the left edge.
+// Finishes at 1000ms, inside the 1100ms the swap keeps both mounted.
+.jl-card--out {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  animation:
+    jl-wipe-out 1s cubic-bezier(0.5, 0, 0.25, 1) forwards,
+    jl-dim-out 1s linear forwards;
+}
+
+.jl-card--in {
+  animation: jl-wipe-in 1s cubic-bezier(0.5, 0, 0.25, 1) both;
+
+  // the light edge on the revealed side of the seam, above an app's root
+  &::after {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    content: "";
+    pointer-events: none;
+    background: linear-gradient(
+      90deg,
+      transparent calc(100% - 7rem),
+      color-mix(in srgb, var(--jl-fg) 7%, transparent) calc(100% - 2px),
+      color-mix(in srgb, var(--jl-fg) 50%, transparent) calc(100% - 1.5px)
+    );
+    opacity: 0;
+    animation:
+      jl-seam 1s cubic-bezier(0.5, 0, 0.25, 1) both,
+      jl-seam-glow 1s linear both;
+  }
+}
+
+// Said here too, so the swap is a plain cut wherever this file lands in the
+// cascade: the leaving card stays whole on top until it's removed.
+@media (prefers-reduced-motion: reduce) {
+  .jl-card--out,
+  .jl-card--in {
+    animation: none;
+  }
+
+  .jl-card--in::after {
+    display: none;
+    animation: none;
+  }
+}
+
+@keyframes jl-wipe-out {
+  from {
+    translate: 0 0;
+    clip-path: inset(0 0 0 0);
+  }
+
+  to {
+    translate: 2% 0;
+    clip-path: inset(0 0 0 98%);
+  }
+}
+
+@keyframes jl-dim-out {
+  0% {
+    opacity: 1;
+  }
+
+  60% {
+    opacity: 0.6;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes jl-wipe-in {
+  from {
+    translate: -1.25% 0;
+    clip-path: inset(0 98.75% 0 0);
+  }
+
+  to {
+    translate: 0 0;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes jl-seam {
+  from {
+    translate: -98.75% 0;
+  }
+
+  to {
+    translate: 0 0;
+  }
+}
+
+@keyframes jl-seam-glow {
+  0% {
+    opacity: 0;
+  }
+
+  8% {
+    opacity: 1;
+  }
+
+  75% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+.jl-card--still {
+  animation: none;
+}
+
+// "Ad", always there, in the corner
+.jt-lines__label {
+  position: absolute;
+  z-index: 2;
+  top: 0.75rem;
+  right: 0.9rem;
+  padding: 0.15em 0.55em;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--jl-muted);
+  border: 1px solid var(--jl-border);
+  border-radius: 999px;
+}
+
+.jt-lines__thumbs {
+  position: absolute;
+  z-index: 2;
+  right: 0.6rem;
+  bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.125em;
+}
+
+.jt-lines__thumb {
+  color: var(--jl-muted);
+
+  &[aria-pressed="true"] {
+    color: var(--jl-accent);
+  }
+}
+
+.jt-lines__tally {
+  margin-inline-start: 0.25em;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--jl-muted);
+  white-space: nowrap;
+}
+
+// ── The kit ────────────────────────────────────────────────────
+// Layout
+// The layout is the card's, never the content's: a split always fills the
+// card, its columns are fixed shares of the width, and each column is the
+// card's full height, its content centred inside. Two ads with different
+// content still have the same boxes in the same places.
+.jl-split {
+  display: grid;
+  flex: 1 1 0;
+  grid-template-rows: minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  align-items: stretch;
+  gap: var(--jl-gap);
+  min-height: 0;
+
+  > * {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
+.jl-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+}
+
+.jl-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.jl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+  gap: 0.75rem;
+}
+
+.jl-center {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.jl-end {
+  margin-inline-start: auto;
+  text-align: end;
+}
+
+.jl-spacer {
+  flex: 1;
+}
+
+// Type
+.jl-kicker,
+.jl-title,
+.jl-title-xl,
+.jl-lead,
+.jl-text,
+.jl-stat,
+.jl-big,
+.jl-quote {
+  margin: 0;
+}
+
+.jl-kicker {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--jl-muted);
+}
+
+.jl-title {
+  font-size: clamp(1.2rem, 0.85rem + 1.6cqi, 1.85rem);
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.jl-title-xl {
+  font-size: clamp(1.45rem, 0.8rem + 3cqi, 2.6rem);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+// at most two lines: the space is fixed
+.jl-lead {
+  display: -webkit-box;
+  max-width: 54ch;
+  overflow: hidden;
+  font-size: clamp(0.9rem, 0.82rem + 0.4cqi, 1.05rem);
+  line-height: 1.45;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  color: var(--jl-muted);
+  text-wrap: pretty;
+}
+
+.jl-muted {
+  color: var(--jl-muted);
+}
+
+.jl-small {
+  font-size: 0.85em;
+}
+
+.jl-mono {
+  font-family: var(--d-font-family--monospace, ui-monospace, monospace);
+}
+
+.jl-accent {
+  color: var(--jl-accent);
+}
+
+// Blocks
+.jl-panel {
+  padding: 1rem 1.1rem;
+  background: var(--jl-raised);
+  border: 1px solid var(--jl-border);
+  border-radius: var(--jl-radius-lg);
+}
+
+.jl-glow {
+  background:
+    radial-gradient(
+      circle at 30% 20%,
+      color-mix(in srgb, var(--jl-accent) 24%, transparent),
+      transparent 65%
+    ),
+    var(--jl-raised);
+}
+
+.jl-stat {
+  font-size: clamp(1.5rem, 1rem + 2.4cqi, 2.5rem);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.jl-stat-label {
+  font-size: 0.85em;
+  color: var(--jl-muted);
+}
+
+.jl-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.jl-chip {
+  padding: 0.2em 0.75em;
+  font-size: 0.85em;
+  border: 1px solid var(--jl-border);
+  border-radius: 999px;
+}
+
+.jl-list {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+
+  li::before {
+    margin-inline-end: 0.5em;
+    color: var(--jl-accent);
+    content: "✓";
+  }
+}
+
+.jl-quote {
+  padding-inline-start: 0.85em;
+  font-style: italic;
+  border-inline-start: 3px solid var(--jl-accent);
+}
+
+.jl-big {
+  font-size: clamp(2rem, 1.4rem + 3cqi, 3.5rem);
+  line-height: 1;
+}
+
+// Actions
+.jl-button,
+.jl-button-alt {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  padding: 0.6em 1.15em;
+  font-weight: 600;
+  line-height: 1.2;
+  text-decoration: none;
+  border-radius: var(--jl-radius);
+}
+
+.jl-button {
+  color: var(--jl-accent-fg);
+  background: var(--jl-accent);
+  border: 1px solid var(--jl-accent);
+
+  &:hover,
+  &:focus-visible {
+    color: var(--jl-accent-fg);
+    filter: brightness(1.08);
+  }
+}
+
+.jl-button-alt {
+  color: var(--jl-fg);
+  background: transparent;
+  border: 1px solid var(--jl-border);
+
+  &:hover,
+  &:focus-visible {
+    color: var(--jl-fg);
+    background: var(--jl-raised);
+  }
+}
+
+// Motion: gentle, and none for reduced motion
+.jl-float {
+  animation: jl-float 6s ease-in-out infinite;
+}
+
+.jl-pulse {
+  animation: jl-pulse 3s ease-in-out infinite;
+}
+
+.jl-marquee {
+  overflow: hidden;
+  white-space: nowrap;
+  mask-image: linear-gradient(
+    90deg,
+    transparent,
+    #000 8%,
+    #000 92%,
+    transparent
+  );
+
+  > * {
+    display: inline-block;
+    padding-inline-start: 100%;
+    animation: jl-marquee 22s linear infinite;
+  }
+}
+
+// A phone-wide card: a split's side goes, the main column stays
+@container jl (width < 520px) {
+  .jl-split {
+    grid-template-columns: minmax(0, 1fr);
+
+    > :nth-child(n + 2) {
+      display: none;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .jl-card,
+  .jl-card--in,
+  .jl-card--out,
+  .jl-float,
+  .jl-pulse,
+  .jl-marquee > * {
+    animation: none;
+  }
+}
+
+@keyframes jl-in {
+  from {
+    opacity: 0;
+    translate: 12% 0;
+  }
+}
+
+@keyframes jl-float {
+  50% {
+    translate: 0 -0.35rem;
+  }
+}
+
+@keyframes jl-pulse {
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@keyframes jl-marquee {
+  to {
+    translate: -100% 0;
+  }
+}

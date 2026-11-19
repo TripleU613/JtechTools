@@ -995,6 +995,31 @@ en:
       days.
 
     # ── Jtech — Listing format ─────────────────────────────────────────────
+    jtech_ads_enabled: Show ads in the welcome area at the top of the home
+      page (Latest, Categories and the homepage), on desktop and phones, like
+      a billboard. Ads are text and links only, fill a space of fixed size and
+      match the theme and palette. In the JTech theme the hero card becomes
+      the ad space; elsewhere it's a card in the same place. Each ad picks
+      who sees it. Admin → Plugins → Jtech Tools → Ads has every setting and
+      a preview. Off by default.
+    jtech_ads_rotate_seconds: With more than one ad for the same person, how
+      many seconds each stays before the next slides in, like a billboard.
+      Rotation pauses while the pointer or keyboard focus is on the ad, and
+      doesn't happen for people who ask for reduced motion.
+    jtech_ads_welcome_seconds: A new visitor (not logged in, first minute on
+      the site, see below) first sees the forum's own welcome for this many
+      seconds, then the ads slide in. 0 goes straight to the ads. Members
+      always go straight to the ads, and so does a theme without a welcome.
+    jtech_ads_new_visitor_seconds: For how many seconds after their first
+      page a logged-out visitor counts as new and gets the welcome first.
+      Remembered in their browser only; nothing is sent to the server. A
+      browser that doesn't keep it counts as not new.
+    jtech_ads_label: The small word shown before every ad so people know it's
+      one, such as "Ad" or "Sponsored".
+    jtech_ads_list: The ads. Add, edit, pause (Running) or schedule (Starts,
+      Ends) them here; changes reach visitors right away and logged-in
+      members on their next page load. Members can give each ad a thumbs up
+      or down; staff see the counts under the ad on the site.
     listing_format_enabled: Makes posts in the topics below follow a set
       format, for sale threads where every post is a listing. Replying opens
       a form with a box per field. A post that doesn't follow the format is
