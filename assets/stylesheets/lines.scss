@@ -228,6 +228,7 @@
   border-radius: 999px;
 }
 
+// A small pill, so the thumbs are easy to find on any ad, light or dark
 .jt-lines__thumbs {
   position: absolute;
   z-index: 2;
@@ -235,15 +236,37 @@
   bottom: 0.5rem;
   display: flex;
   align-items: center;
-  gap: 0.125em;
+  gap: 0.125rem;
+  padding: 0.125rem;
+  background: color-mix(in srgb, var(--secondary) 82%, transparent);
+  border: 1px solid var(--jl-border);
+  border-radius: 999px;
 }
 
-.jt-lines__thumb {
-  color: var(--jl-muted);
+.jt-lines__thumb.btn {
+  min-height: 0;
+  padding: 0.35em 0.55em;
+  color: var(--jl-fg);
+  border-radius: 999px;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--jl-fg);
+    background: var(--jl-raised);
+  }
 
   &[aria-pressed="true"] {
-    color: var(--jl-accent);
+    color: var(--jl-accent-fg);
+    background: var(--jl-accent);
   }
+}
+
+.jt-lines__vote-status:not(:empty) {
+  padding: 0.2em 0.5em;
+  border-radius: var(--jl-radius);
+  background: var(--jl-raised);
+  color: var(--jl-fg);
+  font-size: var(--font-down-1);
 }
 
 // ── The kit ────────────────────────────────────────────────────
@@ -526,8 +549,8 @@
   }
 
   .jt-lines__thumbs {
-    top: 0.3rem;
-    right: 2.9rem;
+    top: 0.4rem;
+    right: 3.3rem;
     bottom: auto;
     gap: 0;
 
