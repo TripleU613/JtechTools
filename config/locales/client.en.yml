@@ -146,6 +146,10 @@ en:
     jt_lines:
       up: I like this
       down: Not for me
+      vote_saving: Saving…
+      vote_liked: Liked
+      vote_disliked: Disliked
+      vote_removed: Vote removed
       preview: "Preview · only you see this"
       search: "Search the forum"
     reqpm:

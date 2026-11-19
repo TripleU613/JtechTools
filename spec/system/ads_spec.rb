@@ -59,12 +59,36 @@ RSpec.describe "Ads in the welcome area" do
     expect(long).to eq(short)
   end
 
-  it "lets a member give it a thumb" do
+  it "confirms when a member adds, changes, or removes feedback" do
     sign_in(member)
     visit "/latest"
-    find(".jt-lines__thumb[title='I like this']").click
-    expect(page).to have_css(".jt-lines__thumb[aria-pressed='true']")
-    expect(DiscourseJtechAds::Vote.find_by(user: member).value).to eq(1)
+
+    within(".jt-lines") do
+      click_button "I like this"
+      expect(page).to have_css("[role='status']", text: "Liked", exact_text: true, visible: true)
+      expect(page).to have_css("button[aria-label='I like this'][aria-pressed='true']")
+
+      click_button "Not for me"
+      expect(page).to have_css("[role='status']", text: "Disliked", exact_text: true, visible: true)
+      expect(page).to have_css("button[aria-label='Not for me'][aria-pressed='true']")
+      expect(page).to have_css("button[aria-label='I like this'][aria-pressed='false']")
+    end
+
+    page.refresh
+
+    within(".jt-lines") do
+      expect(page).to have_css("[role='status']", text: "Disliked", exact_text: true, visible: true)
+      click_button "Not for me"
+      expect(page).to have_css(
+        "[role='status']",
+        text: "Vote removed",
+        exact_text: true,
+        visible: true,
+      )
+      expect(page).to have_no_css(".jt-lines__thumb[aria-pressed='true']")
+    end
+
+    expect(DiscourseJtechAds::Vote.find_by(user: member)).to be_nil
   end
 
   it "shows an admin a preview of a draft, and nobody else" do
@@ -100,6 +124,34 @@ RSpec.describe "Ads in the welcome area" do
       document.head.append(style);
     JS
     expect(page).to have_css("[data-jt-l]", wait: 5)
+  end
+
+  it "keeps the vote and confirms updates on the fallback card" do
+    DiscourseJtechAds::Vote.create!(
+      user: member,
+      ad_key: DiscourseJtechAds.key_for("spring"),
+      value: 1,
+    )
+    sign_in(member)
+    visit "/latest"
+    page.execute_script(<<~JS)
+      const attachShadow = Element.prototype.attachShadow;
+      Element.prototype.attachShadow = function (options) {
+        return attachShadow.call(this, this.matches("[data-jt-l]") ? { mode: "open" } : options);
+      };
+      const style = document.createElement("style");
+      style.textContent = ".jt-lines { display: none !important }";
+      document.head.append(style);
+    JS
+    expect(page).to have_css("[data-jt-l]", wait: 5)
+
+    feedback = "document.querySelector('[data-jt-l]').shadowRoot.querySelector('[role=status]')"
+    expect(page.evaluate_script("#{feedback}.textContent")).to eq("Liked")
+    page.execute_script(<<~JS)
+      document.querySelector("[data-jt-l]").shadowRoot.querySelector("[aria-label='Not for me']").click();
+    JS
+    try_until_success { expect(page.evaluate_script("#{feedback}.textContent")).to eq("Disliked") }
+    expect(DiscourseJtechAds::Vote.find_by(user: member).value).to eq(-1)
   end
 
   # An app trying everything: it can't touch the page, the space's size or

@@ -144,6 +144,14 @@ export default class JtLine extends Component<JtLineSignature> {
     return this.lines.vote(this.args.line);
   }
 
+  get votePending(): boolean {
+    return this.lines.isVotePending(this.args.line);
+  }
+
+  get voteFeedback(): string {
+    return this.lines.voteFeedback(this.args.line);
+  }
+
   get cardClass(): string {
     return [
       "jl-card",
@@ -155,12 +163,7 @@ export default class JtLine extends Component<JtLineSignature> {
   }
 
   get showThumbs(): boolean {
-    return (
-      this.lines.canVote &&
-      !this.args.line.o &&
-      !this.args.line.preview &&
-      this.args.state !== "out"
-    );
+    return this.lines.canVoteOn(this.args.line) && this.args.state !== "out";
   }
 
   get showLabel(): boolean {
@@ -246,7 +249,12 @@ export default class JtLine extends Component<JtLineSignature> {
       {{/if}}
       {{#if this.showThumbs}}
         <div class="jt-lines__thumbs">
+          <span
+            class="jt-lines__vote-status"
+            role="status"
+          >{{this.voteFeedback}}</span>
           <button
+            aria-disabled={{if this.votePending "true" "false"}}
             aria-label={{i18n "jt_lines.up"}}
             aria-pressed={{if (eq this.vote 1) "true" "false"}}
             class="btn-flat no-text jt-lines__thumb"
@@ -255,6 +263,7 @@ export default class JtLine extends Component<JtLineSignature> {
             {{on "click" (fn this.lines.setVote @line 1)}}
           >{{icon "thumbs-up"}}</button>
           <button
+            aria-disabled={{if this.votePending "true" "false"}}
             aria-label={{i18n "jt_lines.down"}}
             aria-pressed={{if (eq this.vote -1) "true" "false"}}
             class="btn-flat no-text jt-lines__thumb"

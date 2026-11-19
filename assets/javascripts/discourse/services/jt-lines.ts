@@ -6,6 +6,7 @@ import { ajax } from "discourse/lib/ajax";
 import { popupAjaxError } from "discourse/lib/ajax-error";
 import type Site from "discourse/models/site";
 import type User from "discourse/models/user";
+import { i18n } from "discourse-i18n";
 import JtLineCard from "../components/jt-line.gts";
 
 // The ads for the home page's welcome area (lib/discourse_jtech_ads.rb,
@@ -101,6 +102,7 @@ export default class JtLinesService extends Service {
   #introPlanned: boolean | null = null;
   #introTimer: ReturnType<typeof setTimeout> | null = null;
   #leaveTimer: ReturnType<typeof setTimeout> | undefined;
+  @tracked _pendingVotes = new Set<string>();
 
   constructor(owner: Owner) {
     super(owner);
@@ -192,6 +194,29 @@ export default class JtLinesService extends Service {
     return line.k in this.votes ? this.votes[line.k] : (line.v ?? null);
   }
 
+  canVoteOn(line: JtLine): boolean {
+    return this.canVote && !line.o && !line.preview;
+  }
+
+  isVotePending(line: JtLine): boolean {
+    return this._pendingVotes.has(line.k);
+  }
+
+  voteFeedback(line: JtLine): string {
+    if (this.isVotePending(line)) {
+      return i18n("jt_lines.vote_saving");
+    }
+
+    switch (this.vote(line)) {
+      case 1:
+        return i18n("jt_lines.vote_liked");
+      case -1:
+        return i18n("jt_lines.vote_disliked");
+      default:
+        return line.k in this.votes ? i18n("jt_lines.vote_removed") : "";
+    }
+  }
+
   // Started by the theme's welcome once it's on the page: after the
   // welcome's seconds, the ads slide in
   startIntro(): () => void {
@@ -279,16 +304,28 @@ export default class JtLinesService extends Service {
   }
 
   @action
-  async setVote(line: JtLine, value: number) {
+  async setVote(line: JtLine, value: -1 | 1) {
+    if (!this.canVoteOn(line) || this.isVotePending(line)) {
+      return;
+    }
+
     const next = this.vote(line) === value ? 0 : value;
+    this._pendingVotes = new Set(this._pendingVotes).add(line.k);
     try {
-      const result = await ajax(`/jtech-lines/${line.k}`, {
-        type: "PUT",
-        data: { value: next },
-      });
+      const result: { v: -1 | 1 | null } = await ajax(
+        `/jtech-lines/${line.k}`,
+        {
+          type: "PUT",
+          data: { value: next },
+        }
+      );
       this.votes = { ...this.votes, [line.k]: result.v ?? null };
     } catch (error) {
       popupAjaxError(error);
+    } finally {
+      const pending = new Set(this._pendingVotes);
+      pending.delete(line.k);
+      this._pendingVotes = pending;
     }
   }
 

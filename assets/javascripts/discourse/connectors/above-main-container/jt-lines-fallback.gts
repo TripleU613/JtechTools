@@ -26,33 +26,50 @@ export default class JtLinesFallback extends Component {
       root.innerHTML = `<style>${STYLE}</style><div class="box"></div>`;
       ROOTS.set(host, root);
     }
-    const vote = (value: number) => this.lines.setVote(line, value);
     const box = root.querySelector<HTMLElement>(".box")!;
-    const render = () => {
-      box.innerHTML = `<b class="tag"></b><p class="head" dir="auto">${line.h}</p>${
-        line.t ? `<p class="text" dir="auto">${line.t}</p>` : ""
-      }`;
-      box.querySelector(".tag")!.textContent = this.lines.label;
-      if (this.lines.canVote) {
-        const row = document.createElement("div");
-        row.className = "row";
-        for (const [value, key] of [
-          [1, "jt_lines.up"],
-          [-1, "jt_lines.down"],
-        ] as const) {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.textContent = value > 0 ? "▲" : "▼";
-          button.title = i18n(key);
-          button.setAttribute("aria-label", i18n(key));
-          button.addEventListener("click", () => vote(value));
-          row.append(button);
-        }
-        box.append(row);
+    box.innerHTML = `<b class="tag"></b><p class="head" dir="auto">${line.h}</p>${
+      line.t ? `<p class="text" dir="auto">${line.t}</p>` : ""
+    }`;
+    box.querySelector(".tag")!.textContent = this.lines.label;
+    if (this.lines.canVoteOn(line)) {
+      const row = document.createElement("div");
+      row.className = "row";
+      const status = document.createElement("span");
+      status.setAttribute("role", "status");
+      row.append(status);
+      for (const [value, key] of [
+        [1, "jt_lines.up"],
+        [-1, "jt_lines.down"],
+      ] as const) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.textContent = value > 0 ? "▲" : "▼";
+        button.title = i18n(key);
+        button.dataset.vote = String(value);
+        button.setAttribute("aria-label", i18n(key));
+        button.addEventListener("click", () => this.lines.setVote(line, value));
+        row.append(button);
       }
-    };
-    render();
+      box.append(row);
+    }
     return () => (box.innerHTML = "");
+  });
+
+  updateFeedback = modifier((host: HTMLElement, [line]: [JtLine]) => {
+    const row = ROOTS.get(host)?.querySelector(".row");
+    if (row) {
+      const vote = this.lines.vote(line);
+      const pending = this.lines.isVotePending(line);
+      row.querySelector('[role="status"]')!.textContent =
+        this.lines.voteFeedback(line);
+      for (const button of row.querySelectorAll<HTMLButtonElement>("button")) {
+        button.setAttribute(
+          "aria-pressed",
+          String(vote === Number(button.dataset.vote))
+        );
+        button.setAttribute("aria-disabled", String(pending));
+      }
+    }
   });
 
   get line(): JtLine | null {
@@ -64,7 +81,11 @@ export default class JtLinesFallback extends Component {
 
   <template>
     {{#if this.line}}
-      <div data-jt-l {{this.mount this.line}}></div>
+      <div
+        data-jt-l
+        {{this.mount this.line}}
+        {{this.updateFeedback this.line}}
+      ></div>
     {{/if}}
   </template>
 }
@@ -85,10 +106,13 @@ const STYLE = `
   .head { margin: 0; font-weight: 600; }
   .text { margin: 0; flex-basis: 100%; color: var(--primary-high, #444); }
   a { color: var(--tertiary, #08c); }
-  .row { margin-left: auto; display: flex; gap: .25em; }
+  .row { margin-left: auto; display: flex; align-items: center; gap: .25em; }
+  [role="status"] { font-size: .875em; }
   button {
     border: 0; background: none; color: var(--primary-medium, #888);
     cursor: pointer; padding: .25em .4em; border-radius: 4px;
   }
   button:hover { background: var(--primary-very-low, #f3f3f3); }
+  button[aria-pressed="true"] { background: var(--tertiary); color: var(--secondary); }
+  button[aria-disabled="true"] { cursor: wait; }
 `;
