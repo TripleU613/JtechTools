@@ -47,6 +47,30 @@ module ::DiscourseJtechAds
         end
       end
 
+      # Every ad's thumbs and who gave them, for admins (the Ads tab, MCP).
+      # One query for the votes, one for their users.
+      def votes
+        list = raw
+        keys = list.to_h { [DiscourseJtechAds.key_for(it["name"]), it["name"]] }
+        rows = Vote.where(ad_key: keys.keys).order(updated_at: :desc).to_a
+        users = User.where(id: rows.map(&:user_id)).index_by(&:id)
+        by_key = rows.group_by(&:ad_key)
+        keys.map do |key, name|
+          voters =
+            (by_key[key] || []).filter_map do |vote|
+              user = users[vote.user_id] or next
+              { username: user.username, value: vote.value, at: vote.updated_at.iso8601 }
+            end
+          {
+            name:,
+            key:,
+            up: voters.count { it[:value].positive? },
+            down: voters.count { it[:value].negative? },
+            voters:,
+          }
+        end
+      end
+
       def configure!(changes, by:)
         changes.each do |key, value|
           name = SETTINGS[key.to_s] or raise Error, "Unknown setting: #{key}"

@@ -103,15 +103,29 @@ RSpec.describe "Ads in the welcome area" do
       expect(response.status).to eq(400)
     end
 
-    it "shows staff the counts, and members only their own" do
+    it "shows nobody counts on the ads, and admins who gave which thumb" do
       DiscourseJtechAds::Vote.create!(user: member, ad_key: key, value: 1)
       DiscourseJtechAds::Vote.create!(user: other, ad_key: key, value: -1)
 
+      [member, admin].each do |user|
+        sign_in(user)
+        expect(lines["items"].find { it["k"] == key }).not_to have_key("n")
+      end
+
       sign_in(member)
-      expect(lines["items"].find { it["k"] == key }).not_to have_key("n")
+      put "/jtech-lines/#{key}.json", params: { value: 1 }
+      expect(response.parsed_body).to eq({ "v" => 1 })
+      get "/jtech-lines/votes.json"
+      expect(response.status).to eq(403)
 
       sign_in(admin)
-      expect(lines["items"].find { it["k"] == key }["n"]).to eq({ "up" => 1, "down" => 1 })
+      get "/jtech-lines/votes.json"
+      spring = response.parsed_body["ads"].find { it["name"] == "spring" }
+      expect(spring).to include("up" => 1, "down" => 1)
+      expect(spring["voters"].map { [it["username"], it["value"]] }).to contain_exactly(
+        [member.username, 1],
+        [other.username, -1],
+      )
     end
   end
 

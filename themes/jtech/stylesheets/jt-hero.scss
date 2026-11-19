@@ -811,7 +811,9 @@ $jt-stars-near: (
 
 .jt-hero.--lines {
   box-sizing: border-box;
-  height: clamp(14rem, 11rem + 9vw, 17rem);
+
+  // the ad space's height (jtech-tools' lines.scss), with its fallback
+  height: var(--jl-height, clamp(14rem, 11rem + 9vw, 17rem));
 
   .jt-hero__close {
     visibility: hidden;

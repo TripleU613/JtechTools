@@ -136,7 +136,6 @@ module ::DiscourseJtechAds
         else
           {}
         end
-      counts = guardian&.is_staff? && keys.present? ? Vote.counts(keys) : {}
 
       {
         label: SiteSetting.jtech_ads_label,
@@ -158,7 +157,6 @@ module ::DiscourseJtechAds
               e: ad.ends_at&.iso8601,
             }
             item[:v] = mine[ad.key] if user
-            item[:n] = counts[ad.key] || { up: 0, down: 0 } if guardian&.is_staff?
             item
           end,
       }

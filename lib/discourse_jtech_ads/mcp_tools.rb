@@ -101,11 +101,12 @@ module ::DiscourseJtechAds
         Support.result(
           settings: Manager.settings,
           ads: Manager.entries,
+          thumbs: Manager.votes,
           app: {
             how:
-              "An app is card HTML plus css. It runs in a closed shadow root inside the fixed ad space (about 224px tall on phones, 272px on wide screens, the content column's width; it never grows: anything that doesn't fit is cut). Use your own class names. Theme colours: var(--jl-fg), --jl-muted, --jl-border, --jl-raised, --jl-accent, --jl-accent-fg, --jl-radius, --jl-radius-lg; the page's fonts inherit. The kit's classes work inside too.",
+              "An app is card HTML plus css. It runs in a closed shadow root inside the fixed ad space: up to 272px tall on wide screens and the content column's width; on phones (up to 600px wide) a card of its own, 320px tall and about 360-400px wide, so stack a picture band over the words there. It never grows: anything that doesn't fit is cut. Use your own class names. Theme colours: var(--jl-fg), --jl-muted, --jl-border, --jl-raised, --jl-accent, --jl-accent-fg, --jl-radius, --jl-radius-lg; the page's fonts inherit. The kit's classes work inside too.",
             reserved:
-              "The space draws its own label ('Ad', top right corner, about 40x22px) and thumbs (bottom right corner, about 90x34px) above the app, unless the ad is house. Leave those corners clear; the app can't remove or cover them.",
+              "The space draws its own label ('Ad') and thumbs above the app, unless the ad is house. Wide screens: label top right (about 40x22px), thumbs bottom right (about 90x34px). Phones (card under 520px wide): label and thumbs share one bar at the top right (about 130x40px) and the bottom is free. Leave those areas clear; the app can't remove or cover them.",
             widgets:
               "<div class=\"jl-search\"></div> becomes a search box; <div class=\"jl-auth\"></div> becomes Sign up / Log in for visitors (nothing for members). Forms and inputs are otherwise not allowed.",
             html:

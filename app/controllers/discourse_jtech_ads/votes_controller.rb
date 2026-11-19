@@ -37,9 +37,8 @@ module DiscourseJtechAds
         )
       end
 
-      result = { v: value.zero? ? nil : value }
-      result[:n] = Vote.counts([key])[key] || { up: 0, down: 0 } if guardian.is_staff?
-      render json: result
+      # No counts here, for anyone: admins see them on the Ads tab
+      render json: { v: value.zero? ? nil : value }
     end
   end
 end

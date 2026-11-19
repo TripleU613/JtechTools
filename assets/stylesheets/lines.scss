@@ -16,11 +16,21 @@
   --jl-radius: var(--d-border-radius);
   --jl-radius-lg: var(--d-border-radius-large, var(--d-border-radius));
   --jl-gap: clamp(0.6rem, 2cqi, 1.25rem);
-
-  // The ad space's one height, set by the space, never by an ad: about
-  // 224px on a phone, 272px on a wide screen. Content is cut, not grown into.
-  --jl-height: clamp(14rem, 11rem + 9vw, 17rem);
   container: jl / inline-size;
+}
+
+// The ad space's one height, set by the space, never by an ad: up to 272px
+// on a wide screen; on a phone a taller, narrower card of its own (320px),
+// so an ad can stack its picture over its words. Content is cut, never
+// grown into. On :root so a theme's own space (the JTech hero) uses it too.
+:root {
+  --jl-height: clamp(14rem, 11rem + 9vw, 17rem);
+}
+
+@media (width <= 600px) {
+  :root {
+    --jl-height: 20rem;
+  }
 }
 
 // ── The plain card (any theme) ─────────────────────────────────
@@ -234,14 +244,6 @@
   &[aria-pressed="true"] {
     color: var(--jl-accent);
   }
-}
-
-.jt-lines__tally {
-  margin-inline-start: 0.25em;
-  font-size: 0.75rem;
-  font-variant-numeric: tabular-nums;
-  color: var(--jl-muted);
-  white-space: nowrap;
 }
 
 // ── The kit ────────────────────────────────────────────────────
@@ -511,6 +513,26 @@
 
     > :nth-child(n + 2) {
       display: none;
+    }
+  }
+}
+
+// On a phone the label and thumbs share one small bar at the top right,
+// leaving the bottom of the card to the ad (its button, full width)
+@container jl (width < 520px) {
+  .jt-lines__label {
+    top: 0.6rem;
+    right: 0.7rem;
+  }
+
+  .jt-lines__thumbs {
+    top: 0.3rem;
+    right: 2.9rem;
+    bottom: auto;
+    gap: 0;
+
+    .btn {
+      padding: 0.35em 0.45em;
     }
   }
 }
