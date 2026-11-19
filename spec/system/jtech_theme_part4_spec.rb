@@ -1286,6 +1286,38 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
       touch&.call(false)
     end
 
+    # A laptop with a touchscreen: its mouse is the main pointer, so the
+    # media queries see no touch screen. What the last press was made with
+    # decides.
+    it "makes room for the row while a laptop's touchscreen is in use" do
+      press_with = ->(type) do
+        page.execute_script(
+          "document.body.dispatchEvent(new PointerEvent('pointerdown', " \
+            "{ pointerType: #{type.to_json}, bubbles: true }))",
+        )
+      end
+      button = "#{post_selector} .post-action-menu__jt-reaction-rollout"
+      resize_window(width: 1000, height: 900) do
+        open_reply
+        expect(page).to have_css("html.desktop-view")
+        expect(page).to have_no_css(button)
+
+        press_with.call("touch")
+        expect(page).to have_css(button)
+        # a script's click: a real one is the mouse's, and the mouse hides it
+        page.execute_script("document.querySelector(#{button.to_json}).click()")
+        expect(page).to have_css(open_row)
+        expect(page).to have_no_css("#{post_selector} .post-action-menu__copy-link")
+        expect(page).to have_css("#{post_selector} .post-action-menu__reply")
+        row = box("#{open_row} .discourse-reactions-picker-container")
+        expect(row["right"] - row["left"]).to be > 3 * 32
+
+        press_with.call("mouse")
+        expect(page).to have_no_css(button)
+      end
+      expect_no_theme_errors
+    end
+
     it "leaves the plugin's picker over the post when switched off" do
       jtech_theme.update_setting(:reaction_rollout, false)
       jtech_theme.save!

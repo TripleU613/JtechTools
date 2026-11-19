@@ -19,6 +19,8 @@ interface ReactionSettings {
 
 const ROW = "discourse-reactions-picker-container";
 const GHOST = "jt-rx-ghost";
+// on <html> while the last press was a finger's (jt-post-chrome)
+const TOUCH_INPUT = "jt-touch-input";
 const SLIDE_MS = 220;
 const EASE = "cubic-bezier(0.2, 0, 0, 1)";
 // how much of the way to the wheel's target the row moves per 60th of a
@@ -318,9 +320,14 @@ export default apiInitializer((api) => {
     capture: true,
     passive: true,
   });
+  // A laptop with a touchscreen reports a mouse, so the media queries never
+  // see its touches. What the last press was made with decides instead: a
+  // finger gets the touch screen's button and room for the row, the mouse
+  // gets the row that slides out from under the pointer.
   document.addEventListener(
     "pointerdown",
     (event) => {
+      root.classList.toggle(TOUCH_INPUT, event.pointerType === "touch");
       pointedAt(event);
       notePress(event);
     },
