@@ -41,6 +41,22 @@ RSpec.describe "Topic list latest reply" do
     expect(latest_reply_for(reader)["excerpt"]).to eq("Works great thanks a lot")
   end
 
+  it "leaves emoji out when the forum doesn't draw them" do
+    SiteSetting.enable_emoji = false
+    reply.update!(raw: "Works great :+1: thanks 🙂 a lot")
+    reply.rebake!
+    expect(reply.reload.cooked).not_to include("img")
+
+    expect(latest_reply_for(reader)["excerpt"]).to eq("Works great thanks a lot")
+  end
+
+  it "leaves emoji out of code spans, and keeps what only looks like one" do
+    reply.update!(raw: "Run `:+1: 🙂` at 10:30:45 © :notanemoji:")
+    reply.rebake!
+
+    expect(latest_reply_for(reader)["excerpt"]).to eq("Run at 10:30:45 © :notanemoji:")
+  end
+
   it "gives it to visitors too" do
     expect(latest_reply_for(nil)["post_number"]).to eq(reply.post_number)
   end
