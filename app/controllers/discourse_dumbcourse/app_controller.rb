@@ -346,7 +346,10 @@ module DiscourseDumbcourse
         list:
           (
             if enabled
-              setting(:discourse_reactions_enabled_reactions).to_s.split("|").reject(&:blank?)
+              all = setting(:discourse_reactions_enabled_reactions).to_s.split("|").reject(&:blank?)
+              # reaction levels: only what this member's trust level unlocked
+              allowed = ::DiscourseReactionLevels.allowed_for(current_user)
+              allowed ? all & allowed : all
             else
               []
             end

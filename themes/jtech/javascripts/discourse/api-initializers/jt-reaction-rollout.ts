@@ -27,11 +27,13 @@ const GLIDE = 0.22;
 
 // How many buttons the plugin's picker shows: the enabled reactions, the
 // like's own if it isn't among them, and the emoji picker when any emoji is
-// allowed. The row is never wider than that.
-function pickerSize(s: ReactionSettings): number {
+// allowed. The row is never wider than that. With jtech-tools' reaction
+// levels, only the reactions this member's trust level unlocked
+// (currentUser.jt_reactions) are in it.
+function pickerSize(s: ReactionSettings, allowed?: string[]): number {
   const reactions = (s.discourse_reactions_enabled_reactions || "")
     .split("|")
-    .filter(Boolean);
+    .filter((reaction) => reaction && (!allowed || allowed.includes(reaction)));
   const like = s.discourse_reactions_reaction_for_like;
   return (
     reactions.length +
@@ -302,7 +304,12 @@ export default apiInitializer((api) => {
   }
   const root = document.documentElement;
   root.classList.add("jt-reaction-rollout");
-  root.style.setProperty("--jt-rx-count", String(pickerSize(siteSettings)));
+  const allowed = (api.getCurrentUser() as { jt_reactions?: string[] } | null)
+    ?.jt_reactions;
+  root.style.setProperty(
+    "--jt-rx-count",
+    String(pickerSize(siteSettings, allowed))
+  );
 
   api.registerValueTransformer(
     "post-menu-buttons",
