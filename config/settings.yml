@@ -1734,6 +1734,9 @@ jtech_reaction_levels:
   jtech_reaction_levels_enabled:
     default: false
     client: true
+# The lists behind the Reaction levels tab's grid (it edits them; they're
+# also under All settings). Their own group so the tab shows only the switch.
+jtech_reaction_levels_lists:
   jtech_reaction_levels_tl0:
     type: emoji_list
     default: ""
@@ -1759,6 +1762,12 @@ jtech_reaction_levels:
     depends_on:
       - "jtech_reaction_levels_enabled"
   jtech_reaction_levels_tl4:
+    type: emoji_list
+    default: ""
+    client: true
+    depends_on:
+      - "jtech_reaction_levels_enabled"
+  jtech_reaction_levels_staff:
     type: emoji_list
     default: ""
     client: true

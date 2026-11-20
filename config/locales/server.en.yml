@@ -1012,6 +1012,8 @@ en:
     jtech_reaction_levels_tl2: Reactions unlocked at trust level 2 (member).
     jtech_reaction_levels_tl3: Reactions unlocked at trust level 3 (regular).
     jtech_reaction_levels_tl4: Reactions unlocked at trust level 4 (leader).
+    jtech_reaction_levels_staff: Reactions only staff can use. No trust level
+      unlocks them.
     jtech_ads_enabled: Show ads in the welcome area at the top of the home
       page (Latest, Categories and the homepage), on desktop and phones, like
       a billboard. Ads are text and links only, fill a space of fixed size and

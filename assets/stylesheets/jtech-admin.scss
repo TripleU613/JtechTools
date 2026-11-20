@@ -64,41 +64,231 @@
   }
 }
 
-// The Reaction levels tab's table (admin/…/jtech-reaction-levels-table.gts)
-.jtech-reaction-levels {
-  margin-bottom: 1.5em;
+// The Reaction levels tab's grid (admin/…/jtech-reaction-levels-grid.gts):
+// a row per reaction, a column per level from TL0 to Staff, the band filled
+// from the reaction's level to Staff, and a box on the level itself
+// the tab stacks its two parts: the switch, then the grid, full width
+.jtech-rl-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
 
-  h3 {
-    margin: 0 0 0.5em;
+.jtech-rl {
+  --jtech-rl-cols: 6;
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: 1.5em;
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    gap: 1em;
+
+    h3 {
+      margin: 0;
+    }
   }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  th,
-  td {
-    padding: 0.5em 0.75em 0.5em 0;
-    text-align: start;
-    vertical-align: middle;
-    border-bottom: 1px solid var(--primary-low);
-  }
-
-  tbody th {
-    white-space: nowrap;
-  }
-
-  .emoji {
-    width: 1.4em;
-    height: 1.4em;
-  }
-
-  &__none {
+  &__status {
+    font-size: var(--font-down-1);
     color: var(--primary-medium);
   }
 
-  &__warn {
+  &__about,
+  &__off {
+    max-width: 52rem;
+    margin: 0.5em 0 1em;
+    color: var(--primary-high);
+  }
+
+  &__off {
     color: var(--danger);
+  }
+
+  &__grid {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: minmax(9rem, 14rem) minmax(0, 1fr);
+    align-items: center;
+    gap: 1rem;
+    padding: 0.2rem 0.4rem;
+    border-radius: var(--d-border-radius);
+
+    &:not(.--head):hover {
+      background: var(--primary-very-low);
+    }
+
+    &.--head {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      padding-bottom: 0.4rem;
+      background: var(--secondary);
+    }
+  }
+
+  &__name {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    min-width: 0;
+
+    code {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: var(--font-down-1);
+      white-space: nowrap;
+      background: none;
+    }
+
+    small {
+      color: var(--primary-medium);
+      white-space: nowrap;
+    }
+  }
+
+  // a fixed slot: an emoji that's missing shows as its :code:, cut to fit
+  &__emoji {
+    display: inline-flex;
+    flex: none;
+    width: 1.6em;
+    justify-content: center;
+    overflow: hidden;
+    white-space: nowrap;
+
+    .emoji {
+      width: 1.6em;
+      height: 1.6em;
+    }
+  }
+
+  // One bar per reaction: six equal segments, the band filled from the
+  // reaction's level to Staff, the box on the level itself
+  &__track {
+    display: grid;
+    grid-template-columns: repeat(var(--jtech-rl-cols), minmax(0, 1fr));
+    touch-action: none;
+    user-select: none;
+  }
+
+  &__row.--head &__track {
+    gap: 0;
+  }
+
+  &__row:not(.--head) &__track {
+    height: 2.25rem;
+    background: var(--primary-very-low);
+    border-radius: 999px;
+    outline: none;
+  }
+
+  &__col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.2;
+    text-align: center;
+
+    small {
+      color: var(--primary-medium);
+      font-size: var(--font-down-2);
+    }
+  }
+
+  &__row:not(.--head, .--fixed) &__track {
+    cursor: pointer;
+  }
+
+  &__cell {
+    position: relative;
+    margin: 0.2rem 0;
+    transition:
+      background 0.15s ease,
+      box-shadow 0.15s ease;
+
+    // between segments, a faint tick
+    & + & {
+      box-shadow: inset 1px 0 0 var(--primary-low);
+    }
+
+    // who can use it: one continuous band from the level to Staff
+    &.--on {
+      background: color-mix(in srgb, var(--tertiary) 30%, transparent);
+      box-shadow: none;
+    }
+
+    &.--on:last-child {
+      margin-right: 0.2rem;
+      border-radius: 0 999px 999px 0;
+    }
+
+    // the box on the lowest level that can: solid, with grip marks
+    &.--min {
+      z-index: 1;
+      margin-left: 0.2rem;
+      background: var(--tertiary);
+      border-radius: 999px;
+      box-shadow: 0 1px 3px rgb(0 0 0 / 25%);
+      cursor: grab;
+
+      &::before {
+        position: absolute;
+        inset: 0;
+        margin: auto;
+        width: 0.5rem;
+        height: 0.8rem;
+        content: "";
+        background:
+          linear-gradient(var(--secondary), var(--secondary)) left / 2px 100%
+            no-repeat,
+          linear-gradient(var(--secondary), var(--secondary)) right / 2px 100%
+            no-repeat;
+        opacity: 0.85;
+      }
+
+      // the band carries on from the box's right edge
+      &::after {
+        position: absolute;
+        top: 0;
+        right: -1px;
+        bottom: 0;
+        z-index: -1;
+        width: 50%;
+        content: "";
+        background: color-mix(in srgb, var(--tertiary) 30%, transparent);
+      }
+
+      &:last-child::after {
+        display: none;
+      }
+    }
+  }
+
+  &__row:not(.--head, .--fixed) &__track:hover &__cell.--min {
+    filter: brightness(1.12);
+  }
+
+  // keyboard focus on the box, not the whole bar
+  &__track:focus-visible &__cell.--min {
+    box-shadow:
+      0 0 0 2px var(--secondary),
+      0 0 0 4px var(--tertiary);
+  }
+
+  &__row.--fixed &__track {
+    opacity: 0.5;
+  }
+
+  &__row.--fixed &__cell.--min {
+    cursor: default;
+
+    &::before {
+      display: none;
+    }
   }
 }
