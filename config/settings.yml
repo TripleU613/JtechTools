@@ -1725,3 +1725,42 @@ jtech_ads:
           type: datetime
           label: "Ends"
           description: "Optional. Not shown after this time."
+
+# ───────────────────────────────────────────────────────────────────────────
+# Jtech — Reaction levels (higher trust levels unlock more reactions;
+# lib/discourse_reaction_levels.rb)
+# ───────────────────────────────────────────────────────────────────────────
+jtech_reaction_levels:
+  jtech_reaction_levels_enabled:
+    default: false
+    client: true
+  jtech_reaction_levels_tl0:
+    type: emoji_list
+    default: ""
+    client: true
+    depends_on:
+      - "jtech_reaction_levels_enabled"
+  jtech_reaction_levels_tl1:
+    type: emoji_list
+    default: ""
+    client: true
+    depends_on:
+      - "jtech_reaction_levels_enabled"
+  jtech_reaction_levels_tl2:
+    type: emoji_list
+    default: ""
+    client: true
+    depends_on:
+      - "jtech_reaction_levels_enabled"
+  jtech_reaction_levels_tl3:
+    type: emoji_list
+    default: ""
+    client: true
+    depends_on:
+      - "jtech_reaction_levels_enabled"
+  jtech_reaction_levels_tl4:
+    type: emoji_list
+    default: ""
+    client: true
+    depends_on:
+      - "jtech_reaction_levels_enabled"

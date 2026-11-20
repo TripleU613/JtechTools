@@ -63,3 +63,42 @@
     justify-self: start;
   }
 }
+
+// The Reaction levels tab's table (admin/…/jtech-reaction-levels-table.gts)
+.jtech-reaction-levels {
+  margin-bottom: 1.5em;
+
+  h3 {
+    margin: 0 0 0.5em;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    padding: 0.5em 0.75em 0.5em 0;
+    text-align: start;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--primary-low);
+  }
+
+  tbody th {
+    white-space: nowrap;
+  }
+
+  .emoji {
+    width: 1.4em;
+    height: 1.4em;
+  }
+
+  &__none {
+    color: var(--primary-medium);
+  }
+
+  &__warn {
+    color: var(--danger);
+  }
+}
