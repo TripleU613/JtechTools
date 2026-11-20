@@ -807,6 +807,7 @@ en:
           mod_elections: Mod elections
           market_accounts: Market accounts
           ads: Ads
+          reaction_levels: Reaction levels
           all_settings: All settings
   admin_js:
     admin:
@@ -939,6 +940,15 @@ en:
           title: Elections
           published: "published %{date}"
       jtech_tools:
+        reaction_levels:
+          title: What each trust level can react with
+          about: Each level has everything below it plus what it unlocks. The like is always there, reactions listed at no level are open to everyone, and staff have them all.
+          level: Trust level %{level}
+          unlocks: Unlocks
+          has: Can react with
+          nothing: nothing new
+          off: Reaction levels are off. Turn on the first setting below.
+          not_enabled: "Listed but not enabled in discourse-reactions, so nobody gets them:"
         lines_votes:
           title: Thumbs
           about: Who gave each ad a thumb up or down. Only admins see these; nobody sees counts on the ads.
@@ -999,6 +1009,7 @@ en:
           jtech_translator: Jtech — Translator tweaks
           jtech_market_accounts: Jtech — Market accounts
           jtech_ads: Jtech — Ads
+          jtech_reaction_levels: Jtech — Reaction levels
           jtech_smart_search: Jtech — Smart search
           jtech_popup_notifications: Jtech — Desktop pop-ups
           jtech_mod_whispers: "Jtech — Mod: Whispers"
