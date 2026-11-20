@@ -152,11 +152,14 @@
     }
   }
 
+  // a fixed slot: an emoji that's missing shows as its :code:, cut to fit
   &__emoji {
     display: inline-flex;
     flex: none;
     width: 1.6em;
     justify-content: center;
+    overflow: hidden;
+    white-space: nowrap;
 
     .emoji {
       width: 1.6em;
