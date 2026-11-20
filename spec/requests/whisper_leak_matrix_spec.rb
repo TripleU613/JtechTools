@@ -460,6 +460,41 @@ RSpec.describe "Whisper leak matrix" do
         ).perform
       expect(Reviewable.viewable_by(stranger).to_a.map(&:id)).to include(plain.reviewable.id)
     end
+
+    it "ignores a client's whisper flag while whispers are switched off" do
+      SiteSetting.enable_category_group_moderation = true
+      reviewers = Fabricate(:group)
+      reviewers.add(stranger)
+      Fabricate(:category_moderation_group, category: category, group: reviewers)
+      SiteSetting.mod_whisper_enabled = false
+
+      result =
+        NewPostManager.new(
+          alice,
+          :topic_id => topic.id,
+          :raw => "a public reply that claims to be a whisper",
+          armed => "true",
+        ).perform
+      expect(result.action).to eq(:enqueued)
+
+      reviewable = result.reviewable
+      expect(reviewable.payload).not_to have_key(armed)
+      expect(DiscourseModCategories::Whisper.private_reviewable?(reviewable)).to eq(false)
+      expect(Reviewable.viewable_by(stranger).to_a.map(&:id)).to include(reviewable.id)
+
+      reviewable.perform(admin, :approve_post)
+      expect(whisper?(reviewable.reload.target)).to eq(false)
+
+      # Answering an existing whisper still keeps the answer private.
+      back =
+        NewPostManager.new(
+          alice,
+          topic_id: topic.id,
+          raw: "queued whisper-back with the switch off",
+          reply_to_post_number: whisper_to_alice.post_number,
+        ).perform
+      expect(DiscourseModCategories::Whisper.private_reviewable?(back.reviewable)).to eq(true)
+    end
   end
 
   describe "the Telegram bridge" do

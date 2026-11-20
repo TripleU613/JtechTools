@@ -659,10 +659,18 @@ after_initialize do
         args[:raw],
       )
     armed_key = DiscourseModCategories::POST_WHISPER_ARMED_PARAM
+    # The client's own flag only counts while whispers can be written, as in
+    # Whisper.prepare_new_post!. With them off it would still have marked the
+    # queued copy a whisper, hiding a post that comes out public from
+    # reviewers and from the reports chat.
     armed =
-      ::ActiveModel::Type::Boolean.new.cast(DiscourseModCategories::Whisper.opt(args, armed_key))
+      DiscourseModCategories::Whisper.enabled? &&
+        ::ActiveModel::Type::Boolean.new.cast(DiscourseModCategories::Whisper.opt(args, armed_key))
     if armed || DiscourseModCategories::Whisper.answered_whispers(stub, {}, user).any?
       args[armed_key] = "true"
+    else
+      args.delete(armed_key)
+      args.delete(armed_key.to_sym)
     end
     nil
   rescue StandardError => e
