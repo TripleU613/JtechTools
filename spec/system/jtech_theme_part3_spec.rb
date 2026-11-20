@@ -1007,7 +1007,7 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
       sign_in(member)
       visit(lonely_topic.relative_url)
       expect(page).to have_css(".jt-first-reply", text: "No replies yet. Be the first.")
-      expect(page).to have_css("pre.jt-numbered .jt-lines", text: "1\n2\n3")
+      expect(page).to have_css("pre.jt-numbered .jt-code-gutter", text: "1\n2\n3")
       shot("first-reply")
       expect_no_theme_errors
     end
@@ -1046,11 +1046,11 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
       tall = Fabricate(:topic, category: category, user: admin)
       Fabricate(:post, topic: tall, user: admin, raw: raw)
       visit(tall.relative_url)
-      expect(page).to have_css("pre.jt-numbered .jt-lines")
+      expect(page).to have_css("pre.jt-numbered .jt-code-gutter")
       sizes = page.evaluate_async_script(<<~JS)
         const [pre] = document.getElementsByClassName("jt-numbered");
         const code = pre.querySelector(":scope > code");
-        const gutter = pre.querySelector(":scope > .jt-lines");
+        const gutter = pre.querySelector(":scope > .jt-code-gutter");
         code.scrollTop = code.scrollHeight;
         requestAnimationFrame(() => requestAnimationFrame(() => arguments[0]([
           code.clientHeight, gutter.offsetHeight, pre.offsetHeight, code.scrollTop, gutter.scrollTop,
@@ -1071,10 +1071,10 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
       SiteSetting.support_mixed_text_direction = true # as on the forum: code runs left to right
       SiteSetting.default_locale = "he"
       visit(lonely_topic.relative_url)
-      expect(page).to have_css("html.rtl pre.jt-numbered.codeblock-buttons .jt-lines")
+      expect(page).to have_css("html.rtl pre.jt-numbered.codeblock-buttons .jt-code-gutter")
       sides = page.evaluate_script(<<~JS)
         (() => {
-          const gutter = getComputedStyle(document.querySelector("pre.jt-numbered .jt-lines"));
+          const gutter = getComputedStyle(document.querySelector("pre.jt-numbered .jt-code-gutter"));
           const code = getComputedStyle(document.querySelector("pre.jt-numbered > code"));
           return [
             gutter.borderRightWidth,

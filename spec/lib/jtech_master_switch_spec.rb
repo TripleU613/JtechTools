@@ -19,6 +19,7 @@ RSpec.describe "Jtech master switch" do
     "DiscourseModElections" => :mod_elections_enabled,
     "DiscourseFairScores" => :jtech_fair_scores,
     "DiscourseJtechAds" => :jtech_ads_enabled,
+    "DiscourseReactionLevels" => :jtech_reaction_levels_enabled,
   }.each do |mod_name, setting|
     describe "#{mod_name}.enabled?" do
       let(:mod) { mod_name.constantize }
