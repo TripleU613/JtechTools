@@ -2,12 +2,11 @@ import type { TemplateOnlyComponent } from "@ember/component/template-only";
 import { array } from "@ember/helper";
 import AdminAreaSettings from "discourse/admin/components/admin-area-settings";
 import type AdminAreaSettingsBaseController from "discourse/admin/controllers/admin-area-settings-base";
-import JtechReactionLevelsTable from "../../../components/jtech-reaction-levels-table.gts";
+import JtechReactionLevelsGrid from "../../../components/jtech-reaction-levels-grid.gts";
 
 const JtechToolsReactionLevels: TemplateOnlyComponent<{
   Args: { controller: AdminAreaSettingsBaseController };
 }> = <template>
-  <JtechReactionLevelsTable />
   <AdminAreaSettings
     @adminSettingsFilterChangedCallback={{@controller.adminSettingsFilterChangedCallback}}
     @categories={{array "jtech_reaction_levels"}}
@@ -15,6 +14,7 @@ const JtechToolsReactionLevels: TemplateOnlyComponent<{
     @path="/admin/plugins/jtech-tools/reaction-levels"
     @showBreadcrumb={{false}}
   />
+  <JtechReactionLevelsGrid />
 </template>;
 
 export default JtechToolsReactionLevels;

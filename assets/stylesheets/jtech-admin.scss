@@ -64,41 +64,142 @@
   }
 }
 
-// The Reaction levels tab's table (admin/…/jtech-reaction-levels-table.gts)
-.jtech-reaction-levels {
-  margin-bottom: 1.5em;
+// The Reaction levels tab's grid (admin/…/jtech-reaction-levels-grid.gts):
+// a row per reaction, a column per level from TL0 to Staff, the band filled
+// from the reaction's level to Staff, and a box on the level itself
+.jtech-rl {
+  --jtech-rl-cols: 6;
+  margin-top: 1.5em;
 
-  h3 {
-    margin: 0 0 0.5em;
+  &__head {
+    display: flex;
+    align-items: baseline;
+    gap: 1em;
+
+    h3 {
+      margin: 0;
+    }
   }
 
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  th,
-  td {
-    padding: 0.5em 0.75em 0.5em 0;
-    text-align: start;
-    vertical-align: middle;
-    border-bottom: 1px solid var(--primary-low);
-  }
-
-  tbody th {
-    white-space: nowrap;
-  }
-
-  .emoji {
-    width: 1.4em;
-    height: 1.4em;
-  }
-
-  &__none {
+  &__status {
+    font-size: var(--font-down-1);
     color: var(--primary-medium);
   }
 
-  &__warn {
+  &__about,
+  &__off {
+    max-width: 52rem;
+    margin: 0.5em 0 1em;
+    color: var(--primary-high);
+  }
+
+  &__off {
     color: var(--danger);
+  }
+
+  &__grid {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  &__row {
+    display: grid;
+    grid-template-columns: minmax(9rem, 14rem) minmax(0, 1fr);
+    align-items: center;
+    gap: 1rem;
+
+    &.--head {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      padding-bottom: 0.25rem;
+      background: var(--secondary);
+    }
+  }
+
+  &__name {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    min-width: 0;
+
+    code {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: var(--font-down-1);
+      white-space: nowrap;
+      background: none;
+    }
+
+    small {
+      color: var(--primary-medium);
+      white-space: nowrap;
+    }
+  }
+
+  &__emoji .emoji {
+    width: 1.6em;
+    height: 1.6em;
+  }
+
+  &__track {
+    display: grid;
+    grid-template-columns: repeat(var(--jtech-rl-cols), minmax(0, 1fr));
+    gap: 0.25rem;
+    touch-action: none;
+    user-select: none;
+  }
+
+  &__col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.2;
+    text-align: center;
+
+    small {
+      color: var(--primary-medium);
+      font-size: var(--font-down-2);
+    }
+  }
+
+  &__row:not(.--head, .--fixed) &__track {
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid var(--tertiary);
+      outline-offset: 3px;
+      border-radius: var(--d-border-radius);
+    }
+  }
+
+  &__cell {
+    height: 2.1rem;
+    background: var(--primary-very-low);
+    border-radius: var(--d-border-radius);
+    transition: background 0.15s ease;
+
+    // who can use it: from the level to Staff
+    &.--on {
+      background: color-mix(in srgb, var(--tertiary) 22%, var(--secondary));
+    }
+
+    // the box on the lowest level that can
+    &.--min {
+      background: var(--tertiary);
+      box-shadow:
+        0 0 0 2px var(--secondary),
+        0 0 0 4px var(--tertiary),
+        0 2px 6px rgb(0 0 0 / 20%);
+      cursor: grab;
+    }
+  }
+
+  &__row.--fixed &__cell {
+    opacity: 0.55;
+
+    &.--min {
+      cursor: default;
+    }
   }
 }

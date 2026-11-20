@@ -24,6 +24,12 @@ RSpec.describe DiscourseReactionLevels, if: defined?(DiscourseReactions) do
     expect(described_class.allowed_for(regular)).to eq(%w[heart +1 laughing fire trophy clap])
   end
 
+  it "keeps a staff-only reaction from every trust level" do
+    SiteSetting.jtech_reaction_levels_staff = "clap"
+    expect(described_class.allowed_for(regular)).not_to include("clap")
+    expect(described_class.allowed_for(moderator)).to be_nil
+  end
+
   it "holds nothing back for staff, or with the switch or Jtech off" do
     expect(described_class.allowed_for(moderator)).to be_nil
 

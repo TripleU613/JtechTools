@@ -12,6 +12,8 @@
 # what isn't unlocked, and the server refuses it.
 module ::DiscourseReactionLevels
   LEVELS = (0..4).freeze
+  # Staff only: no trust level unlocks it
+  STAFF = 5
 
   class << self
     def enabled?
@@ -20,17 +22,15 @@ module ::DiscourseReactionLevels
     end
 
     def list(level)
-      SiteSetting
-        .get(:"jtech_reaction_levels_tl#{level}")
-        .to_s
-        .split("|")
-        .map(&:strip)
-        .reject(&:empty?)
+      name = level == STAFF ? :jtech_reaction_levels_staff : :"jtech_reaction_levels_tl#{level}"
+      SiteSetting.get(name).to_s.split("|").map(&:strip).reject(&:empty?)
     end
 
     # emoji => the lowest trust level it's listed at
     def levels
-      LEVELS.reverse_each.each_with_object({}) { |level, map| list(level).each { map[it] = level } }
+      [STAFF, *LEVELS.to_a.reverse].each_with_object({}) do |level, map|
+        list(level).each { map[it] = level }
+      end
     end
 
     def enabled_reactions
