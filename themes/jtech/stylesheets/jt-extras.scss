@@ -244,7 +244,7 @@ html.desktop-view #topic-footer-buttons {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
 
-  > .jt-lines {
+  > .jt-code-gutter {
     padding-block: 12px;
     padding-inline: 0.85em 0.6em;
     font-family: var(--jt-font-mono);
