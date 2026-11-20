@@ -702,7 +702,10 @@ html.jt-reaction-rollout:not(.jt-vanilla) {
   // menu steps aside but the heart, the button that opened it and Reply, so
   // it gets the menu's width. They're back when it shuts. A touch screen in
   // the desktop layout (a tablet, an unfolded phone) has every button on
-  // the line, which left the row one reaction wide.
+  // the line, which left the row one reaction wide. A laptop's touchscreen
+  // counts while it's the one in use (.jt-touch-input, set by
+  // jt-reaction-rollout); under its mouse the row slides out as on any
+  // desktop, without moving the heart away from the pointer.
   @include viewport.until(sm) {
     @include rx-step-aside;
   }
@@ -710,13 +713,19 @@ html.jt-reaction-rollout:not(.jt-vanilla) {
   @media (hover: none) {
     @include rx-step-aside;
   }
+
+  &.jt-touch-input {
+    @include rx-step-aside;
+  }
 }
 
 // The button that opens the row, for screens without a pointer to rest on
-// the heart, and only with the row.
+// the heart (or a laptop's touchscreen in use), and only with the row.
 .post-action-menu__jt-reaction-rollout {
   @media (hover: hover) {
-    display: none !important;
+    html:not(.jt-touch-input) & {
+      display: none !important;
+    }
   }
 
   html.jt-vanilla & {
