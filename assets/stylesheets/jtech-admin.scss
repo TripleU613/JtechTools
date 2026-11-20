@@ -67,8 +67,17 @@
 // The Reaction levels tab's grid (admin/…/jtech-reaction-levels-grid.gts):
 // a row per reaction, a column per level from TL0 to Staff, the band filled
 // from the reaction's level to Staff, and a box on the level itself
+// the tab stacks its two parts: the switch, then the grid, full width
+.jtech-rl-page {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
 .jtech-rl {
   --jtech-rl-cols: 6;
+  box-sizing: border-box;
+  width: 100%;
   margin-top: 1.5em;
 
   &__head {

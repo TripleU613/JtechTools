@@ -7,14 +7,16 @@ import JtechReactionLevelsGrid from "../../../components/jtech-reaction-levels-g
 const JtechToolsReactionLevels: TemplateOnlyComponent<{
   Args: { controller: AdminAreaSettingsBaseController };
 }> = <template>
-  <AdminAreaSettings
-    @adminSettingsFilterChangedCallback={{@controller.adminSettingsFilterChangedCallback}}
-    @categories={{array "jtech_reaction_levels"}}
-    @filter={{@controller.filter}}
-    @path="/admin/plugins/jtech-tools/reaction-levels"
-    @showBreadcrumb={{false}}
-  />
-  <JtechReactionLevelsGrid />
+  <div class="jtech-rl-page">
+    <AdminAreaSettings
+      @adminSettingsFilterChangedCallback={{@controller.adminSettingsFilterChangedCallback}}
+      @categories={{array "jtech_reaction_levels"}}
+      @filter={{@controller.filter}}
+      @path="/admin/plugins/jtech-tools/reaction-levels"
+      @showBreadcrumb={{false}}
+    />
+    <JtechReactionLevelsGrid />
+  </div>
 </template>;
 
 export default JtechToolsReactionLevels;
