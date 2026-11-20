@@ -807,6 +807,7 @@ en:
           mod_elections: Mod elections
           market_accounts: Market accounts
           ads: Ads
+          reaction_levels: Reaction levels
           all_settings: All settings
   admin_js:
     admin:
@@ -939,6 +940,22 @@ en:
           title: Elections
           published: "published %{date}"
       jtech_tools:
+        reaction_levels:
+          title: Who can react with what
+          about: Each reaction is open from the level its box is on up to Staff. Drag the box, click a column or use the arrow keys; changes save right away. The like is always open to everyone.
+          tl: "TL%{level}"
+          staff: Staff
+          names:
+            l0: Everyone
+            l1: Basic
+            l2: Member
+            l3: Regular
+            l4: Leader
+            l5: Admins, mods
+          always: always open
+          saving: Saving…
+          saved: Saved
+          off: Reaction levels are off, so everyone has every reaction. Turn on the switch above; the levels below take effect then.
         lines_votes:
           title: Thumbs
           about: Who gave each ad a thumb up or down. Only admins see these; nobody sees counts on the ads.
@@ -999,6 +1016,8 @@ en:
           jtech_translator: Jtech — Translator tweaks
           jtech_market_accounts: Jtech — Market accounts
           jtech_ads: Jtech — Ads
+          jtech_reaction_levels: Jtech — Reaction levels
+          jtech_reaction_levels_lists: Jtech — Reaction levels (lists)
           jtech_smart_search: Jtech — Smart search
           jtech_popup_notifications: Jtech — Desktop pop-ups
           jtech_mod_whispers: "Jtech — Mod: Whispers"

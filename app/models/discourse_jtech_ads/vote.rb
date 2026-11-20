@@ -24,3 +24,20 @@ module DiscourseJtechAds
     end
   end
 end
+
+# == Schema Information
+#
+# Table name: jtech_ad_votes
+#
+#  id         :bigint           not null, primary key
+#  ad_key     :string(12)       not null
+#  value      :integer          not null
+#  created_at :datetime         not null
+#  updated_at :datetime         not null
+#  user_id    :integer          not null
+#
+# Indexes
+#
+#  index_jtech_ad_votes_on_ad_key              (ad_key)
+#  index_jtech_ad_votes_on_user_id_and_ad_key  (user_id,ad_key) UNIQUE
+#
