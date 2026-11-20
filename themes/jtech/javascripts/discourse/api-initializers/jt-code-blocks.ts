@@ -19,7 +19,7 @@ const ALIASES: Record<string, string> = {
 // highlight.js rewrites the code's markup, copy buttons read its text, and
 // neither should see the numbers.
 function addLineNumbers(pre: HTMLElement, code: HTMLElement): void {
-  if (pre.querySelector(":scope > .jt-lines") || pre.closest("aside")) {
+  if (pre.querySelector(":scope > .jt-code-gutter") || pre.closest("aside")) {
     return;
   }
   const lines = (code.textContent ?? "").replace(/\n$/, "").split("\n").length;
@@ -27,7 +27,7 @@ function addLineNumbers(pre: HTMLElement, code: HTMLElement): void {
     return;
   }
   const gutter = document.createElement("span");
-  gutter.className = "jt-lines";
+  gutter.className = "jt-code-gutter";
   gutter.setAttribute("aria-hidden", "true");
   gutter.textContent = Array.from({ length: lines }, (_, i) => i + 1).join(
     "\n"

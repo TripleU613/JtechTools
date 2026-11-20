@@ -60,6 +60,8 @@ en:
       another_smtp_unconfigured: "Another SMTP is switched on but has no relay address, so forum email is still going out through the server's own mail host. Set <a href='%{base_path}/admin/plugins/jtech-tools/smtp'>the relay address</a> or switch Another SMTP off."
       disteleplus_telegram: "Disteleplus could not deliver to Telegram (%{at}): <code>%{description}</code> — %{hint}"
 
+  jtech_reaction_levels:
+    locked: "The :%{reaction}: reaction unlocks at trust level %{level}."
   site_settings:
     jtech_market_account_retention: Protect accounts linked to Jtech Market from inactive-user deletion. Other inactive accounts still follow the forum cleanup policy. Requires Jtech Tools to be enabled.
     jtech_market_origin: Exact HTTPS origin of Jtech Market. Only a signed sign-in to its marketplace callback marks a member as protected.
@@ -995,6 +997,23 @@ en:
       days.
 
     # ── Jtech — Listing format ─────────────────────────────────────────────
+    jtech_reaction_levels_enabled: Higher trust levels unlock more reaction
+      emojis. List the reactions to hold back under the trust level that
+      unlocks them (below); a reaction listed at a level is open at that
+      level and every level above. Reactions enabled in discourse-reactions
+      but listed at no level stay open to everyone, the main reaction (the
+      like) is always open, and staff have every reaction. The picker hides
+      what someone hasn't unlocked and the server refuses it; taking back a
+      reaction already given always works. Off by default.
+    jtech_reaction_levels_tl0: Reactions only for members at trust level 0
+      (new) and up. Usually left empty, since unlisted reactions are already
+      open to everyone.
+    jtech_reaction_levels_tl1: Reactions unlocked at trust level 1 (basic).
+    jtech_reaction_levels_tl2: Reactions unlocked at trust level 2 (member).
+    jtech_reaction_levels_tl3: Reactions unlocked at trust level 3 (regular).
+    jtech_reaction_levels_tl4: Reactions unlocked at trust level 4 (leader).
+    jtech_reaction_levels_staff: Reactions only staff can use. No trust level
+      unlocks them.
     jtech_ads_enabled: Show ads in the welcome area at the top of the home
       page (Latest, Categories and the homepage), on desktop and phones, like
       a billboard. Ads are text and links only, fill a space of fixed size and

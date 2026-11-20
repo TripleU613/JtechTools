@@ -678,7 +678,9 @@ RSpec.describe "Moderator messages" do
       expect(link[:href]).to include("/t/")
       shot("95_mod_note_notification_in_user_menu")
 
-      link.click
+      # Found again: opening the menu marks the notifications seen, and the
+      # list can re-render between the checks above and the click.
+      find(".notification.custom a[title='Moderator note']", match: :first).click
 
       # Clicking the notification lands on the topic — at the note, the same
       # target the notes feed uses.

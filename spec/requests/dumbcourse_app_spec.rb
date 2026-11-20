@@ -117,6 +117,28 @@ RSpec.describe "Dumbcourse app page" do
       )
     end
 
+    it "lists only the reactions the member's trust level unlocked" do
+      SiteSetting.jtech_enabled = true
+      SiteSetting.discourse_reactions_enabled = true
+      SiteSetting.discourse_reactions_enabled_reactions = "+1|laughing|trophy"
+      SiteSetting.jtech_reaction_levels_enabled = true
+      SiteSetting.jtech_reaction_levels_tl3 = "trophy"
+
+      user.update!(trust_level: TrustLevel[1])
+      sign_in(user)
+      get "/dumb/"
+      expect(boot_data.dig("reactions", "list")).to eq(%w[+1 laughing])
+
+      user.update!(trust_level: TrustLevel[3])
+      get "/dumb/"
+      expect(boot_data.dig("reactions", "list")).to eq(%w[+1 laughing trophy])
+
+      SiteSetting.jtech_reaction_levels_enabled = false
+      user.update!(trust_level: TrustLevel[1])
+      get "/dumb/"
+      expect(boot_data.dig("reactions", "list")).to eq(%w[+1 laughing trophy])
+    end
+
     it "has no user for signed-out visitors" do
       get "/dumb/"
       expect(response.status).to eq(200)
