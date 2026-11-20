@@ -116,12 +116,18 @@
     grid-template-columns: minmax(9rem, 14rem) minmax(0, 1fr);
     align-items: center;
     gap: 1rem;
+    padding: 0.2rem 0.4rem;
+    border-radius: var(--d-border-radius);
+
+    &:not(.--head):hover {
+      background: var(--primary-very-low);
+    }
 
     &.--head {
       position: sticky;
       top: 0;
       z-index: 1;
-      padding-bottom: 0.25rem;
+      padding-bottom: 0.4rem;
       background: var(--secondary);
     }
   }
@@ -146,17 +152,36 @@
     }
   }
 
-  &__emoji .emoji {
+  &__emoji {
+    display: inline-flex;
+    flex: none;
     width: 1.6em;
-    height: 1.6em;
+    justify-content: center;
+
+    .emoji {
+      width: 1.6em;
+      height: 1.6em;
+    }
   }
 
+  // One bar per reaction: six equal segments, the band filled from the
+  // reaction's level to Staff, the box on the level itself
   &__track {
     display: grid;
     grid-template-columns: repeat(var(--jtech-rl-cols), minmax(0, 1fr));
-    gap: 0.25rem;
     touch-action: none;
     user-select: none;
+  }
+
+  &__row.--head &__track {
+    gap: 0;
+  }
+
+  &__row:not(.--head) &__track {
+    height: 2.25rem;
+    background: var(--primary-very-low);
+    border-radius: 999px;
+    outline: none;
   }
 
   &__col {
@@ -174,41 +199,93 @@
 
   &__row:not(.--head, .--fixed) &__track {
     cursor: pointer;
-
-    &:focus-visible {
-      outline: 2px solid var(--tertiary);
-      outline-offset: 3px;
-      border-radius: var(--d-border-radius);
-    }
   }
 
   &__cell {
-    height: 2.1rem;
-    background: var(--primary-very-low);
-    border-radius: var(--d-border-radius);
-    transition: background 0.15s ease;
+    position: relative;
+    margin: 0.2rem 0;
+    transition:
+      background 0.15s ease,
+      box-shadow 0.15s ease;
 
-    // who can use it: from the level to Staff
-    &.--on {
-      background: color-mix(in srgb, var(--tertiary) 22%, var(--secondary));
+    // between segments, a faint tick
+    & + & {
+      box-shadow: inset 1px 0 0 var(--primary-low);
     }
 
-    // the box on the lowest level that can
+    // who can use it: one continuous band from the level to Staff
+    &.--on {
+      background: color-mix(in srgb, var(--tertiary) 30%, transparent);
+      box-shadow: none;
+    }
+
+    &.--on:last-child {
+      margin-right: 0.2rem;
+      border-radius: 0 999px 999px 0;
+    }
+
+    // the box on the lowest level that can: solid, with grip marks
     &.--min {
+      z-index: 1;
+      margin-left: 0.2rem;
       background: var(--tertiary);
-      box-shadow:
-        0 0 0 2px var(--secondary),
-        0 0 0 4px var(--tertiary),
-        0 2px 6px rgb(0 0 0 / 20%);
+      border-radius: 999px;
+      box-shadow: 0 1px 3px rgb(0 0 0 / 25%);
       cursor: grab;
+
+      &::before {
+        position: absolute;
+        inset: 0;
+        margin: auto;
+        width: 0.5rem;
+        height: 0.8rem;
+        content: "";
+        background:
+          linear-gradient(var(--secondary), var(--secondary)) left / 2px 100%
+            no-repeat,
+          linear-gradient(var(--secondary), var(--secondary)) right / 2px 100%
+            no-repeat;
+        opacity: 0.85;
+      }
+
+      // the band carries on from the box's right edge
+      &::after {
+        position: absolute;
+        top: 0;
+        right: -1px;
+        bottom: 0;
+        z-index: -1;
+        width: 50%;
+        content: "";
+        background: color-mix(in srgb, var(--tertiary) 30%, transparent);
+      }
+
+      &:last-child::after {
+        display: none;
+      }
     }
   }
 
-  &__row.--fixed &__cell {
-    opacity: 0.55;
+  &__row:not(.--head, .--fixed) &__track:hover &__cell.--min {
+    filter: brightness(1.12);
+  }
 
-    &.--min {
-      cursor: default;
+  // keyboard focus on the box, not the whole bar
+  &__track:focus-visible &__cell.--min {
+    box-shadow:
+      0 0 0 2px var(--secondary),
+      0 0 0 4px var(--tertiary);
+  }
+
+  &__row.--fixed &__track {
+    opacity: 0.5;
+  }
+
+  &__row.--fixed &__cell.--min {
+    cursor: default;
+
+    &::before {
+      display: none;
     }
   }
 }
