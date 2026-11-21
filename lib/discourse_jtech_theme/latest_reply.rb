@@ -74,7 +74,7 @@ module DiscourseJtechTheme
       excerpt =
         Discourse
           .cache
-          .fetch("jt-latest-reply:v2:#{post.id}:#{post.updated_at.to_i}", expires_in: 1.day) do
+          .fetch("jt-latest-reply:v3:#{post.id}:#{post.updated_at.to_i}", expires_in: 1.day) do
             ::Post.excerpt(
               without_emoji(post.cooked),
               SiteSetting.topic_excerpt_maxlength,
@@ -96,13 +96,36 @@ module DiscourseJtechTheme
     end
 
     # Core's excerpt writes an emoji out as its code (":smile:"), which reads
-    # as noise in a one-line preview; the card leaves emoji out instead.
+    # as noise in a one-line preview; the card leaves emoji out instead. Not
+    # every emoji is an image in the cooked post: with emoji turned off, or in
+    # a code span, it stays the character or the code the author typed.
     def without_emoji(cooked)
-      return cooked if cooked.blank? || !cooked.include?("emoji")
+      return cooked if cooked.blank?
 
       doc = Nokogiri::HTML5.fragment(cooked)
       doc.css("img.emoji").each(&:remove)
+      doc
+        .xpath(".//text()")
+        .each do |node|
+          text = without_text_emoji(node.content)
+          node.content = text if text != node.content
+        end
       doc.to_html
+    end
+
+    def without_text_emoji(text)
+      text = text.gsub(unicode_emoji_regexp, "") if !text.ascii_only?
+      text.gsub(::Emoji::EMOJI_CODE_REGEXP) { |code| ::Emoji.exists?($1) ? "" : code }
+    end
+
+    # Core's own list of emoji characters (the ones it would draw as images),
+    # longest first so a sequence isn't cut into its parts.
+    def unicode_emoji_regexp
+      @unicode_emoji_regexp ||=
+        begin
+          union = Regexp.union(::Emoji.unicode_replacements.keys.sort_by { |k| -k.length })
+          Regexp.new("(?:#{union.source})\\u{FE0F}?")
+        end
     end
   end
 end
