@@ -678,9 +678,12 @@ RSpec.describe "Moderator messages" do
       expect(link[:href]).to include("/t/")
       shot("95_mod_note_notification_in_user_menu")
 
-      # Found again: opening the menu marks the notifications seen, and the
-      # list can re-render between the checks above and the click.
-      find(".notification.custom a[title='Moderator note']", match: :first).click
+      # Opening the menu marks the notifications seen, and the list can
+      # re-render under a click, even one on a freshly found link. Playwright's
+      # locator finds the link again on each try; Capybara's element doesn't.
+      page.driver.with_playwright_page do |pw|
+        pw.locator(".notification.custom a[title='Moderator note']").first.click
+      end
 
       # Clicking the notification lands on the topic — at the note, the same
       # target the notes feed uses.
