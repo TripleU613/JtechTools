@@ -27,6 +27,16 @@ jobs:
       name: jtech-tools
       runs_on: jtechtools-ci
 
+  # The same suite on Discourse's monthly release channel (the newest
+  # release/YYYY.M branch), so the plugin keeps working for a forum on
+  # release, not only on latest.
+  ci_release:
+    uses: discourse/.github/.github/workflows/discourse-plugin.yml@v1
+    with:
+      name: jtech-tools
+      runs_on: jtechtools-ci
+      core_ref: release
+
   # Dumbcourse is written in TypeScript and shipped as a prebuilt ES5 bundle
   # in public/. Type-check it, run its unit tests, and fail if the committed
   # bundle doesn't match the sources (run `pnpm dumbcourse:build`).
