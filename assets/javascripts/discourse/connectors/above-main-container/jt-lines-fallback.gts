@@ -55,7 +55,8 @@ export default class JtLinesFallback extends Component {
     this.host.className = this.hostClass;
     this.#root = this.host.attachShadow({ mode: "closed" });
     this.#root.adoptedStyleSheets = [sheet()];
-    this.#sprite.setAttribute("hidden", "");
+    // hidden takes no effect on an svg: it would hold 300×150 of room
+    this.#sprite.style.display = "none";
     this.inner.className = "jt-lines";
     this.#root.append(this.#sprite, this.inner);
   }
