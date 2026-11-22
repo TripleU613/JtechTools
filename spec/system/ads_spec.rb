@@ -149,6 +149,13 @@ RSpec.describe "Ads in the welcome area" do
         "Spring sale",
       )
     end
+
+    # the fallback is the card's size, nothing more
+    sizes =
+      page.evaluate_script(
+        "[#{host}, #{fallback}.querySelector('.jt-lines')].map((el) => el.getBoundingClientRect().height)",
+      )
+    expect(sizes[0]).to be_within(1).of(sizes[1])
   end
 
   # Nothing outside the root a page rule could name, and a script that
