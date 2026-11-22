@@ -114,16 +114,64 @@ RSpec.describe "Ads in the welcome area" do
     expect(page).to have_no_text("Draft card")
   end
 
-  # A blocker's element rule, applied as soon as the page is up: the space
-  # checks itself after a second and a half, and moves the ad
-  it "moves the ad to the fallback when the space is hidden" do
-    visit "/latest"
+  # The fallback's root is closed; in these specs every root is opened, so
+  # they can look inside
+  def open_shadow_roots
+    page.driver.with_playwright_page { |pw| pw.add_init_script(script: <<~JS) }
+        const attachShadow = Element.prototype.attachShadow;
+        Element.prototype.attachShadow = function (options) {
+          return attachShadow.call(this, { ...options, mode: "open" });
+        };
+      JS
+  end
+
+  def hide_space
     page.execute_script(<<~JS)
       const style = document.createElement("style");
       style.textContent = ".jt-lines { display: none !important }";
       document.head.append(style);
     JS
-    expect(page).to have_css("[data-jt-l]", wait: 5)
+  end
+
+  let(:host) do
+    "[...document.querySelectorAll('#main-outlet div')].find((el) => el.shadowRoot?.querySelector('.jt-lines'))"
+  end
+  let(:fallback) { "#{host}?.shadowRoot" }
+
+  # A blocker's element rule, applied as soon as the page is up: the space
+  # checks itself after a second and a half, and moves the ad
+  it "moves the ad to the fallback when the space is hidden" do
+    open_shadow_roots
+    visit "/latest"
+    hide_space
+    try_until_success(timeout: 5) do
+      expect(page.evaluate_script("#{fallback}?.querySelector('.jl-title-xl')?.textContent")).to eq(
+        "Spring sale",
+      )
+    end
+  end
+
+  # Nothing outside the root a page rule could name, and a script that
+  # hides it is undone
+  it "gives the fallback nothing to be named by, and undoes hiding" do
+    open_shadow_roots
+    visit "/latest"
+    hide_space
+    try_until_success(timeout: 5) { expect(page.evaluate_script("!!#{fallback}")).to eq(true) }
+
+    outside = page.evaluate_script(<<~JS)
+      (() => { const host = #{host}; return [host, host.parentElement].map((el) => [...el.attributes].map((a) => a.name + "=" + a.value)); })()
+    JS
+    outside.each { |attributes| expect(attributes).to match([/\Aclass=c[a-z0-9]+\z/]) }
+
+    page.execute_script("#{host}.style.setProperty('display', 'none', 'important')")
+    page.execute_script("#{host}.parentElement.setAttribute('data-jtab-shadow', '')")
+    try_until_success do
+      expect(page.evaluate_script("getComputedStyle(#{host}).display")).to eq("block")
+      expect(page.evaluate_script("#{host}.parentElement.hasAttribute('data-jtab-shadow')")).to eq(
+        false,
+      )
+    end
   end
 
   it "keeps the vote and confirms updates on the fallback card" do
@@ -132,24 +180,15 @@ RSpec.describe "Ads in the welcome area" do
       ad_key: DiscourseJtechAds.key_for("spring"),
       value: 1,
     )
+    open_shadow_roots
     sign_in(member)
     visit "/latest"
-    page.execute_script(<<~JS)
-      const attachShadow = Element.prototype.attachShadow;
-      Element.prototype.attachShadow = function (options) {
-        return attachShadow.call(this, this.matches("[data-jt-l]") ? { mode: "open" } : options);
-      };
-      const style = document.createElement("style");
-      style.textContent = ".jt-lines { display: none !important }";
-      document.head.append(style);
-    JS
-    expect(page).to have_css("[data-jt-l]", wait: 5)
+    hide_space
+    try_until_success(timeout: 5) { expect(page.evaluate_script("!!#{fallback}")).to eq(true) }
 
-    feedback = "document.querySelector('[data-jt-l]').shadowRoot.querySelector('[role=status]')"
+    feedback = "#{fallback}.querySelector('[role=status]')"
     expect(page.evaluate_script("#{feedback}.textContent")).to eq("Liked")
-    page.execute_script(<<~JS)
-      document.querySelector("[data-jt-l]").shadowRoot.querySelector("[aria-label='Not for me']").click();
-    JS
+    page.execute_script("#{fallback}.querySelector(\"[aria-label='Not for me']\").click()")
     try_until_success { expect(page.evaluate_script("#{feedback}.textContent")).to eq("Disliked") }
     expect(DiscourseJtechAds::Vote.find_by(user: member).value).to eq(-1)
   end

@@ -1,118 +1,168 @@
 import Component from "@glimmer/component";
+import type Owner from "@ember/owner";
 import type RouterService from "@ember/routing/router-service";
 import { service } from "@ember/service";
 import { modifier } from "ember-modifier";
-import { i18n } from "discourse-i18n";
+import JtLine from "../../components/jt-line.gts";
 import { onWelcomeRoute } from "../../lib/jt-lines-route.ts";
-import type {
-  default as JtLinesService,
-  JtLine,
-} from "../../services/jt-lines.ts";
+import type JtLinesService from "../../services/jt-lines.ts";
 
-// Only when the welcome area's line was hidden by a rule of the browser's
-// (a blocker): the line again, at the top of the page, inside a closed
-// shadow root, which page-level hiding rules can't reach into. Styled with
-// the theme's own colour variables, which do reach in. One fallback, no
-// nagging: if this is hidden too, nothing more happens.
+// Only when the welcome area's ad was hidden by something in the browser
+// (a blocker or an extension): the same card again, at the top of the page,
+// inside a closed shadow root. Everything a hiding rule or script keys on
+// is kept out of the page: no fixed class, id or data attribute on what's
+// outside the root, and nothing of the card is in the page itself. If a
+// script still sets it hidden, that's undone. One fallback, no nagging.
+//
+// .github/workflows/ad-remover-check.yml runs the published remover
+// extension against this every day (spec/system/ads_remover_spec.rb).
 export default class JtLinesFallback extends Component {
   @service("jt-lines") declare lines: JtLinesService;
   @service declare router: RouterService;
 
-  mount = modifier((host: HTMLElement, [line]: [JtLine]) => {
-    // closed roots can't be looked up again, so the element keeps its own
-    let root = ROOTS.get(host);
-    if (!root) {
-      root = host.attachShadow({ mode: "closed" });
-      root.innerHTML = `<style>${STYLE}</style><div class="box"></div>`;
-      ROOTS.set(host, root);
-    }
-    const box = root.querySelector<HTMLElement>(".box")!;
-    box.innerHTML = `<b class="tag"></b><p class="head" dir="auto">${line.h}</p>${
-      line.t ? `<p class="text" dir="auto">${line.t}</p>` : ""
-    }`;
-    box.querySelector(".tag")!.textContent = this.lines.label;
-    if (this.lines.canVoteOn(line)) {
-      const row = document.createElement("div");
-      row.className = "row";
-      const status = document.createElement("span");
-      status.setAttribute("role", "status");
-      row.append(status);
-      for (const [value, key] of [
-        [1, "jt_lines.up"],
-        [-1, "jt_lines.down"],
-      ] as const) {
-        const button = document.createElement("button");
-        button.type = "button";
-        button.textContent = value > 0 ? "▲" : "▼";
-        button.title = i18n(key);
-        button.dataset.vote = String(value);
-        button.setAttribute("aria-label", i18n(key));
-        button.addEventListener("click", () => this.lines.setVote(line, value));
-        row.append(button);
-      }
-      box.append(row);
-    }
-    return () => (box.innerHTML = "");
+  // A fresh class every page load, so no page rule can name it
+  hostClass = `c${Math.random().toString(36).slice(2, 9)}`;
+  host = document.createElement("div");
+  inner = document.createElement("div");
+
+  place = modifier((slot: HTMLElement) => {
+    slot.append(this.host);
+    const heal = new MutationObserver(() => this.#heal(slot));
+    heal.observe(slot, { attributes: true });
+    heal.observe(this.host, { attributes: true });
+    this.#heal(slot);
+
+    // the thumbs' icons point into the page's sprite, which a shadow root
+    // can't see: the root carries its own copies
+    const icons = new MutationObserver(() => this.#icons());
+    icons.observe(this.inner, { childList: true, subtree: true });
+    this.#icons();
+
+    const stops = [this.lines.rotate(this.inner)];
+    return () => {
+      heal.disconnect();
+      icons.disconnect();
+      stops.forEach((stop) => stop());
+      this.host.remove();
+    };
   });
 
-  updateFeedback = modifier((host: HTMLElement, [line]: [JtLine]) => {
-    const row = ROOTS.get(host)?.querySelector(".row");
-    if (row) {
-      const vote = this.lines.vote(line);
-      const pending = this.lines.isVotePending(line);
-      row.querySelector('[role="status"]')!.textContent =
-        this.lines.voteFeedback(line);
-      for (const button of row.querySelectorAll<HTMLButtonElement>("button")) {
-        button.setAttribute(
-          "aria-pressed",
-          String(vote === Number(button.dataset.vote))
-        );
-        button.setAttribute("aria-disabled", String(pending));
-      }
-    }
-  });
+  #root: ShadowRoot;
+  #sprite = document.createElementNS("http://www.w3.org/2000/svg", "svg");
 
-  get line(): JtLine | null {
+  constructor(owner: Owner, args: object) {
+    super(owner, args);
+    this.host.className = this.hostClass;
+    this.#root = this.host.attachShadow({ mode: "closed" });
+    this.#root.adoptedStyleSheets = [sheet()];
+    this.#sprite.setAttribute("hidden", "");
+    this.inner.className = "jt-lines";
+    this.#root.append(this.#sprite, this.inner);
+  }
+
+  get shown() {
     if (!this.lines.hidden || !onWelcomeRoute(this.router, false)) {
       return null;
     }
-    return this.lines.line;
+    return this.lines.line ? this.lines.shown : null;
+  }
+
+  // Put back what a hiding script changes: its inline style, its marks
+  #heal(slot: HTMLElement) {
+    for (const element of [slot, this.host]) {
+      const style = element.style;
+      if (
+        style.display ||
+        style.visibility ||
+        style.opacity ||
+        style.height ||
+        style.position
+      ) {
+        element.removeAttribute("style");
+      }
+      if (element.hidden) {
+        element.hidden = false;
+      }
+      for (const attribute of Array.from(element.attributes)) {
+        if (attribute.name !== "class") {
+          element.removeAttribute(attribute.name);
+        }
+      }
+    }
+    if (slot.className !== this.hostClass) {
+      slot.className = this.hostClass;
+    }
+    if (this.host.className !== this.hostClass) {
+      this.host.className = this.hostClass;
+    }
+  }
+
+  #icons() {
+    for (const use of this.inner.querySelectorAll("use")) {
+      const id = (use.getAttribute("href") ?? "").replace(/^#/, "");
+      if (id && !this.#sprite.querySelector(`[id="${CSS.escape(id)}"]`)) {
+        const symbol = document.getElementById(id);
+        if (symbol) {
+          this.#sprite.append(symbol.cloneNode(true));
+        }
+      }
+    }
   }
 
   <template>
-    {{#if this.line}}
-      <div
-        data-jt-l
-        {{this.mount this.line}}
-        {{this.updateFeedback this.line}}
-      ></div>
+    {{#if this.shown}}
+      <div class={{this.hostClass}} {{this.place}}></div>
+      {{#in-element this.inner insertBefore=null}}
+        {{#each this.shown key="line.k" as |item|}}
+          <JtLine @line={{item.line}} @state={{item.state}} />
+        {{/each}}
+      {{/in-element}}
     {{/if}}
   </template>
 }
 
-const ROOTS = new WeakMap<HTMLElement, ShadowRoot>();
+// The card's own rules (lines.scss) and the bits of core's it uses (the
+// thumbs' buttons and icons), copied once from the forum's own stylesheets
+// into a sheet the root adopts. Only sheets the forum serves: never a rule
+// something else put in the page.
+let copied: CSSStyleSheet | null = null;
+function sheet(): CSSStyleSheet {
+  if (copied) {
+    return copied;
+  }
+  const wanted = /\.jt-lines|\.jl-|@keyframes jl-|\.btn-flat|\.d-icon/;
+  const rules: string[] = [
+    ":host { display: block; margin: 0 0 1em; }",
+    ".jt-lines { box-sizing: border-box; }",
+  ];
+  for (const styleSheet of Array.from(document.styleSheets)) {
+    if (!ours(styleSheet)) {
+      continue;
+    }
+    let list: CSSRuleList;
+    try {
+      list = styleSheet.cssRules;
+    } catch {
+      continue;
+    }
+    for (const rule of Array.from(list)) {
+      if (wanted.test(rule.cssText)) {
+        rules.push(rule.cssText);
+      }
+    }
+  }
+  copied = new CSSStyleSheet();
+  copied.replaceSync(rules.join("\n"));
+  return copied;
+}
 
-// Line headlines and text are already cleaned to inline tags on the server
-const STYLE = `
-  :host { display: block; margin: 0 0 1em; }
-  .box {
-    display: flex; flex-wrap: wrap; align-items: baseline; gap: .25em .75em;
-    padding: .75em 1em; border: 1px solid var(--primary-low, #ddd);
-    border-radius: var(--d-border-radius, 6px);
-    background: var(--secondary, #fff); color: var(--primary, #222);
-    font: inherit;
+function ours(styleSheet: CSSStyleSheet): boolean {
+  if (!styleSheet.href) {
+    return false;
   }
-  .tag { font-size: .75em; font-weight: 600; color: var(--primary-medium, #888); }
-  .head { margin: 0; font-weight: 600; }
-  .text { margin: 0; flex-basis: 100%; color: var(--primary-high, #444); }
-  a { color: var(--tertiary, #08c); }
-  .row { margin-left: auto; display: flex; align-items: center; gap: .25em; }
-  [role="status"] { font-size: .875em; }
-  button {
-    border: 0; background: none; color: var(--primary-medium, #888);
-    cursor: pointer; padding: .25em .4em; border-radius: 4px;
+  try {
+    return new URL(styleSheet.href).pathname.includes("/stylesheets/");
+  } catch {
+    return false;
   }
-  button:hover { background: var(--primary-very-low, #f3f3f3); }
-  button[aria-pressed="true"] { background: var(--tertiary); color: var(--secondary); }
-  button[aria-disabled="true"] { cursor: wait; }
-`;
+}

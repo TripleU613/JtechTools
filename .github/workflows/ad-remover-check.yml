@@ -1,0 +1,154 @@
+name: Ad remover check
+
+# The published "JTech Ad Remover" Chrome extension
+# (github.com/the-curious-2025/jtech-ad-remover) against the ad space, every
+# day, at its latest commit: spec/system/ads_remover_spec.rb runs their
+# files the way Chrome would and checks the ad still shows, with core's
+# theme and the JTech theme. Red means a new version of theirs gets past
+# the fallback (assets/.../above-main-container/jt-lines-fallback.gts);
+# a scheduled run then opens an issue saying which of their commits did it.
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "assets/javascripts/discourse/connectors/above-main-container/jt-lines-fallback.gts"
+      - "assets/javascripts/discourse/components/jt-line.gts"
+      - "assets/javascripts/discourse/services/jt-lines.ts"
+      - "assets/stylesheets/lines.scss"
+      - "themes/jtech/javascripts/discourse/components/jt-hero.gts"
+      - "spec/system/ads_remover_spec.rb"
+      - ".github/workflows/ad-remover-check.yml"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    name: ad_remover
+    runs-on: jtechtools-ci
+    container: discourse/discourse_test:slim-browsers
+    timeout-minutes: 30
+
+    env:
+      RUBY_GLOBAL_METHOD_CACHE_SIZE: 131072
+      RAILS_ENV: test
+      PGUSER: discourse
+      PGPASSWORD: discourse
+      # lowercase: see feature-screenshots.yml
+      PLUGIN_NAME: jtech-tools
+      CHEAP_SOURCE_MAPS: "1"
+      USES_PARALLEL_DATABASES: "false"
+      PARALLEL_TEST_PROCESSORS: 1
+      LOAD_PLUGINS: 1
+      CAPYBARA_DEFAULT_MAX_WAIT_TIME: 10
+      JTECH_THEME_SPECS: "1"
+
+    steps:
+      - name: Set working directory owner
+        run: chown root:root .
+
+      - name: Checkout Discourse
+        uses: actions/checkout@v7
+        with:
+          repository: discourse/discourse
+          fetch-depth: 1
+          ref: latest
+
+      - name: Install plugin
+        uses: actions/checkout@v7
+        with:
+          path: plugins/${{ env.PLUGIN_NAME }}
+          fetch-depth: 1
+
+      - name: Fetch the ad remover
+        id: remover
+        run: |
+          git clone --depth 1 https://github.com/the-curious-2025/jtech-ad-remover.git ad-remover
+          sha=$(git -C ad-remover rev-parse --short HEAD)
+          version=$(ruby -rjson -e 'puts JSON.parse(File.read("ad-remover/manifest.json"))["version"]')
+          echo "JTECH_AD_REMOVER_DIR=$PWD/ad-remover" >> $GITHUB_ENV
+          echo "sha=$sha" >> $GITHUB_OUTPUT
+          echo "version=$version" >> $GITHUB_OUTPUT
+          echo "Ad remover $version at $sha" >> $GITHUB_STEP_SUMMARY
+
+      - name: Setup Git
+        run: |
+          git config --global user.email "ci@ci.invalid"
+          git config --global user.name "Discourse CI"
+
+      - name: Start redis
+        run: redis-server /etc/redis/redis.conf &
+
+      - name: Start Postgres
+        run: |
+          chown -R postgres /var/run/postgresql
+          sudo -E -u postgres script/start_test_db.rb
+          sudo -u postgres psql -c "CREATE ROLE $PGUSER LOGIN SUPERUSER PASSWORD '$PGPASSWORD';"
+
+      - name: Container envs
+        id: container-envs
+        run: |
+          echo "ruby_version=$RUBY_VERSION" >> $GITHUB_OUTPUT
+          echo "debian_release=$DEBIAN_RELEASE" >> $GITHUB_OUTPUT
+
+      - name: Bundler cache
+        uses: actions/cache@v6
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-${{ steps.container-envs.outputs.ruby_version }}-${{ steps.container-envs.outputs.debian_release }}-gem-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ steps.container-envs.outputs.ruby_version }}-${{ steps.container-envs.outputs.debian_release }}-gem-
+
+      - name: Setup gems
+        run: |
+          bundle config --local path vendor/bundle
+          bundle config --local deployment true
+          bundle config --local without development
+          bundle install --jobs 4
+          bundle clean
+
+      - name: Install JS Dependencies
+        run: if [ -f yarn.lock ]; then yarn install --frozen-lockfile; else pnpm install --frozen-lockfile; fi
+
+      - name: Install playwright
+        run: |
+          if pnpm playwright -V; then
+            pnpm playwright install --with-deps --no-shell chromium
+          fi
+
+      - name: Create and migrate database
+        run: |
+          bin/rake db:create
+          bin/rake db:migrate
+
+      - name: Ember Build
+        env:
+          EMBER_ENV: development
+        run: |
+          export DISCOURSE_DOWNLOAD_PRE_BUILT_ASSETS=$(bin/rails runner 'puts(Discourse.has_needed_version?(Discourse::VERSION::STRING, "2026.3.0-latest") ? 1 : 0)')
+          script/assemble_ember_build.rb
+
+      - name: Run the ad remover against the ads
+        run: bundle exec rspec --format documentation plugins/${{ env.PLUGIN_NAME }}/spec/system/ads_remover_spec.rb
+
+      - name: Open an issue when it gets past the ads
+        if: failure() && github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          title="Ad remover ${{ steps.remover.outputs.version }} gets past the ads"
+          if ! gh issue list --state open --search "in:title \"$title\"" --json number --jq '.[].number' | grep -q .; then
+            gh issue create --title "$title" --body "The ad remover at the-curious-2025/jtech-ad-remover@${{ steps.remover.outputs.sha }} hides the ad: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}. Update jt-lines-fallback.gts until spec/system/ads_remover_spec.rb passes again."
+          fi
+
+      - name: Upload screenshots
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ad-remover-screenshots
+          path: tmp/capybara/*.png
+          if-no-files-found: ignore
