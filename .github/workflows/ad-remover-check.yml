@@ -63,10 +63,19 @@ jobs:
           path: plugins/${{ env.PLUGIN_NAME }}
           fetch-depth: 1
 
+      # Gone from GitHub (deleted or private): nothing to check against,
+      # which isn't a failure; the steps below skip until it's back
       - name: Fetch the ad remover
         id: remover
+        env:
+          GIT_TERMINAL_PROMPT: "0"
         run: |
-          git clone --depth 1 https://github.com/the-curious-2025/jtech-ad-remover.git ad-remover
+          if ! git clone --depth 1 https://github.com/the-curious-2025/jtech-ad-remover.git ad-remover; then
+            echo "found=false" >> $GITHUB_OUTPUT
+            echo "The ad remover's repository isn't public any more; nothing to check." >> $GITHUB_STEP_SUMMARY
+            exit 0
+          fi
+          echo "found=true" >> $GITHUB_OUTPUT
           sha=$(git -C ad-remover rev-parse --short HEAD)
           version=$(ruby -rjson -e 'puts JSON.parse(File.read("ad-remover/manifest.json"))["version"]')
           echo "JTECH_AD_REMOVER_DIR=$PWD/ad-remover" >> $GITHUB_ENV
@@ -75,26 +84,31 @@ jobs:
           echo "Ad remover $version at $sha" >> $GITHUB_STEP_SUMMARY
 
       - name: Setup Git
+        if: steps.remover.outputs.found == 'true'
         run: |
           git config --global user.email "ci@ci.invalid"
           git config --global user.name "Discourse CI"
 
       - name: Start redis
+        if: steps.remover.outputs.found == 'true'
         run: redis-server /etc/redis/redis.conf &
 
       - name: Start Postgres
+        if: steps.remover.outputs.found == 'true'
         run: |
           chown -R postgres /var/run/postgresql
           sudo -E -u postgres script/start_test_db.rb
           sudo -u postgres psql -c "CREATE ROLE $PGUSER LOGIN SUPERUSER PASSWORD '$PGPASSWORD';"
 
       - name: Container envs
+        if: steps.remover.outputs.found == 'true'
         id: container-envs
         run: |
           echo "ruby_version=$RUBY_VERSION" >> $GITHUB_OUTPUT
           echo "debian_release=$DEBIAN_RELEASE" >> $GITHUB_OUTPUT
 
       - name: Bundler cache
+        if: steps.remover.outputs.found == 'true'
         uses: actions/cache@v6
         with:
           path: vendor/bundle
@@ -103,6 +117,7 @@ jobs:
             ${{ runner.os }}-${{ steps.container-envs.outputs.ruby_version }}-${{ steps.container-envs.outputs.debian_release }}-gem-
 
       - name: Setup gems
+        if: steps.remover.outputs.found == 'true'
         run: |
           bundle config --local path vendor/bundle
           bundle config --local deployment true
@@ -111,20 +126,24 @@ jobs:
           bundle clean
 
       - name: Install JS Dependencies
+        if: steps.remover.outputs.found == 'true'
         run: if [ -f yarn.lock ]; then yarn install --frozen-lockfile; else pnpm install --frozen-lockfile; fi
 
       - name: Install playwright
+        if: steps.remover.outputs.found == 'true'
         run: |
           if pnpm playwright -V; then
             pnpm playwright install --with-deps --no-shell chromium
           fi
 
       - name: Create and migrate database
+        if: steps.remover.outputs.found == 'true'
         run: |
           bin/rake db:create
           bin/rake db:migrate
 
       - name: Ember Build
+        if: steps.remover.outputs.found == 'true'
         env:
           EMBER_ENV: development
         run: |
@@ -132,10 +151,11 @@ jobs:
           script/assemble_ember_build.rb
 
       - name: Run the ad remover against the ads
+        if: steps.remover.outputs.found == 'true'
         run: bundle exec rspec --format documentation plugins/${{ env.PLUGIN_NAME }}/spec/system/ads_remover_spec.rb
 
       - name: Open an issue when it gets past the ads
-        if: failure() && github.event_name == 'schedule'
+        if: failure() && github.event_name == 'schedule' && steps.remover.outputs.found == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
