@@ -89,4 +89,41 @@ RSpec.describe "Topic list latest reply" do
     SiteSetting.jtech_topic_list_latest_reply = false
     expect(latest_reply_for(reader)).to be_nil
   end
+
+  it "skips deleted replies and small actions for the one before" do
+    older = reply
+    newer = Fabricate(:post, topic: topic, user: author, raw: "A reply that gets deleted later.")
+    newer.trash!
+    topic.add_small_action(author, "closed.enabled")
+
+    expect(latest_reply_for(reader)["post_number"]).to eq(older.post_number)
+  end
+
+  it "picks each topic's own newest reply across a whole list" do
+    other = Fabricate(:topic, user: author)
+    Fabricate(:post, topic: other, user: author)
+    Fabricate(:post, topic: other, user: replier, raw: "First reply in the other topic.")
+    last = Fabricate(:post, topic: other, user: author, raw: "Last reply in the other topic.")
+
+    sign_in(reader)
+    get "/latest.json"
+    rows = response.parsed_body["topic_list"]["topics"].index_by { |t| t["id"] }
+    expect(rows[topic.id]["jt_latest_reply"]["post_number"]).to eq(reply.post_number)
+    expect(rows[other.id]["jt_latest_reply"]["post_number"]).to eq(last.post_number)
+  end
+
+  # A topic page's Suggested list never shows the reply: working it out there
+  # was most of a topic page's time
+  it "isn't worked out for a topic page's suggested topics" do
+    other = Fabricate(:topic, user: author)
+    Fabricate(:post, topic: other, user: author)
+    Fabricate(:post, topic: other, user: replier)
+    allow(DiscourseJtechTheme::LatestReply).to receive(:latest_posts).and_call_original
+
+    sign_in(reader)
+    get "/t/#{topic.id}.json"
+    expect(response.status).to eq(200)
+    expect(response.parsed_body["suggested_topics"].map { it["id"] }).to include(other.id)
+    expect(DiscourseJtechTheme::LatestReply).not_to have_received(:latest_posts)
+  end
 end

@@ -64,7 +64,8 @@ after_initialize do
   end
 
   TopicList.on_preload do |topics, topic_list|
-    if DiscourseJtechTheme::LatestReply.enabled?
+    if DiscourseJtechTheme::LatestReply.enabled? &&
+         DiscourseJtechTheme::LatestReply.wanted?(topic_list)
       DiscourseJtechTheme::LatestReply.preload!(topics, topic_list.current_user)
     end
   end
