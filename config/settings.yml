@@ -39,6 +39,11 @@ jtech:
   jtech_app_icon:
     default: false
     client: false
+  # Palettes in every page's preloaded site data carry only the colours their
+  # previews show (lib/discourse_jtech_theme/palettes.rb).
+  jtech_lean_palettes:
+    default: true
+    client: false
   # Members without a flair of their own show their trust level group's
   # (lib/discourse_trust_level_flair.rb). Off by default: it sets users' flair.
   jtech_trust_level_flair:

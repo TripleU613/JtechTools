@@ -99,6 +99,13 @@ en:
       icon site setting in the web manifest only; turn this off to use that
       upload instead. Reinstall the app to pick up a change.
 
+    jtech_lean_palettes: Send the colour palettes in every page with only the
+      colours their previews and swatches use (primary, secondary, tertiary,
+      selected, header background and header text) instead of all of them.
+      With many palettes that is most of a page's weight. Picking a palette
+      loads its full stylesheet as before, so nothing on screen changes; turn
+      this off to send every colour again.
+
     jtech_trust_level_flair: Show each member's trust level as their avatar
       flair when they haven't picked one, using the flair of their highest
       trust level group that has one (set the flair on the trust level groups
