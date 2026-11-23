@@ -365,6 +365,22 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
     end
   end
 
+  # The title's words sit in a span inside the link; a click on them loaded
+  # the whole page again instead of opening the topic in the app
+  it "opens a topic from its card's title without reloading the page" do
+    sign_in(member)
+    visit("/latest")
+    expect(page).to have_css(".jt-card")
+    page.execute_script("window.__jtSamePage = true")
+    link = find(".jt-card .raw-topic-link", text: topic.title, match: :first)
+    # core's current TopicLink wraps the words in a span; older ones don't
+    (link.has_css?("span", wait: 0) ? link.find("span", match: :first) : link).click
+    expect(page).to have_css("#post_1")
+    expect(page).to have_current_path(%r{/t/})
+    expect(page.evaluate_script("window.__jtSamePage === true")).to eq(true)
+    expect_no_theme_errors
+  end
+
   # "Skip to main content", the first Tab on a page, was core's square chip
   # jammed against the window's top edge, over the logo
   it "rounds the skip link and keeps it off the window's edge" do

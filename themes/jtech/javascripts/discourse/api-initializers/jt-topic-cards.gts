@@ -4,6 +4,7 @@ import { settings } from "virtual:theme";
 import HeaderTopicCell from "discourse/components/topic-list/header/topic-cell";
 import { apiInitializer } from "discourse/lib/api";
 import type DAG from "discourse/lib/dag";
+import { wantsNewWindow } from "discourse/lib/intercept-click";
 import type Category from "discourse/models/category";
 import type Topic from "discourse/models/topic";
 import JtTopicCard, {
@@ -45,6 +46,8 @@ interface TopicListTransformerArgs<T> {
 
 interface TopicListItemClickContext {
   event: MouseEvent & { target: Element };
+  topic: Topic;
+  navigateToTopic: (topic: Topic, href: string) => void;
 }
 
 // Discovery lists (latest/new/top/category/tag, group + user activity), the
@@ -134,6 +137,21 @@ export default apiInitializer((api) => {
       }
       // Selecting text on a card (drag, then release) isn't a click to open it.
       if (window.getSelection()?.toString()) {
+        return;
+      }
+      // The title's text sits in a span inside the link. Core opens the topic
+      // in the app only when the click lands on the link itself, and its
+      // click interceptor leaves raw links to the row; so a click on the
+      // words loaded the whole page again, every time.
+      const own = event.target.closest<HTMLAnchorElement>(
+        "a.raw-topic-link, a.post-activity, a.badge-posts"
+      );
+      if (own && own !== event.target) {
+        if (wantsNewWindow(event)) {
+          return;
+        }
+        event.preventDefault();
+        context.navigateToTopic(context.topic, own.href);
         return;
       }
       if (
