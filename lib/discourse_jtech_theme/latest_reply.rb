@@ -36,25 +36,47 @@ module DiscourseJtechTheme
       end
     end
 
+    # Lists whose rows never show the reply: a topic page's Suggested and
+    # Related, which were most of the cost of a topic page
+    SKIPPED_LISTS = %i[suggested semantic_related].freeze
+
+    def wanted?(topic_list)
+      !SKIPPED_LISTS.include?(topic_list.try(:filter)&.to_sym)
+    end
+
+    # The newest readable reply of each topic, one index lookup per topic
+    # (posts' topic_id, post_number index, newest first, the first that
+    # passes). A DISTINCT ON over all of a list's replies read every reply in
+    # full, and with the ignored-user and whisper filters a member's version
+    # was costed high enough for Postgres to JIT-compile it: about 35 ms a list.
     def latest_posts(topic_ids, user)
-      scope =
+      newest =
         ::Post
-          .select("DISTINCT ON (posts.topic_id) posts.*")
-          .where(topic_id: topic_ids, post_type: ::Post.types[:regular], hidden: false)
+          .where("posts.topic_id = jt_topics.id")
+          .where(post_type: ::Post.types[:regular], hidden: false)
           .where("posts.post_number > 1")
           .where(user_deleted: false)
-          .order("posts.topic_id, posts.post_number DESC")
 
       if user
         ignored = ::IgnoredUser.where(user_id: user.id).select(:ignored_user_id)
-        scope = scope.where.not(user_id: ignored)
+        newest = newest.where.not(user_id: ignored)
       end
 
       if defined?(::DiscourseModCategories::WhisperQueryFilter)
-        scope = ::DiscourseModCategories::WhisperQueryFilter.apply(scope, user)
+        newest = ::DiscourseModCategories::WhisperQueryFilter.apply(newest, user)
       end
 
-      scope.to_a
+      newest = newest.order("posts.post_number DESC").limit(1)
+      ids = topic_ids.map(&:to_i).uniq
+
+      ::Post
+        .unscoped
+        .select("posts.*")
+        .from(
+          "unnest(ARRAY[#{ids.join(",")}]::int[]) AS jt_topics(id) " \
+            "CROSS JOIN LATERAL (#{newest.to_sql}) posts",
+        )
+        .to_a
     end
 
     def private_reply_topic_ids(topics, user)
