@@ -146,7 +146,7 @@ The hero gets `.--lines` while the ads have it, and `.jt-hero__lines` holds them
 
 Ad blockers hide elements and block requests by name: anything called ad, ads, advert, sponsor, banner or promo, and files and paths like them (Discourse's own ad plugin is blocked by its name, `adplugin`). So, in everything the browser sees, nothing is named after ads:
 
-- **No request of its own.** The ads come inside the page's preloaded site data (`site.jt_lines`), filtered for the person on the server. The thumbs go to `/jtech-lines/:key`.
+- **No request of its own.** The ads come inside the welcome pages' own lists (`topic_list.jt_lines` on the unscoped Latest and Top lists, `category_list.jt_lines` on the top-level category list), filtered for the person on the server, so pages that don't show them don't carry them. The thumbs go to `/jtech-lines/:key`.
 - **Neutral names** for classes (`jt-lines`, `jl-*`, `jt-hero__lines`), the service and the data (`h`, `t`, `c`).
 - **In the JTech theme the ad is the hero**, so a rule that hides it hides the welcome with it.
 - **One fallback.** About a second and a half after the page settles, the space checks it's actually showing. If something hid it, the same card moves once to the top of the page, inside a closed shadow root (`jt-lines-fallback.gts`). Nothing outside that root can be named by a rule: its class is new on every page load, it has no id or data attribute, and the card's label, thumbs and text are only inside the root. If a script sets it hidden anyway (an inline style, a mark), that's undone. No nagging, no wall, no second attempt.
