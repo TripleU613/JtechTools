@@ -15,10 +15,23 @@ register_svg_icon "thumbs-up"
 register_svg_icon "thumbs-down"
 
 after_initialize do
-  # Inside the page's preloaded site data: no request of the ads' own
-  add_to_serializer(:site, :jt_lines, include_condition: -> { DiscourseJtechAds.enabled? }) do
-    DiscourseJtechAds.payload(scope)
-  end
+  # Inside the welcome pages' own lists (the unscoped Latest topic list, the
+  # top-level category list): no request of the ads' own for a blocker to
+  # drop, and nothing on the pages that don't show them (topic pages are
+  # most of the traffic). In the site data, every page carried them.
+  add_to_serializer(
+    :topic_list,
+    :jt_lines,
+    include_condition: -> { DiscourseJtechAds.enabled? && DiscourseJtechAds.welcome_list?(object) },
+  ) { DiscourseJtechAds.payload(scope) }
+
+  add_to_serializer(
+    :category_list,
+    :jt_lines,
+    include_condition: -> do
+      DiscourseJtechAds.enabled? && DiscourseJtechAds.welcome_categories?(object)
+    end,
+  ) { DiscourseJtechAds.payload(scope) }
 
   # Visitors' site data is cached; a changed ad reaches them right away
   on(:site_setting_changed) do |name, _old, _new|

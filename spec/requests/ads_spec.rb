@@ -26,12 +26,12 @@ RSpec.describe "Ads in the welcome area" do
   end
 
   def lines
-    get "/site.json"
+    get "/latest.json"
     expect(response.status).to eq(200)
-    response.parsed_body["jt_lines"]
+    response.parsed_body.dig("topic_list", "jt_lines")
   end
 
-  it "puts the ads for each person in the site data, under neutral keys" do
+  it "puts the ads for each person in the welcome list, under neutral keys" do
     data = lines
     expect(data["label"]).to eq("Ad")
     expect(data["items"].map { it["h"] }).to eq(["<b>Spring</b> sale"])
@@ -39,6 +39,29 @@ RSpec.describe "Ads in the welcome area" do
 
     sign_in(member)
     expect(lines["items"].map { it["k"] }).to eq([key, members_key])
+  end
+
+  it "comes with the welcome pages' lists only, not every page's site data" do
+    category = Fabricate(:category)
+    topic = Fabricate(:post).topic
+
+    get "/categories.json"
+    expect(response.parsed_body.dig("category_list", "jt_lines", "items").map { it["h"] }).to eq(
+      ["<b>Spring</b> sale"],
+    )
+    get "/categories_and_latest.json"
+    expect(response.parsed_body.dig("topic_list", "jt_lines")).to be_present
+    get "/top.json"
+    expect(response.parsed_body.dig("topic_list", "jt_lines")).to be_present
+
+    get "/site.json"
+    expect(response.parsed_body).not_to have_key("jt_lines")
+    get "/c/#{category.slug}/#{category.id}/l/latest.json"
+    expect(response.parsed_body["topic_list"]).not_to have_key("jt_lines")
+    get "/categories.json", params: { parent_category_id: category.id }
+    expect(response.parsed_body["category_list"]).not_to have_key("jt_lines")
+    get "/t/#{topic.id}.json"
+    expect(response.body).not_to include("jt_lines")
   end
 
   it "sends nothing with ads off, or with Jtech off" do

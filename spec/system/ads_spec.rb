@@ -37,6 +37,20 @@ RSpec.describe "Ads in the welcome area" do
     expect(page).to have_no_css(".jt-lines")
   end
 
+  it "shows the ad on the way home from a topic, the page loaded without it" do
+    visit topic.relative_url
+    expect(page).to have_css("#post_1")
+    find("#site-logo, .title a", match: :first).click
+    expect(page).to have_css("#main-outlet .topic-list")
+    expect(page).to have_css(".jt-lines .jl-title-xl", text: "Spring sale")
+  end
+
+  it "shows the ad on the Categories page" do
+    Fabricate(:category)
+    visit "/categories"
+    expect(page).to have_css(".jt-lines .jl-title-xl", text: "Spring sale")
+  end
+
   it "keeps the space's size whatever the ad holds" do
     visit "/latest"
     expect(page).to have_css(".jt-lines .jl-card")
