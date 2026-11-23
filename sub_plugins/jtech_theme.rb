@@ -43,6 +43,7 @@ end
 
 require_relative "../lib/discourse_jtech_theme/installer"
 require_relative "../lib/discourse_jtech_theme/latest_reply"
+require_relative "../lib/discourse_jtech_theme/palettes"
 
 # Whole-row click + press bounce on other themes' topic lists
 # (jtech_row_click_theme_ids); scoped by html.jtech-row-click.
@@ -57,6 +58,10 @@ after_initialize do
 
   reloadable_patch do
     ::MetadataController.prepend(DiscourseJtechTheme::MetadataControllerExtension)
+  end
+
+  reloadable_patch do
+    ::SiteSerializer.prepend(DiscourseJtechTheme::Palettes::SiteSerializerExtension)
   end
 
   reloadable_patch do
