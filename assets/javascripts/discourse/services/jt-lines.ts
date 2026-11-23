@@ -10,9 +10,10 @@ import { i18n } from "discourse-i18n";
 import JtLineCard from "../components/jt-line.gts";
 
 // The ads for the home page's welcome area (lib/discourse_jtech_ads.rb,
-// docs/features/ads.md). They arrive inside the preloaded site data as
-// site.jt_lines. Nothing in the browser is named after ads: blockers hide
-// elements and requests by names like that.
+// docs/features/ads.md). They arrive inside the welcome pages' own lists
+// (initializers/jt-lines-lists), not in every page's site data. Nothing in
+// the browser is named after ads: blockers hide elements and requests by
+// names like that.
 
 export interface JtLine {
   k: string; // key
@@ -88,6 +89,9 @@ export default class JtLinesService extends Service {
   @tracked preview: JtLine | null = null;
   // The ad on its way out during a swap
   @tracked leaving: JtLine | null = null;
+  // From the last welcome list that came with them; a page served before
+  // they moved there still has them in its site data
+  @tracked listed: JtLines | null = null;
 
   // A theme that carries the line itself says so at startup (the JTech
   // theme's hero does, when it's on); then the plugin's card stays out.
@@ -110,7 +114,7 @@ export default class JtLinesService extends Service {
   }
 
   get data(): JtLines | null {
-    return this.site.jt_lines ?? null;
+    return this.listed ?? this.site.jt_lines ?? null;
   }
 
   get label(): string {
@@ -188,6 +192,14 @@ export default class JtLinesService extends Service {
 
   get isStaff(): boolean {
     return !!this.currentUser?.staff;
+  }
+
+  // A list's lines. One without any (a category's list, a later page)
+  // leaves the ones there are.
+  take(lines: JtLines | null | undefined) {
+    if (lines && lines !== this.listed) {
+      this.listed = lines;
+    }
   }
 
   vote(line: JtLine): number | null {

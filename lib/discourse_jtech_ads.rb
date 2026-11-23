@@ -125,6 +125,20 @@ module ::DiscourseJtechAds
     end
 
     # What the site serializer sends. Short, neutral keys on purpose.
+    # The lists the welcome area's pages are built from (lib/jt-lines-route
+    # in the browser): Latest (also the homepage, and the Categories page's
+    # topics) or Top (Categories with top topics), outside a category or tag
+    def welcome_list?(topic_list)
+      %w[latest top].include?(topic_list.filter.to_s) && topic_list.category.blank? &&
+        topic_list.tags.blank?
+    end
+
+    # The Categories page's own list, not a category's subcategories
+    def welcome_categories?(category_list)
+      options = category_list.instance_variable_get(:@options) || {}
+      options[:parent_category_id].blank?
+    end
+
     def payload(guardian)
       ads = visible_to(guardian)
       user = guardian&.user
