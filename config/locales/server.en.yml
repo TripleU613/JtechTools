@@ -106,6 +106,13 @@ en:
       loads its full stylesheet as before, so nothing on screen changes; turn
       this off to send every colour again.
 
+    jtech_lean_category_types: Send the categories in every page with each
+      of their types' id, name, title and icon only, not the full definition
+      (description and every field of its settings form). With many
+      categories that was over 100 KB of every page. The category editor
+      loads the category again with everything, so editing is unchanged;
+      turn this off to send the full definitions again.
+
     jtech_trust_level_flair: Show each member's trust level as their avatar
       flair when they haven't picked one, using the flair of their highest
       trust level group that has one (set the flair on the trust level groups
