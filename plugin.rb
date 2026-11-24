@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # name: jtech-tools
-# about: Jtech Tools — the JTech Forums all-in-one plugin: moderator tools, Mini-mod, Dislike, the Disteleplus Telegram bridge, REQ-PM, listing format for sale threads, mod elections, Dumbcourse, smart search, desktop pop-ups, Another SMTP, translator tweaks and the JTech theme.
+# about: Jtech Tools — the JTech Forums all-in-one plugin: moderator tools, Mini-mod, Dislike, the Disteleplus Telegram bridge, REQ-PM, listing format for sale threads, mod elections, Dumbcourse, smart search, desktop pop-ups, Another SMTP, translator tweaks, the JTech theme and a Discord mirror.
 # version: 0.5.0
 # authors: TripleU, Shalom_Karr, Ars18
 # url: https://github.com/TripleU613/JtechTools
@@ -51,6 +51,7 @@ enabled_site_setting :jtech_enabled
   ads
   reaction_levels
   lean_site_data
+  discord_mirror
 ].each do |sub|
   path = File.expand_path("sub_plugins/#{sub}.rb", __dir__)
   instance_eval(File.read(path), path, 1)
