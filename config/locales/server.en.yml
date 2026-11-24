@@ -99,6 +99,34 @@ en:
       icon site setting in the web manifest only; turn this off to use that
       upload instead. Reinstall the app to pick up a change.
 
+    discord_mirror_enabled: Copy the forum's public categories into a
+      Discord server, live and read-only. Each category becomes a Discord
+      forum channel, each topic a thread, each post a message under its
+      author's name and avatar with a link back. Only what a logged-out
+      visitor can read is sent; posts and topics that are deleted, hidden,
+      unlisted, whispered or moved somewhere private are taken down from
+      Discord too. Needs the bot token and server ID below.
+
+    discord_mirror_bot_token: Token of the Discord bot that manages the
+      mirror (Developer Portal → your app → Bot → Reset Token). The bot needs
+      Manage Channels, Manage Roles, Manage Webhooks, Manage Threads, View
+      Channels, Send Messages, Send Messages in Threads, Embed Links, Attach
+      Files and Read Message History in the server.
+
+    discord_mirror_guild_id: ID of the Discord server to mirror into (right
+      click the server with Developer Mode on → Copy Server ID). The mirror
+      creates and removes its own channels there; channels it didn't make are
+      left alone.
+
+    discord_mirror_excluded_categories: Public categories to keep off
+      Discord, with their subcategories. Their channels are removed from
+      Discord when added here.
+
+    discord_mirror_backfill_days: When the mirror is switched on, also send
+      topics with activity in this many past days, oldest first. Changing it
+      starts the copy again (topics already there aren't sent twice). 0 sends
+      only new activity.
+
     jtech_lean_palettes: Send the colour palettes in every page with only the
       colours their previews and swatches use (primary, secondary, tertiary,
       selected, header background and header text) instead of all of them.

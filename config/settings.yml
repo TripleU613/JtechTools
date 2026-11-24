@@ -1783,3 +1783,31 @@ jtech_reaction_levels_lists:
     client: true
     depends_on:
       - "jtech_reaction_levels_enabled"
+jtech_discord_mirror:
+  discord_mirror_enabled:
+    default: false
+    client: false
+  discord_mirror_bot_token:
+    default: ""
+    client: false
+    secret: true
+    depends_on:
+      - "discord_mirror_enabled"
+  discord_mirror_guild_id:
+    default: ""
+    client: false
+    depends_on:
+      - "discord_mirror_enabled"
+  discord_mirror_excluded_categories:
+    type: category_list
+    default: ""
+    client: false
+    depends_on:
+      - "discord_mirror_enabled"
+  discord_mirror_backfill_days:
+    default: 180
+    min: 0
+    max: 3650
+    client: false
+    depends_on:
+      - "discord_mirror_enabled"
