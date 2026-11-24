@@ -735,7 +735,7 @@ html.jt-reaction-rollout:not(.jt-vanilla) {
           position: absolute;
           top: 50%;
           right: 100%;
-          z-index: 1;
+          z-index: z("timeline");
           max-width: min(
             calc(
               var(--jt-rx-count, 7) * var(--jt-rx-cell) + 2 *

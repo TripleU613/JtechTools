@@ -85,10 +85,18 @@ function markEdges(row: HTMLElement) {
 // The room the menu gives the row, rounded down to whole reactions so none
 // is cut in half at its edge. Everything fitting, it's the row's own width.
 function fitWidth(row: HTMLElement): number {
-  const room = row.getBoundingClientRect().width;
+  const own = row.getBoundingClientRect();
+  let room = own.width;
+  // Opened over the buttons (under a mouse) it would run on past the menu
+  // and over the post; it stops at the menu's left edge.
+  const picker = row.closest<HTMLElement>(".discourse-reactions-picker");
+  const menu = row.closest<HTMLElement>(".post-controls");
+  if (picker && menu && getComputedStyle(picker).position === "absolute") {
+    room = Math.min(room, own.right - menu.getBoundingClientRect().left);
+  }
   const cell =
     row.querySelector<HTMLElement>(".pickable-reaction")?.offsetWidth;
-  if (!cell || row.scrollWidth <= row.clientWidth + 1) {
+  if (!cell || (row.scrollWidth <= row.clientWidth + 1 && room >= own.width)) {
     return room;
   }
   const style = getComputedStyle(row);
