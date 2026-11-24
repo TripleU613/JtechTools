@@ -1198,6 +1198,22 @@ RSpec.describe "JTech theme", if: ENV["JTECH_THEME_SPECS"].present? do
       expect_no_theme_errors
     end
 
+    it "opens over the buttons beside it with a mouse, so none of them move" do
+      open_reply
+      positions = <<~JS
+        Array.from(
+          document.querySelectorAll(
+            "#{post_selector} nav.post-controls .actions > :not(.discourse-reactions-actions-button-shim)",
+          ),
+        ).map((el) => Math.round(el.getBoundingClientRect().left))
+      JS
+      before = page.evaluate_script(positions)
+      expect(before.size).to be > 1
+      find("#{post_selector} .discourse-reactions-reaction-button").hover
+      expect(page).to have_css(open_row)
+      expect(page.evaluate_script(positions)).to eq(before)
+    end
+
     it "scrolls a row that doesn't fit with the mouse wheel" do
       SiteSetting.discourse_reactions_enabled_reactions +=
         "|grinning|smiley|smile|grin|joy|wink|blush|innocent|heart_eyes|star_struck|sunglasses|nerd_face"

@@ -546,9 +546,10 @@ html:not(.jt-vanilla) {
 }
 
 // The picker leaves its box over the post and opens in the post's menu, a
-// row rolling out to the left of the heart: in the row of buttons, so the
-// space it takes pushes what's beside it along rather than covering it. It
-// takes the room there is in whole reactions and scrolls the rest.
+// row rolling out to the left of the heart. Under a mouse it opens over the
+// buttons beside it; on touch it takes its place in the row and the others
+// step aside. It takes the room there is in whole reactions and scrolls the
+// rest.
 // api-initializers/jt-reaction-rollout slides it open to that width and
 // shut again (a copy, .jt-rx-ghost, since the plugin removes the row the
 // moment it closes) and glides the wheel; nothing runs while it sits. Not
@@ -716,6 +717,42 @@ html.jt-reaction-rollout:not(.jt-vanilla) {
 
   &.jt-touch-input {
     @include rx-step-aside;
+  }
+
+  // Under a mouse the row opens over the buttons to its left instead of
+  // pushing them along, so translate and the rest stay where the pointer
+  // left them. Its background is solid there, the fill on top of the page
+  // colour, so nothing shows through. Touch keeps the row in the line, with
+  // the other buttons stepping aside (above).
+  @include viewport.from(sm) {
+    @media (hover: hover) {
+      &:not(.jt-touch-input) {
+        .post-controls .discourse-reactions-actions {
+          position: relative;
+        }
+
+        // the plugin places its picker with inline top and left; the row
+        // goes by the heart instead
+        .post-controls .discourse-reactions-picker {
+          position: absolute;
+          top: 50% !important;
+          right: 100%;
+          bottom: auto;
+          left: auto !important;
+          z-index: z("timeline");
+          max-width: min(
+            calc(
+              var(--jt-rx-count, 7) * var(--jt-rx-cell) + 2 *
+                var(--jt-rx-inset) + 2px
+            ),
+            60vw
+          );
+          background:
+            linear-gradient(var(--jt-fill), var(--jt-fill)), var(--secondary);
+          transform: translateY(-50%);
+        }
+      }
+    }
   }
 }
 
