@@ -1,10 +1,28 @@
 name: Feature Screenshots
 
+# Browser tests of the theme and frontend: about 20 minutes a partition on
+# our two runners, so only when something they test changed.
 on:
   push:
     branches:
       - main
+    paths:
+      - "themes/**"
+      - "assets/**"
+      - "spec/system/**"
+      - "config/locales/client.*.yml"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/feature-screenshots.yml"
   pull_request:
+    paths:
+      - "themes/**"
+      - "assets/**"
+      - "spec/system/**"
+      - "config/locales/client.*.yml"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - ".github/workflows/feature-screenshots.yml"
   workflow_dispatch:
 
 # This workflow is a focused mirror of the `system_tests` job from
