@@ -731,10 +731,14 @@ html.jt-reaction-rollout:not(.jt-vanilla) {
           position: relative;
         }
 
+        // the plugin places its picker with inline top and left; the row
+        // goes by the heart instead
         .post-controls .discourse-reactions-picker {
           position: absolute;
-          top: 50%;
+          top: 50% !important;
           right: 100%;
+          bottom: auto;
+          left: auto !important;
           z-index: z("timeline");
           max-width: min(
             calc(
