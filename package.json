@@ -47,5 +47,11 @@
     "yarn": "please-use-pnpm",
     "pnpm": "^10"
   },
-  "packageManager": "pnpm@10.28.0"
+  "packageManager": "pnpm@10.28.0",
+  "pnpm": {
+    "overrides": {
+      "fast-uri@<3.1.9": "^3.1.9",
+      "minimatch@>=7 <11.0.1": "^11.0.1"
+    }
+  }
 }
