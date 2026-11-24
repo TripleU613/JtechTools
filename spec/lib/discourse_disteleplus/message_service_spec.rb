@@ -234,7 +234,12 @@ RSpec.describe DiscourseDisteleplus::MessageService do
     end
 
     it "queues web push only for mentioned, subscribed recipients" do
-      PushSubscription.create!(user: other, data: { endpoint: "https://push.example/x" }.to_json)
+      # Core only pushes to subscriptions tied to a live login.
+      PushSubscription.create!(
+        user: other,
+        user_auth_token: UserAuthToken.generate!(user_id: other.id),
+        data: { endpoint: "https://push.example/x" }.to_json,
+      )
       expect { service.create!(raw: "no mention here") }.not_to change {
         Jobs::DeliverPushNotification.jobs.size
       }
