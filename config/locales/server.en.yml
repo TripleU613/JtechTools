@@ -176,6 +176,14 @@ en:
       needs the Timeout Members permission, and can't time out anyone with a
       higher role. Kicks and bans in the server don't come back to the forum.
 
+    discord_chat_reports_enabled: Add "Report to moderators" to the Discord
+      server's message menu (right-click or long-press a message, then Apps).
+      A report goes to the moderators' log channel and, as a message, to the
+      forum's moderators group, with a link to the reported message and its
+      text quoted as plain text. The reporter gets a private "Sent" reply.
+      Each member can send 5 reports an hour. Needs the Interactions Endpoint
+      URL and public key set up as for the slash commands.
+
     jtech_lean_palettes: Send the colour palettes in every page with only the
       colours their previews and swatches use (primary, secondary, tertiary,
       selected, header background and header text) instead of all of them.

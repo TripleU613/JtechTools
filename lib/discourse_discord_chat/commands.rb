@@ -16,6 +16,7 @@ module DiscourseDiscordChat
     EPHEMERAL = 64
     ANSWER_DELAY = 2.seconds
     CHAT_INPUT = 1
+    MESSAGE_COMMAND = 3
     STRING = 3
     USER = 6
 
@@ -24,6 +25,13 @@ module DiscourseDiscordChat
     TITLE_LENGTH = 100
 
     NOT_LINKED = "Not linked to a JTech account."
+
+    REPORT = "Report to moderators"
+    REPORTS_PER_HOUR = 5
+    REPORT_LENGTH = 1500
+
+    # Right-click a message → Apps. Message commands take no description.
+    REPORT_DEFINITION = { name: REPORT, type: MESSAGE_COMMAND }.freeze
 
     DEFINITIONS = [
       {
@@ -50,6 +58,14 @@ module DiscourseDiscordChat
       { name: "leaderboard", type: CHAT_INPUT, description: "Top members on the forum" },
     ].freeze
 
+    # What the server's command list should hold right now.
+    def self.definitions
+      list = []
+      list.concat(DEFINITIONS) if SiteSetting.discord_chat_commands_enabled
+      list << REPORT_DEFINITION if SiteSetting.discord_chat_reports_enabled
+      list
+    end
+
     def self.respond(interaction)
       case interaction["type"]
       when PING
@@ -62,9 +78,10 @@ module DiscourseDiscordChat
     end
 
     def self.command(interaction)
+      data = interaction["data"].is_a?(Hash) ? interaction["data"] : {}
+      return report(interaction, data) if data["type"] == MESSAGE_COMMAND && data["name"] == REPORT
       return reply("Commands are off.", ephemeral: true) if !DiscourseDiscordChat.commands_enabled?
 
-      data = interaction["data"].is_a?(Hash) ? interaction["data"] : {}
       case data["name"]
       when "search"
         defer("search", option(data, "query"), interaction)
@@ -79,6 +96,45 @@ module DiscourseDiscordChat
       else
         reply("Unknown command.", ephemeral: true)
       end
+    end
+
+    # Takes the reported message as Discord resolved it, answers the reporter
+    # straight away (only they see it), and leaves the posting to a job.
+    def self.report(interaction, data)
+      return reply("Reports are off.", ephemeral: true) if !DiscourseDiscordChat.reports_enabled?
+      if interaction["guild_id"].to_s != SiteSetting.discord_chat_guild_id.to_s.strip
+        return reply("Reports only work in the JTech server.", ephemeral: true)
+      end
+
+      message = data.dig("resolved", "messages", data["target_id"].to_s)
+      reporter = interaction.dig("member", "user")
+      if !message.is_a?(Hash) || !reporter.is_a?(Hash)
+        return reply("That message can't be reported.", ephemeral: true)
+      end
+
+      begin
+        RateLimiter.new(
+          nil,
+          "discord_chat_report_#{reporter["id"]}",
+          REPORTS_PER_HOUR,
+          1.hour,
+        ).performed!
+      rescue RateLimiter::LimitExceeded
+        return reply("That's a lot of reports. Try again in a while.", ephemeral: true)
+      end
+
+      author = message["author"].is_a?(Hash) ? message["author"] : {}
+      Jobs.enqueue(
+        :discord_chat_report,
+        reporter_id: reporter["id"].to_s,
+        reporter_name: reporter["username"].to_s,
+        author_id: author["id"].to_s,
+        author_name: author["username"].to_s,
+        channel_id: (message["channel_id"] || interaction["channel_id"]).to_s,
+        message_id: message["id"].to_s,
+        content: message["content"].to_s.truncate(REPORT_LENGTH),
+      )
+      reply("Sent to the moderators. Thanks.", ephemeral: true)
     end
 
     # Search can take longer than the 3 seconds Discord waits for an answer,

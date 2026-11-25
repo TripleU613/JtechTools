@@ -1876,3 +1876,8 @@ jtech_discord_chat:
     client: false
     depends_on:
       - "discord_chat_enabled"
+  discord_chat_reports_enabled:
+    default: false
+    client: false
+    depends_on:
+      - "discord_chat_enabled"

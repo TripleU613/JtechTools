@@ -52,6 +52,13 @@ RSpec.describe Jobs::DiscordChatRegisterCommands do
     expect(whois["options"].first).to include("name" => "user", "type" => 6, "required" => true)
   end
 
+  it "adds the message menu's report entry when reports are on" do
+    SiteSetting.discord_chat_commands_enabled = false
+    SiteSetting.discord_chat_reports_enabled = true
+    described_class.new.execute({})
+    expect(calls.first[:body]).to eq([{ "name" => "Report to moderators", "type" => 3 }])
+  end
+
   it "empties the server's command list when commands are off" do
     SiteSetting.discord_chat_commands_enabled = false
     described_class.new.execute({})
