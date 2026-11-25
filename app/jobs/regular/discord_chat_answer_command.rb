@@ -7,6 +7,8 @@ module Jobs
   class DiscordChatAnswerCommand < ::Jobs::Base
     sidekiq_options retry: false
 
+    RETRIES = 4
+
     def execute(args)
       content =
         if DiscourseDiscordChat.commands_enabled?
@@ -20,6 +22,15 @@ module Jobs
         "/webhooks/#{args[:application_id]}/#{args[:token]}/messages/@original",
         DiscourseDiscordChat::Commands.message(content),
       )
+    rescue DiscourseDiscordChat::Api::NotFound => e
+      # Discord can still be settling the "thinking" message; try again for a
+      # little while, well inside the token's 15 minutes.
+      attempt = args[:attempt].to_i + 1
+      if attempt < RETRIES
+        Jobs.enqueue_in(2.seconds, :discord_chat_answer_command, args.merge(attempt: attempt))
+      else
+        Rails.logger.warn("#{DiscourseDiscordChat::LOG_TAG} command answer: #{e.message}")
+      end
     rescue DiscourseDiscordChat::Api::Error => e
       Rails.logger.warn("#{DiscourseDiscordChat::LOG_TAG} command answer: #{e.message}")
     end
