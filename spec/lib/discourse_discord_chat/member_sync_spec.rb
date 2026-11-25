@@ -156,4 +156,61 @@ RSpec.describe DiscourseDiscordChat::MemberSync do
       DiscourseDiscordChat::Api::RateLimited,
     )
   end
+
+  describe "roles for trust levels, groups and badges" do
+    fab!(:helpers) { Fabricate(:group, name: "helpers") }
+    fab!(:badge)
+
+    before do
+      linked.update!(trust_level: TrustLevel[2])
+      helpers.add(linked)
+      BadgeGranter.grant(badge, linked)
+      SiteSetting.discord_chat_trust_level_roles = "1:81|2:82"
+      SiteSetting.discord_chat_group_roles = "helpers:83"
+      SiteSetting.discord_chat_badge_roles = "#{badge.id}:84"
+    end
+
+    it "gives the role for the current trust level, groups and badges" do
+      described_class.new.run
+      puts_for_10 = role_calls(:put).select { |p| p.start_with?("/guilds/7/members/10/") }
+      expect(puts_for_10).to include(
+        "/guilds/7/members/10/roles/82",
+        "/guilds/7/members/10/roles/83",
+        "/guilds/7/members/10/roles/84",
+      )
+      expect(puts_for_10).not_to include("/guilds/7/members/10/roles/81")
+    end
+
+    it "takes the role away once the member leaves the group" do
+      members[0]["roles"] = %w[50 83]
+      helpers.remove(linked)
+      described_class.new.run
+      expect(role_calls(:delete)).to include("/guilds/7/members/10/roles/83")
+    end
+  end
+
+  describe "the Supporter role from the server shop" do
+    fab!(:supporters) { Fabricate(:group, name: "supporters") }
+
+    before do
+      SiteSetting.discord_chat_supporter_role_id = "90"
+      SiteSetting.discord_chat_supporter_group = "supporters"
+    end
+
+    it "adds a linked buyer to the forum group, and never removes them" do
+      members[0]["roles"] = %w[90]
+      described_class.new.run
+      expect(supporters.reload.users).to include(linked)
+
+      members[0]["roles"] = []
+      described_class.new.run
+      expect(supporters.reload.users).to include(linked)
+    end
+
+    it "doesn't touch the Supporter role on Discord" do
+      members[0]["roles"] = %w[90]
+      described_class.new.run
+      expect(calls.map { |_, p, _| p }.grep(%r{/roles/90})).to be_empty
+    end
+  end
 end

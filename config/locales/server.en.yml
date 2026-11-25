@@ -127,6 +127,24 @@ en:
       raising this to 1 keeps out accounts made only to get in. Staff always
       get in.
 
+    discord_chat_trust_level_roles: A Discord role for each trust level, as
+      "level:role ID" (for example 1:123456789). A member has the one for
+      their current trust level.
+
+    discord_chat_group_roles: A Discord role for members of a forum group,
+      as "group name:role ID". It follows the group's membership.
+
+    discord_chat_badge_roles: A Discord role for holders of a badge, as
+      "badge ID:role ID".
+
+    discord_chat_supporter_role_id: The Discord role the server shop's
+      thank-you product gives. Linked members who have it are added to the
+      forum group below.
+
+    discord_chat_supporter_group: Forum group that Discord supporters are
+      added to (and never removed from here). Give it a flair or title to
+      show on the forum.
+
     discord_chat_sync_nicknames: Set each linked member's server nickname to
       their forum username, so names match on both sides.
 
