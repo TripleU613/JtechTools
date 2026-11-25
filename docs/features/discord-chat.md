@@ -61,3 +61,22 @@ from the public, so the reply never says which. Nobody is pinged by an answer.
    in the server (needs `discord_chat_bot_token` and `discord_chat_guild_id`).
    Turning it off removes them again. Changing the public key registers them
    again too.
+
+## Moderators' log
+
+`discord_chat_mod_log_channel_id`: a moderators-only channel where the forum
+posts what it did in the server: who got in (with their forum username), who
+lost access, and timeouts set and lifted. Lines never ping anyone. If a line
+can't be posted it is dropped; the sync carries on.
+
+## Timeouts from forum restrictions
+
+`discord_chat_sync_timeouts`: while a linked member is suspended or silenced
+on the forum, they are timed out in the server until it ends. Discord caps a
+timeout at 28 days, so longer ones are renewed as they run down. The forum
+remembers which timeouts it set and only ever lifts those, so a moderator's
+own timeout in the server stays. The bot's role needs Timeout Members, and it
+can't time out anyone ranked above it.
+
+This only runs forum → server. A kick or ban in the server doesn't touch the
+forum account.

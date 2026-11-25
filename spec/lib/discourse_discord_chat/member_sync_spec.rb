@@ -213,4 +213,78 @@ RSpec.describe DiscourseDiscordChat::MemberSync do
       expect(calls.map { |_, p, _| p }.grep(%r{/roles/90})).to be_empty
     end
   end
+  describe "timeouts from forum restrictions" do
+    before { SiteSetting.discord_chat_sync_timeouts = true }
+
+    def timeout_calls
+      calls.select { |m, _, body| m == :patch && body&.key?("communication_disabled_until") }
+    end
+
+    it "times a suspended member out until the suspension ends" do
+      freeze_time
+      described_class.new.run
+      expect(timeout_calls.map { |_, p, _| p }).to eq(["/guilds/7/members/11"])
+      until_time = Time.zone.parse(timeout_calls.first[2]["communication_disabled_until"])
+      expect(until_time).to be_within(1.second).of(suspended.suspended_till)
+    end
+
+    it "caps the timeout at Discord's 28 days" do
+      freeze_time
+      suspended.update!(suspended_till: 1.year.from_now)
+      described_class.new.run
+      until_time = Time.zone.parse(timeout_calls.first[2]["communication_disabled_until"])
+      expect(until_time).to be <= 28.days.from_now
+    end
+
+    it "leaves a timeout that is already about right alone" do
+      members[1]["communication_disabled_until"] = (suspended.suspended_till - 1.hour).iso8601
+      described_class.new.run
+      expect(timeout_calls).to be_empty
+    end
+
+    it "lifts a timeout the forum set once the restriction ends" do
+      described_class.new.run
+      suspended.update!(suspended_till: nil, suspended_at: nil)
+      members[1]["communication_disabled_until"] = 3.days.from_now.iso8601
+      calls.clear
+      described_class.new.run
+      expect(timeout_calls).to eq(
+        [[:patch, "/guilds/7/members/11", { "communication_disabled_until" => nil }]],
+      )
+    end
+
+    it "never lifts a moderator's own timeout in the server" do
+      members[0]["communication_disabled_until"] = 2.days.from_now.iso8601
+      described_class.new.run
+      expect(timeout_calls.map { |_, p, _| p }).not_to include("/guilds/7/members/10")
+    end
+
+    it "does nothing when the setting is off" do
+      SiteSetting.discord_chat_sync_timeouts = false
+      described_class.new.run
+      expect(timeout_calls).to be_empty
+    end
+  end
+
+  describe "the moderators' log" do
+    before { SiteSetting.discord_chat_mod_log_channel_id = "555" }
+
+    def log_lines
+      calls.select { |m, p, _| m == :post && p == "/channels/555/messages" }.map { |_, _, b| b }
+    end
+
+    it "logs who got in and who lost access, without pinging anyone" do
+      described_class.new.run
+      texts = log_lines.map { |b| b["content"] }
+      expect(texts).to include(a_string_including("<@10>", "moshe"))
+      expect(texts).to include(a_string_including("<@11>", "lost access"))
+      expect(log_lines.map { |b| b["allowed_mentions"] }.uniq).to eq([{ "parse" => [] }])
+    end
+
+    it "logs nothing without a channel" do
+      SiteSetting.discord_chat_mod_log_channel_id = ""
+      described_class.new.run
+      expect(calls.map { |_, p, _| p }.grep(%r{/channels/})).to be_empty
+    end
+  end
 end

@@ -162,6 +162,20 @@ en:
       forum, /search, /guide, /whois and /leaderboard find nothing. Turning
       this off removes the commands from the server.
 
+    discord_chat_mod_log_channel_id: ID of a moderators-only Discord channel
+      where the forum logs what it does in the server (who got in or lost
+      access, timeouts set and lifted, reports). Leave blank for no log. Make
+      sure only moderators can read it, since the bot posts whatever it is told to
+      log there.
+
+    discord_chat_sync_timeouts: Time a linked member out in the Discord server
+      while they're suspended or silenced on the forum, and lift it when that
+      ends. Discord's longest timeout is 28 days, so a longer suspension is
+      renewed as it runs. Only timeouts the forum set are ever lifted; a
+      moderator's own timeout in the server is left alone. The bot's role
+      needs the Timeout Members permission, and can't time out anyone with a
+      higher role. Kicks and bans in the server don't come back to the forum.
+
     jtech_lean_palettes: Send the colour palettes in every page with only the
       colours their previews and swatches use (primary, secondary, tertiary,
       selected, header background and header text) instead of all of them.
