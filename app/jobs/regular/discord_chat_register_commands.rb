@@ -17,14 +17,7 @@ module Jobs
       end
 
       guild_id = SiteSetting.discord_chat_guild_id.to_s.strip
-      commands =
-        (
-          if SiteSetting.discord_chat_commands_enabled
-            DiscourseDiscordChat::Commands::DEFINITIONS
-          else
-            []
-          end
-        )
+      commands = DiscourseDiscordChat::Commands.definitions
 
       DiscourseDiscordChat::Api.new.bot(
         :put,

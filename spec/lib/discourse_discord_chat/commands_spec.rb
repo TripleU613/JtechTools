@@ -174,4 +174,79 @@ RSpec.describe DiscourseDiscordChat::Commands do
       expect(described_class.leaderboard).to eq("Leaderboard: <#{url}>")
     end
   end
+
+  describe "Report to moderators" do
+    before do
+      SiteSetting.discord_chat_guild_id = "7"
+      SiteSetting.discord_chat_reports_enabled = true
+    end
+
+    def report(guild_id: "7", message: nil)
+      message ||= {
+        "id" => "900",
+        "channel_id" => "300",
+        "content" => "something nasty @everyone",
+        "author" => {
+          "id" => "41",
+          "username" => "troll",
+        },
+      }
+      described_class.respond(
+        {
+          "type" => 2,
+          "guild_id" => guild_id,
+          "channel_id" => "300",
+          "member" => {
+            "user" => {
+              "id" => "40",
+              "username" => "helper",
+            },
+          },
+          "data" => {
+            "type" => 3,
+            "name" => "Report to moderators",
+            "target_id" => "900",
+            "resolved" => {
+              "messages" => {
+                "900" => message,
+              },
+            },
+          },
+        },
+      )
+    end
+
+    it "answers only the reporter, and queues the report" do
+      expect_enqueued_with(
+        job: :discord_chat_report,
+        args: {
+          reporter_id: "40",
+          author_id: "41",
+          channel_id: "300",
+          message_id: "900",
+          content: "something nasty @everyone",
+        },
+      ) do
+        response = report
+        expect(response[:data][:flags]).to eq(described_class::EPHEMERAL)
+        expect(response[:data][:content]).to eq("Sent to the moderators. Thanks.")
+      end
+    end
+
+    it "works with the slash commands off" do
+      SiteSetting.discord_chat_commands_enabled = false
+      expect(report[:data][:content]).to eq("Sent to the moderators. Thanks.")
+    end
+
+    it "takes nothing from another server" do
+      expect { report(guild_id: "8") }.not_to change { Jobs::DiscordChatReport.jobs.size }
+    end
+
+    it "takes nothing while reports are off" do
+      SiteSetting.discord_chat_reports_enabled = false
+      response = report
+      expect(response[:data][:content]).to eq("Reports are off.")
+      expect(Jobs::DiscordChatReport.jobs).to be_empty
+    end
+  end
 end
