@@ -44,16 +44,40 @@ module DiscourseDiscordChat
       request(method, path, body, query: nil)
     end
 
+    # Calls made as a member, with the token they granted the forum.
+    def user(method, path, access_token, body = nil)
+      request(method, path, body, query: nil, auth: "Bearer #{access_token}")
+    end
+
+    # Swaps the code from Discord's authorize page for the member's token.
+    def exchange_code(code, redirect_uri)
+      request(
+        :post,
+        "/oauth2/token",
+        nil,
+        query: nil,
+        form: {
+          client_id: SiteSetting.discord_client_id.to_s.strip,
+          client_secret: SiteSetting.discord_secret.to_s,
+          grant_type: "authorization_code",
+          code: code.to_s,
+          redirect_uri: redirect_uri,
+        },
+      )
+    end
+
     private
 
-    def request(method, path, body, query:, auth: nil)
+    def request(method, path, body, query:, auth: nil, form: nil)
       uri = URI("#{BASE}#{path}")
       uri.query = URI.encode_www_form(query) if query.present?
       klass = Net::HTTP.const_get(method.to_s.capitalize)
       req = klass.new(uri.request_uri)
       req["Authorization"] = auth if auth
       req["User-Agent"] = "DiscourseBot (https://github.com/TripleU613/JtechTools, 1.0)"
-      if body
+      if form
+        req.set_form_data(form)
+      elsif body
         req["Content-Type"] = "application/json"
         req.body = body.to_json
       end

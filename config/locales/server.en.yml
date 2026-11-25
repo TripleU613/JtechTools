@@ -205,6 +205,17 @@ en:
       be reposted to the starboard. Each message is reposted once; messages
       older than 7 days are ignored.
 
+    discord_chat_linked_roles_enabled: Let members connect their forum account
+      from inside Discord (server menu → Linked Roles). They sign in here,
+      approve the app on Discord, and their accounts are connected as the
+      Discord login would; the sync then gives them the roles the forum
+      allows. Set the app's Linked Roles Verification URL to
+      /discord-chat/link on this forum, add /discord-chat/link/callback to its
+      OAuth2 redirects, and give a role with no permissions the "Linked to
+      JTech Forums" requirement under Links. Don't put that requirement on
+      the member role, or a suspended member could claim it back. Uses the
+      Discord login's client ID and secret.
+
     jtech_lean_palettes: Send the colour palettes in every page with only the
       colours their previews and swatches use (primary, secondary, tertiary,
       selected, header background and header text) instead of all of them.

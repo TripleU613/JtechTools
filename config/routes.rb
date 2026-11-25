@@ -297,4 +297,7 @@ Discourse::Application.routes.append do
        :defaults => {
          format: :json,
        }
+  # Discord's Linked Roles Verification URL, and where its sign-in returns.
+  get "/discord-chat/link" => "discourse_discord_chat/link#start"
+  get "/discord-chat/link/callback" => "discourse_discord_chat/link#callback"
 end
