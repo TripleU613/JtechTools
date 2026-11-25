@@ -99,6 +99,32 @@ en:
       icon site setting in the web manifest only; turn this off to use that
       upload instead. Reinstall the app to pick up a change.
 
+    discord_chat_enabled: Run the JTech Discord server's membership from the
+      forum. Members who linked Discord to their account (Preferences →
+      Account) get the member role and their forum username there; forum
+      staff get the staff roles; anyone unlinked, suspended, silenced or
+      deactivated loses them. Checked every 5 minutes. Nothing posted on the
+      forum is sent to Discord.
+
+    discord_chat_bot_token: Token of the Discord bot in the server (Developer
+      Portal → the app → Bot → Reset Token). In the server its role needs
+      Manage Roles and Manage Nicknames, and must sit above the roles below.
+
+    discord_chat_guild_id: ID of the Discord server (with Developer Mode on,
+      right click the server → Copy Server ID).
+
+    discord_chat_member_role_id: Discord role for every member with a linked,
+      active JTech account. Leave blank to manage no member role.
+
+    discord_chat_moderator_role_id: Discord role for forum moderators and
+      admins. Leave blank to manage none.
+
+    discord_chat_admin_role_id: Discord role for forum admins. Leave blank to
+      manage none.
+
+    discord_chat_sync_nicknames: Set each linked member's server nickname to
+      their forum username, so names match on both sides.
+
     jtech_lean_palettes: Send the colour palettes in every page with only the
       colours their previews and swatches use (primary, secondary, tertiary,
       selected, header background and header text) instead of all of them.
