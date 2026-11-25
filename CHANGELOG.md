@@ -6,6 +6,7 @@ What changed for forums running Jtech Tools. Newest first.
 
 **New**
 
+- Discord chat: slash commands in the Discord server, answered by the forum itself. /search and /guide list up to 5 matching topics (/guide only from Guides), /rules links the guidelines, /whois shows a member's forum account, and /leaderboard the top 5 when Gamification is on. Answers show only what a logged-out visitor can see, and ping nobody. Settings: `discord_chat_public_key`, `discord_chat_commands_enabled`.
 - JTech theme: Discourse AI's summaries show on topic cards. With its toggle beside New Topic set to AI summaries, each card shows the topic's one-line summary, marked with a sparkle, where the excerpt goes.
 - JTech theme: with Discourse AI's semantic search on, the search menu (⌘K / Ctrl+K and the header's search) adds Related: topics about the same thing in other words, besides the keyword matches. For a question of four words or more they come first. Search syntax (`in:`, `@user`, `#category`, `tags:`) keeps to keyword search.
 - JTech theme: logos on @handles. A mention of @claude, @chatgpt, @microsoft, @jtechforums, @groupme, @24six, @zing, @naki and the rest of the list (22 in all) is a chip with that brand's logo after the name, like a mention of an account, in posts and the composer's preview, whether or not the account exists. Setting: `handle_logos`.

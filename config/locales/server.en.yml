@@ -104,7 +104,8 @@ en:
       Account) get the member role and their forum username there; forum
       staff get the staff roles; anyone unlinked, suspended, silenced or
       deactivated loses them. Checked every minute. Nothing posted on the
-      forum is sent to Discord.
+      forum is sent to Discord, except public topics the slash commands
+      (below) are asked for.
 
     discord_chat_bot_token: Token of the Discord bot in the server (Developer
       Portal → the app → Bot → Reset Token). In the server its role needs
@@ -147,6 +148,19 @@ en:
 
     discord_chat_sync_nicknames: Set each linked member's server nickname to
       their forum username, so names match on both sides.
+
+    discord_chat_public_key: Public key of the Discord app (Developer Portal →
+      the app → General Information → Public Key). Discord signs every slash
+      command with it, and the forum refuses anything it can't verify. Set
+      the app's Interactions Endpoint URL to /discord-chat/interactions on
+      this forum.
+
+    discord_chat_commands_enabled: Answer the slash commands /search, /guide,
+      /rules, /whois and /leaderboard in the Discord server, and register
+      them there (uses the Discord login's client ID as the app). Answers
+      only ever show what a logged-out visitor can see; on a login-required
+      forum, /search, /guide, /whois and /leaderboard find nothing. Turning
+      this off removes the commands from the server.
 
     jtech_lean_palettes: Send the colour palettes in every page with only the
       colours their previews and swatches use (primary, secondary, tertiary,

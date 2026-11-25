@@ -288,3 +288,13 @@ Discourse::Application.routes.append do
         format: :json,
       }
 end
+
+# ── Discord chat ───────────────────────────────────────────────────────────
+Discourse::Application.routes.append do
+  # Discord's Interactions Endpoint URL for the server's slash commands.
+  # No session; each request is signed with the app's Ed25519 key.
+  post "/discord-chat/interactions" => "discourse_discord_chat/interactions#create",
+       :defaults => {
+         format: :json,
+       }
+end

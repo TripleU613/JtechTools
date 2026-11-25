@@ -38,6 +38,12 @@ module DiscourseDiscordChat
       request(method, path, body, query: query, auth: "Bot #{@token}")
     end
 
+    # Interaction webhooks are authorised by the token in the path, so the
+    # bot token stays out of these calls.
+    def webhook(method, path, body = nil)
+      request(method, path, body, query: nil)
+    end
+
     private
 
     def request(method, path, body, query:, auth: nil)
