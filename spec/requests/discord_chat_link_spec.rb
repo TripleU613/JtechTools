@@ -4,7 +4,7 @@ require "rails_helper"
 
 RSpec.describe DiscourseDiscordChat::LinkController do
   fab!(:user) { Fabricate(:user, username: "moshe", trust_level: 1) }
-  fab!(:other) { Fabricate(:user) }
+  fab!(:other, :user)
 
   let(:calls) { [] }
   let(:discord_id) { "4242" }
@@ -93,7 +93,7 @@ RSpec.describe DiscourseDiscordChat::LinkController do
     expect(UserAssociatedAccount.count).to eq(0)
   end
 
-  it "won't take a Discord account already connected to someone else" do
+  it "refuses a Discord account already connected to someone else" do
     UserAssociatedAccount.create!(provider_name: "discord", provider_uid: discord_id, user: other)
     sign_in(user)
     get "/discord-chat/link/callback", params: { state: start, code: "abc" }
@@ -101,7 +101,7 @@ RSpec.describe DiscourseDiscordChat::LinkController do
     expect(UserAssociatedAccount.where(user: user)).to be_empty
   end
 
-  it "won't swap the Discord account a forum account already has" do
+  it "keeps the Discord account a forum account already has" do
     UserAssociatedAccount.create!(provider_name: "discord", provider_uid: "1111", user: user)
     sign_in(user)
     get "/discord-chat/link/callback", params: { state: start, code: "abc" }

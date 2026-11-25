@@ -35,7 +35,9 @@ module DiscourseDiscordChat
     end
 
     def callback
-      raise Discourse::NotLoggedIn if !current_user
+      if !current_user
+        return finish("Sign in on the forum first, then start again from Discord.", 403)
+      end
 
       expected = server_session[STATE_KEY]
       server_session.delete(STATE_KEY)
