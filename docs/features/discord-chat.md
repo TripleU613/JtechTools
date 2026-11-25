@@ -108,3 +108,23 @@ text, the first image and a link back. Only the channel IDs in
 `discord_chat_starboard_channels` are read, so private channels can't leak into
 it; messages older than 7 days and bot messages are skipped. The forum checks
 every 2 minutes. The bot needs the Message Content intent for the text.
+
+## Linked Roles
+
+`discord_chat_linked_roles_enabled` lets members connect their forum account
+without leaving Discord: server menu → Linked Roles → the "Linked" role →
+connect. They sign in on the forum (if they aren't already), approve the app on
+Discord, and the two accounts are connected just as the Discord login connects
+them. The sync then hands out whatever roles the forum allows. A Discord account
+already connected to someone else, or a forum account connected to a different
+Discord account, is refused.
+
+The linked role grants nothing by itself. Keep its "Linked to JTech Forums"
+requirement off the member role: Discord lets people claim linked roles from its
+menu, so on the member role a suspended member could claim their way back in.
+
+Setup: Developer Portal → General Information → Linked Roles Verification URL
+`https://<forum>/discord-chat/link`; OAuth2 → Redirects → add
+`https://<forum>/discord-chat/link/callback`; turn the setting on (it registers
+the requirement); then Server Settings → Roles → a new role with no permissions
+→ Links → add JTech Forums.

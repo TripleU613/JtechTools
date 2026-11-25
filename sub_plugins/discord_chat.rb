@@ -28,6 +28,10 @@ module ::DiscourseDiscordChat
     enabled? && SiteSetting.discord_chat_reports_enabled
   end
 
+  def self.linked_roles_enabled?
+    enabled? && SiteSetting.discord_chat_linked_roles_enabled
+  end
+
   # Whether a forum account may be in the chat.
   def self.allowed?(user)
     return false if user.nil?
@@ -55,6 +59,9 @@ after_initialize do
          discord_chat_public_key
        ].include?(name.to_sym)
       Jobs.enqueue(:discord_chat_register_commands)
+    end
+    if name.to_sym == :discord_chat_linked_roles_enabled
+      Jobs.enqueue(:discord_chat_register_linked_role)
     end
   end
 end
