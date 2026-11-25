@@ -80,3 +80,14 @@ can't time out anyone ranked above it.
 
 This only runs forum → server. A kick or ban in the server doesn't touch the
 forum account.
+
+## Report to moderators
+
+`discord_chat_reports_enabled` adds "Report to moderators" to the server's
+message menu (right-click or long-press a message → Apps). The reporter gets a
+private "Sent to the moderators" reply; the report goes to the moderators' log
+channel and, as a message, to the forum's moderators group with the reporter,
+the author (with their forum accounts when linked), a link to the message and
+its text as a plain code block. Nobody is pinged or @mentioned. Each member can
+send 5 reports an hour, and only reports from the configured server are taken.
+It works whether or not the slash commands are on.

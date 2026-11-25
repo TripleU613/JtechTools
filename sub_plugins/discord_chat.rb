@@ -24,6 +24,10 @@ module ::DiscourseDiscordChat
     enabled? && SiteSetting.discord_chat_commands_enabled
   end
 
+  def self.reports_enabled?
+    enabled? && SiteSetting.discord_chat_reports_enabled
+  end
+
   # Whether a forum account may be in the chat.
   def self.allowed?(user)
     return false if user.nil?
@@ -44,7 +48,11 @@ after_initialize do
     next unless name.to_s.start_with?("discord_chat_")
     next unless DiscourseDiscordChat.configured?
     Jobs.enqueue(:discord_chat_sync_members)
-    if %i[discord_chat_commands_enabled discord_chat_public_key].include?(name.to_sym)
+    if %i[
+         discord_chat_commands_enabled
+         discord_chat_reports_enabled
+         discord_chat_public_key
+       ].include?(name.to_sym)
       Jobs.enqueue(:discord_chat_register_commands)
     end
   end
