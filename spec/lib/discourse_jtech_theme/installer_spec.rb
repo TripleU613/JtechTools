@@ -6,6 +6,12 @@ RSpec.describe ::DiscourseJtechTheme::Installer do
   before do
     SiteSetting.jtech_enabled = true
     SiteSetting.jtech_theme_install = true
+    # These examples are about what gets installed and kept, not about
+    # compiling the theme: compiling all of its SCSS and JS on every save took
+    # longer than the 45-second example limit on the CI runners. The browser
+    # specs load the compiled theme.
+    allow_any_instance_of(ThemeField).to receive(:ensure_baked!)
+    allow(Theme).to receive(:notify_theme_change)
   end
 
   def installed

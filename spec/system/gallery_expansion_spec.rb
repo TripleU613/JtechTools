@@ -72,6 +72,9 @@ RSpec.describe "Gallery expansion" do
     before do
       # Moderator category management is core's setting.
       SiteSetting.moderators_manage_categories = true
+      # The forum's layout; new sites now default to category boxes, which
+      # have no .category-list.
+      SiteSetting.desktop_category_page_style = "categories_and_latest_topics"
       sign_in(moderator)
     end
 
