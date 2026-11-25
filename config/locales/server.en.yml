@@ -191,6 +191,20 @@ en:
       welcomed, 10 a minute at most; anyone with direct messages closed is
       skipped and not tried again.
 
+    discord_chat_starboard_channel_id: ID of the Discord channel that starred
+      messages are reposted to (make it read-only for members). Leave blank
+      to turn the starboard off. Needs the Message Content intent on the bot
+      (Developer Portal → Bot) so the reposts carry the text.
+
+    discord_chat_starboard_channels: IDs of the Discord channels the
+      starboard reads. Only these are ever looked at, so list public channels
+      only; a starred message in a channel left off the list is never
+      reposted.
+
+    discord_chat_starboard_threshold: How many ⭐ reactions a message needs to
+      be reposted to the starboard. Each message is reposted once; messages
+      older than 7 days are ignored.
+
     jtech_lean_palettes: Send the colour palettes in every page with only the
       colours their previews and swatches use (primary, secondary, tertiary,
       selected, header background and header text) instead of all of them.
