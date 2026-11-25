@@ -15,6 +15,18 @@ module DiscourseDiscordChat
     # the run up to the next one.
     MAX_WAIT = 10
 
+    # Discord's longest timeout is 28 days; a longer forum suspension is
+    # covered by renewing it as it runs down.
+    MAX_TIMEOUT = 28.days - 1.hour
+
+    # A timeout already this close to the one wanted is left alone, so a
+    # long suspension isn't rewritten on every run.
+    TIMEOUT_SLACK = 1.day
+
+    # Remembers which timeouts the forum set, so a moderator's own timeout
+    # in the server is never lifted by the sync.
+    STORE = "discord_chat"
+
     def initialize(api: Api.new, sleeper: ->(seconds) { sleep(seconds) })
       @api = api
       @sleeper = sleeper
@@ -45,10 +57,14 @@ module DiscourseDiscordChat
         want = allowed && tests.any? { |wanted| wanted.call(user) }
         if want && !has.include?(role_id)
           call(:put, "/guilds/#{guild_id}/members/#{discord_id}/roles/#{role_id}")
+          log_access(discord_id, user, granted: true) if role_id == member_role_id
         elsif !want && has.include?(role_id)
           call(:delete, "/guilds/#{guild_id}/members/#{discord_id}/roles/#{role_id}")
+          log_access(discord_id, user, granted: false) if role_id == member_role_id
         end
       end
+
+      sync_timeout(member, user) if discord_id != owner_id && SiteSetting.discord_chat_sync_timeouts
 
       # Discord doesn't let anyone rename the server's owner.
       return if discord_id == owner_id
@@ -61,7 +77,75 @@ module DiscourseDiscordChat
       Rails.logger.warn("#{DiscourseDiscordChat::LOG_TAG} member #{discord_id}: #{e.message}")
     end
 
+    # A forum suspension or silence times the member out in the server for
+    # as long as it lasts (up to Discord's 28 days, renewed as it runs).
+    # Only a timeout the forum set is ever lifted.
+    def sync_timeout(member, user)
+      discord_id = member.dig("user", "id")
+      wanted = timeout_until(user)
+      current = Time.zone.parse(member["communication_disabled_until"].to_s)
+      current = nil if current && current <= Time.zone.now
+      ours = PluginStore.get(STORE, timeout_key(discord_id)).present?
+
+      if wanted
+        return if current && (current - wanted).abs < TIMEOUT_SLACK
+        return if current && !ours && current > wanted
+        call(
+          :patch,
+          "/guilds/#{guild_id}/members/#{discord_id}",
+          { communication_disabled_until: wanted.iso8601 },
+        )
+        PluginStore.set(STORE, timeout_key(discord_id), true)
+        unless ours
+          ModLog.post(
+            "⏸️ <@#{discord_id}> (#{user.username}) timed out until #{wanted.to_date}: restricted on the forum.",
+            api: @api,
+          )
+        end
+      elsif ours
+        if current
+          call(
+            :patch,
+            "/guilds/#{guild_id}/members/#{discord_id}",
+            { communication_disabled_until: nil },
+          )
+          ModLog.post(
+            "▶️ <@#{discord_id}> timeout lifted: no longer restricted on the forum.",
+            api: @api,
+          )
+        end
+        PluginStore.remove(STORE, timeout_key(discord_id))
+      end
+    rescue Api::RateLimited
+      raise
+    rescue Api::Error => e
+      Rails.logger.warn("#{DiscourseDiscordChat::LOG_TAG} timeout #{discord_id}: #{e.message}")
+    end
+
     private
+
+    def timeout_until(user)
+      return if user.nil?
+      now = Time.zone.now
+      ends = [user.suspended_till, user.silenced_till].compact.select { |time| time > now }.max
+      [ends, now + MAX_TIMEOUT].min if ends
+    end
+
+    def timeout_key(discord_id)
+      "timeout_#{discord_id}"
+    end
+
+    def member_role_id
+      SiteSetting.discord_chat_member_role_id.to_s.strip
+    end
+
+    def log_access(discord_id, user, granted:)
+      if granted
+        ModLog.post("✅ <@#{discord_id}> got in as forum user #{user.username}.", api: @api)
+      else
+        ModLog.post("⛔ <@#{discord_id}> lost access to the chat.", api: @api)
+      end
+    end
 
     # A launch can link many people at once; a short rate limit is waited
     # out instead of ending the run.

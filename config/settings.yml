@@ -1866,3 +1866,13 @@ jtech_discord_chat:
     client: false
     depends_on:
       - "discord_chat_enabled"
+  discord_chat_mod_log_channel_id:
+    default: ""
+    client: false
+    depends_on:
+      - "discord_chat_enabled"
+  discord_chat_sync_timeouts:
+    default: false
+    client: false
+    depends_on:
+      - "discord_chat_enabled"
