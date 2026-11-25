@@ -53,6 +53,8 @@ RSpec.describe DiscourseDiscordChat::MemberSync do
             { "id" => "7", "owner_id" => "1" }
           when "/guilds/7/members"
             members
+          when "/users/@me/channels"
+            { "id" => "dm" }
           else
             {}
           end
@@ -286,6 +288,47 @@ RSpec.describe DiscourseDiscordChat::MemberSync do
       SiteSetting.discord_chat_mod_log_channel_id = ""
       described_class.new.run
       expect(calls.map { |_, p, _| p }.grep(%r{/channels/})).to be_empty
+    end
+  end
+
+  describe "the welcome message" do
+    before do
+      SiteSetting.discord_chat_welcome_message = "Hi {username}, start in #introductions!"
+      members.each { |m| m["joined_at"] = 1.hour.ago.iso8601 }
+    end
+
+    def opened
+      calls
+        .select { |m, p, _| m == :post && p == "/users/@me/channels" }
+        .map { |_, _, b| b["recipient_id"] }
+    end
+
+    it "welcomes each allowed member once" do
+      described_class.new.run
+      expect(opened).to contain_exactly("10", "13", "1")
+      calls.clear
+      described_class.new.run
+      expect(opened).to be_empty
+    end
+
+    it "fills in the forum username and pings nobody" do
+      described_class.new.run
+      bodies =
+        calls.select { |m, p, _| m == :post && p == "/channels/dm/messages" }.map { |_, _, b| b }
+      expect(bodies.map { |b| b["content"] }).to include("Hi moshe, start in #introductions!")
+      expect(bodies.map { |b| b["allowed_mentions"] }.uniq).to eq([{ "parse" => [] }])
+    end
+
+    it "skips the suspended and anyone who joined long ago" do
+      members[0]["joined_at"] = 1.month.ago.iso8601
+      described_class.new.run
+      expect(opened).not_to include("10", "11")
+    end
+
+    it "sends nothing when the message is blank" do
+      SiteSetting.discord_chat_welcome_message = ""
+      described_class.new.run
+      expect(opened).to be_empty
     end
   end
 end

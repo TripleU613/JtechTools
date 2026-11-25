@@ -184,6 +184,13 @@ en:
       Each member can send 5 reports an hour. Needs the Interactions Endpoint
       URL and public key set up as for the slash commands.
 
+    discord_chat_welcome_message: A direct message the bot sends each member
+      once, when the chat first opens for them (their account is linked and
+      allowed). {username} becomes their forum username. Leave blank to send
+      none. Only members who joined the server in the last 7 days are
+      welcomed, 10 a minute at most; anyone with direct messages closed is
+      skipped and not tried again.
+
     jtech_lean_palettes: Send the colour palettes in every page with only the
       colours their previews and swatches use (primary, secondary, tertiary,
       selected, header background and header text) instead of all of them.
