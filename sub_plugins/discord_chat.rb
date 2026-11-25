@@ -40,6 +40,7 @@ end
 require_relative "../lib/discourse_discord_chat/api"
 require_relative "../lib/discourse_discord_chat/mod_log"
 require_relative "../lib/discourse_discord_chat/member_sync"
+require_relative "../lib/discourse_discord_chat/starboard"
 require_relative "../lib/discourse_discord_chat/signature"
 require_relative "../lib/discourse_discord_chat/commands"
 

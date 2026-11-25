@@ -99,3 +99,12 @@ the chat opens for them. `{username}` becomes their forum username. Only people
 who joined the server in the last 7 days are welcomed, at most 10 a minute, and
 someone with direct messages closed is marked done rather than retried. Blank
 sends nothing.
+
+## Starboard
+
+Messages that get `discord_chat_starboard_threshold` ⭐ reactions (3 by default)
+are reposted once to `discord_chat_starboard_channel_id`, with the author, the
+text, the first image and a link back. Only the channel IDs in
+`discord_chat_starboard_channels` are read, so private channels can't leak into
+it; messages older than 7 days and bot messages are skipped. The forum checks
+every 2 minutes. The bot needs the Message Content intent for the text.

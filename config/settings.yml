@@ -1887,3 +1887,22 @@ jtech_discord_chat:
     client: false
     depends_on:
       - "discord_chat_enabled"
+  discord_chat_starboard_channel_id:
+    default: ""
+    client: false
+    depends_on:
+      - "discord_chat_enabled"
+  discord_chat_starboard_channels:
+    type: list
+    list_type: simple
+    default: ""
+    client: false
+    depends_on:
+      - "discord_chat_enabled"
+  discord_chat_starboard_threshold:
+    default: 3
+    min: 1
+    max: 100
+    client: false
+    depends_on:
+      - "discord_chat_enabled"
