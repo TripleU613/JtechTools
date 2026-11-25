@@ -27,6 +27,12 @@ module DiscourseDiscordChat
     # in the server is never lifted by the sync.
     STORE = "discord_chat"
 
+    # New members are welcomed by direct message a few at a time, so a
+    # launch rush doesn't look like spam to Discord. Only people who joined
+    # the server recently are welcomed at all.
+    WELCOMES_PER_RUN = 10
+    WELCOME_WINDOW = 7.days
+
     def initialize(api: Api.new, sleeper: ->(seconds) { sleep(seconds) })
       @api = api
       @sleeper = sleeper
@@ -44,6 +50,34 @@ module DiscourseDiscordChat
         next if member.dig("user", "bot")
         sync_member(member, links[member.dig("user", "id")], owner_id: guild["owner_id"])
       end
+
+      welcome(members, links) if welcome_text.present?
+    end
+
+    # A direct message for each newly let-in member, once. Marked as done
+    # whether or not it arrives: someone with direct messages closed would
+    # otherwise be tried again every minute.
+    def welcome(members, links)
+      recent =
+        members.select do |member|
+          next false if member.dig("user", "bot")
+          joined = Time.zone.parse(member["joined_at"].to_s)
+          user = links[member.dig("user", "id")]
+          joined && joined > WELCOME_WINDOW.ago && DiscourseDiscordChat.allowed?(user)
+        end
+      return if recent.empty?
+
+      keys = recent.map { |member| welcome_key(member.dig("user", "id")) }
+      done = PluginStoreRow.where(plugin_name: STORE, key: keys).pluck(:key).to_set
+
+      recent
+        .reject { |member| done.include?(welcome_key(member.dig("user", "id"))) }
+        .first(WELCOMES_PER_RUN)
+        .each do |member|
+          discord_id = member.dig("user", "id")
+          PluginStore.set(STORE, welcome_key(discord_id), true)
+          send_welcome(discord_id, links[discord_id])
+        end
     end
 
     def sync_member(member, user, owner_id:)
@@ -123,6 +157,29 @@ module DiscourseDiscordChat
     end
 
     private
+
+    def welcome_text
+      SiteSetting.discord_chat_welcome_message.to_s.strip
+    end
+
+    def welcome_key(discord_id)
+      "welcomed_#{discord_id}"
+    end
+
+    def send_welcome(discord_id, user)
+      channel = call(:post, "/users/@me/channels", { recipient_id: discord_id })
+      text = welcome_text.gsub("{username}", user.username)
+      call(
+        :post,
+        "/channels/#{channel["id"]}/messages",
+        { content: text.truncate(2000), allowed_mentions: { parse: [] } },
+      )
+    rescue Api::RateLimited
+      raise
+    rescue Api::Error => e
+      # Usually direct messages closed; nothing to do about that.
+      Rails.logger.info("#{DiscourseDiscordChat::LOG_TAG} welcome #{discord_id}: #{e.message}")
+    end
 
     def timeout_until(user)
       return if user.nil?

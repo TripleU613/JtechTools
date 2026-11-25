@@ -91,3 +91,11 @@ the author (with their forum accounts when linked), a link to the message and
 its text as a plain code block. Nobody is pinged or @mentioned. Each member can
 send 5 reports an hour, and only reports from the configured server are taken.
 It works whether or not the slash commands are on.
+
+## Welcome message
+
+`discord_chat_welcome_message`: a direct message sent once to each member when
+the chat opens for them. `{username}` becomes their forum username. Only people
+who joined the server in the last 7 days are welcomed, at most 10 a minute, and
+someone with direct messages closed is marked done rather than retried. Blank
+sends nothing.
