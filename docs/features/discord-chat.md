@@ -10,7 +10,7 @@ Discord.
    #link-your-account are visible.
 2. Link Discord on the forum: Preferences → Account → Discord → Connect (or
    sign up / log in with Discord).
-3. Within 5 minutes the bot gives them the member role (the chat opens) and
+3. Within a minute the bot gives them the member role (the chat opens) and
    sets their server nickname to their forum username.
 
 ## What follows the forum

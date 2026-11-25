@@ -1818,3 +1818,10 @@ jtech_discord_chat:
     client: false
     depends_on:
       - "discord_chat_enabled"
+  discord_chat_min_trust_level:
+    default: 0
+    min: 0
+    max: 4
+    client: false
+    depends_on:
+      - "discord_chat_enabled"
