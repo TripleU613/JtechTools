@@ -9,12 +9,17 @@ module DiscourseDiscordChat
   class MemberSync
     PAGE = 1000
 
-    def initialize(api: Api.new)
+    # Waits this long at most for one rate limit before giving the rest of
+    # the run up to the next one.
+    MAX_WAIT = 10
+
+    def initialize(api: Api.new, sleeper: ->(seconds) { sleep(seconds) })
       @api = api
+      @sleeper = sleeper
     end
 
     def run
-      guild = @api.bot(:get, "/guilds/#{guild_id}")
+      guild = call(:get, "/guilds/#{guild_id}")
       members = all_members
       links = linked_users(members.map { |m| m.dig("user", "id") })
 
@@ -32,9 +37,9 @@ module DiscourseDiscordChat
       managed_roles.each do |role_id, wanted|
         want = allowed && wanted.call(user)
         if want && !has.include?(role_id)
-          @api.bot(:put, "/guilds/#{guild_id}/members/#{discord_id}/roles/#{role_id}")
+          call(:put, "/guilds/#{guild_id}/members/#{discord_id}/roles/#{role_id}")
         elsif !want && has.include?(role_id)
-          @api.bot(:delete, "/guilds/#{guild_id}/members/#{discord_id}/roles/#{role_id}")
+          call(:delete, "/guilds/#{guild_id}/members/#{discord_id}/roles/#{role_id}")
         end
       end
 
@@ -42,7 +47,7 @@ module DiscourseDiscordChat
       return if discord_id == owner_id
       return unless allowed && SiteSetting.discord_chat_sync_nicknames
       return if member["nick"] == user.username
-      @api.bot(:patch, "/guilds/#{guild_id}/members/#{discord_id}", { nick: user.username })
+      call(:patch, "/guilds/#{guild_id}/members/#{discord_id}", { nick: user.username })
     rescue Api::RateLimited
       raise
     rescue Api::Error => e
@@ -50,6 +55,20 @@ module DiscourseDiscordChat
     end
 
     private
+
+    # A launch can link many people at once; a short rate limit is waited
+    # out instead of ending the run.
+    def call(*args, **kwargs)
+      attempts = 0
+      begin
+        @api.bot(*args, **kwargs)
+      rescue Api::RateLimited => e
+        attempts += 1
+        raise if attempts > 3 || e.retry_after > MAX_WAIT
+        @sleeper.call(e.retry_after)
+        retry
+      end
+    end
 
     def guild_id
       SiteSetting.discord_chat_guild_id.to_s.strip
@@ -68,8 +87,7 @@ module DiscourseDiscordChat
       members = []
       after = "0"
       loop do
-        page =
-          @api.bot(:get, "/guilds/#{guild_id}/members", query: { limit: PAGE, after: after }) || []
+        page = call(:get, "/guilds/#{guild_id}/members", query: { limit: PAGE, after: after }) || []
         members.concat(page)
         break if page.size < PAGE
         after = page.last.dig("user", "id")

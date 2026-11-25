@@ -24,7 +24,8 @@ module ::DiscourseDiscordChat
   def self.allowed?(user)
     return false if user.nil?
     return false if !user.active || user.staged || user.suspended? || user.silenced?
-    true
+    return true if user.staff?
+    user.trust_level >= SiteSetting.discord_chat_min_trust_level
   end
 end
 

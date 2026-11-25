@@ -110,4 +110,50 @@ RSpec.describe DiscourseDiscordChat::MemberSync do
     described_class.new.run
     expect(role_calls(:delete)).to include("/guilds/7/members/10/roles/50")
   end
+
+  it "keeps out members below the trust level floor, but never staff" do
+    SiteSetting.discord_chat_min_trust_level = 2
+    linked.update!(trust_level: TrustLevel[1])
+    described_class.new.run
+    expect(role_calls(:put)).not_to include("/guilds/7/members/10/roles/50")
+    expect(role_calls(:put)).to include("/guilds/7/members/13/roles/50")
+  end
+
+  it "waits out a short rate limit instead of ending the run" do
+    limited = 0
+    WebMock
+      .stub_request(:put, %r{/guilds/7/members/10/roles/50})
+      .to_return do
+        limited += 1
+        if limited == 1
+          {
+            status: 429,
+            body: { retry_after: 0.5 }.to_json,
+            headers: {
+              "Content-Type" => "application/json",
+            },
+          }
+        else
+          { status: 204, body: "" }
+        end
+      end
+    waits = []
+    described_class.new(sleeper: ->(seconds) { waits << seconds }).run
+    expect(limited).to eq(2)
+    expect(waits).to eq([1])
+    expect(role_calls(:put)).to include("/guilds/7/members/13/roles/50")
+  end
+
+  it "gives up a run on a long rate limit, for the next run to finish" do
+    WebMock.stub_request(:get, %r{/guilds/7/members}).to_return(
+      status: 429,
+      body: { retry_after: 60 }.to_json,
+      headers: {
+        "Content-Type" => "application/json",
+      },
+    )
+    expect { described_class.new(sleeper: ->(_) {}).run }.to raise_error(
+      DiscourseDiscordChat::Api::RateLimited,
+    )
+  end
 end

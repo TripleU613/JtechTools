@@ -103,7 +103,7 @@ en:
       forum. Members who linked Discord to their account (Preferences →
       Account) get the member role and their forum username there; forum
       staff get the staff roles; anyone unlinked, suspended, silenced or
-      deactivated loses them. Checked every 5 minutes. Nothing posted on the
+      deactivated loses them. Checked every minute. Nothing posted on the
       forum is sent to Discord.
 
     discord_chat_bot_token: Token of the Discord bot in the server (Developer
@@ -121,6 +121,11 @@ en:
 
     discord_chat_admin_role_id: Discord role for forum admins. Leave blank to
       manage none.
+
+    discord_chat_min_trust_level: Lowest trust level that gets into the
+      Discord chat. A Discord sign-in makes a forum account in one click, so
+      raising this to 1 keeps out accounts made only to get in. Staff always
+      get in.
 
     discord_chat_sync_nicknames: Set each linked member's server nickname to
       their forum username, so names match on both sides.
