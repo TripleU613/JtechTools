@@ -39,7 +39,7 @@ jobs:
     # job beside the rest (they skip themselves there, without
     # JTECH_THEME_SPECS).
     name: ${{ matrix.name }}
-    runs-on: jtechtools-ci
+    runs-on: ubuntu-latest
     container: discourse/discourse_test:slim-browsers
     timeout-minutes: ${{ matrix.timeout }}
     strategy:
