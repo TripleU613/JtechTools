@@ -1881,3 +1881,9 @@ jtech_discord_chat:
     client: false
     depends_on:
       - "discord_chat_enabled"
+  discord_chat_welcome_message:
+    default: ""
+    textarea: true
+    client: false
+    depends_on:
+      - "discord_chat_enabled"
