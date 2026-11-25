@@ -213,6 +213,7 @@ RSpec.describe DiscourseDiscordChat::MemberSync do
       expect(calls.map { |_, p, _| p }.grep(%r{/roles/90})).to be_empty
     end
   end
+
   describe "timeouts from forum restrictions" do
     before { SiteSetting.discord_chat_sync_timeouts = true }
 
