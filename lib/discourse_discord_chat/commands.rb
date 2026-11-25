@@ -14,6 +14,7 @@ module DiscourseDiscordChat
     DEFERRED_MESSAGE = 5
 
     EPHEMERAL = 64
+    ANSWER_DELAY = 2.seconds
     CHAT_INPUT = 1
     STRING = 3
     USER = 6
@@ -81,9 +82,12 @@ module DiscourseDiscordChat
     end
 
     # Search can take longer than the 3 seconds Discord waits for an answer,
-    # so it runs in a job that edits the "thinking" message afterwards.
+    # so it runs in a job that edits the "thinking" message afterwards. The
+    # job waits a moment: run straight away it reached Discord before this
+    # response had, and there was no message to edit yet.
     def self.defer(kind, term, interaction)
-      Jobs.enqueue(
+      Jobs.enqueue_in(
+        ANSWER_DELAY,
         :discord_chat_answer_command,
         kind: kind,
         term: term.to_s,

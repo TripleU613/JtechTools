@@ -57,4 +57,24 @@ RSpec.describe Jobs::DiscordChatAnswerCommand do
     described_class.new.execute(args)
     expect(calls.first[:body]["content"]).to eq("Search failed. Try again in a minute.")
   end
+
+  it "tries again shortly while Discord hasn't got the thinking message yet" do
+    WebMock.stub_request(:patch, %r{/webhooks/555/}).to_return(
+      status: 404,
+      body: { message: "Unknown Webhook", code: 10_015 }.to_json,
+      headers: {
+        "Content-Type" => "application/json",
+      },
+    )
+    expect_enqueued_with(job: :discord_chat_answer_command, args: args.merge(attempt: 1)) do
+      described_class.new.execute(args)
+    end
+  end
+
+  it "stops trying after a few attempts" do
+    WebMock.stub_request(:patch, %r{/webhooks/555/}).to_return(status: 404, body: "{}")
+    expect_not_enqueued_with(job: :discord_chat_answer_command) do
+      described_class.new.execute(args.merge(attempt: described_class::RETRIES - 1))
+    end
+  end
 end
