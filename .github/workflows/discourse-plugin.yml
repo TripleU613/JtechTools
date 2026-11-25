@@ -77,4 +77,7 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm lint:scripts
+      # The container's user doesn't own the checkout, and git won't list a
+      # repository owned by someone else without this.
+      - run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - run: pnpm lint:languages
