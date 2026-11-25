@@ -1,6 +1,12 @@
 // discourse-gamification leaderboard: monochrome podium. Rank is carried by
 // fill (1st inverted) and border weight, not gold/silver/bronze.
 html .leaderboard {
+  // The sticky Rank / Cheers header stays above the rows scrolling under
+  // it; letter avatars made their own layer and showed over it.
+  .ranking-col-names {
+    z-index: 1;
+  }
+
   .podium__wrapper {
     background: var(--jt-surface-raised);
     border: 1px solid var(--jt-border);
