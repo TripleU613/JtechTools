@@ -1825,3 +1825,34 @@ jtech_discord_chat:
     client: false
     depends_on:
       - "discord_chat_enabled"
+  discord_chat_trust_level_roles:
+    type: list
+    list_type: simple
+    default: ""
+    client: false
+    depends_on:
+      - "discord_chat_enabled"
+  discord_chat_group_roles:
+    type: list
+    list_type: simple
+    default: ""
+    client: false
+    depends_on:
+      - "discord_chat_enabled"
+  discord_chat_badge_roles:
+    type: list
+    list_type: simple
+    default: ""
+    client: false
+    depends_on:
+      - "discord_chat_enabled"
+  discord_chat_supporter_role_id:
+    default: ""
+    client: false
+    depends_on:
+      - "discord_chat_enabled"
+  discord_chat_supporter_group:
+    default: ""
+    client: false
+    depends_on:
+      - "discord_chat_enabled"

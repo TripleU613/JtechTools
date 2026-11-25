@@ -5,7 +5,9 @@ module DiscourseDiscordChat
   # members who linked Discord on the forum get the member role and their
   # forum username as nickname, forum staff get the staff roles, and anyone
   # unlinked, suspended, silenced or deactivated has those roles taken away.
-  # The forum decides; nothing is read back from Discord.
+  # Trust levels, groups and chosen badges can each have a role too. The
+  # forum decides; the one thing read back from Discord is the Supporter
+  # role bought in the server shop, which adds the member to a forum group.
   class MemberSync
     PAGE = 1000
 
@@ -16,12 +18,15 @@ module DiscourseDiscordChat
     def initialize(api: Api.new, sleeper: ->(seconds) { sleep(seconds) })
       @api = api
       @sleeper = sleeper
+      @groups = {}
+      @badges = {}
     end
 
     def run
       guild = call(:get, "/guilds/#{guild_id}")
       members = all_members
       links = linked_users(members.map { |m| m.dig("user", "id") })
+      preload(links.values)
 
       members.each do |member|
         next if member.dig("user", "bot")
@@ -34,8 +39,10 @@ module DiscourseDiscordChat
       allowed = DiscourseDiscordChat.allowed?(user)
       has = member["roles"] || []
 
-      managed_roles.each do |role_id, wanted|
-        want = allowed && wanted.call(user)
+      add_supporter(user) if user && has.include?(supporter_role_id)
+
+      managed_roles.each do |role_id, tests|
+        want = allowed && tests.any? { |wanted| wanted.call(user) }
         if want && !has.include?(role_id)
           call(:put, "/guilds/#{guild_id}/members/#{discord_id}/roles/#{role_id}")
         elsif !want && has.include?(role_id)
@@ -74,13 +81,75 @@ module DiscourseDiscordChat
       SiteSetting.discord_chat_guild_id.to_s.strip
     end
 
-    # role id => who should have it, for the roles the forum manages
+    # role id => who should have it, for the roles the forum manages. A role
+    # listed more than once goes to anyone any of its entries picks.
     def managed_roles
-      {
-        SiteSetting.discord_chat_member_role_id => ->(_user) { true },
-        SiteSetting.discord_chat_moderator_role_id => ->(user) { user.staff? },
-        SiteSetting.discord_chat_admin_role_id => ->(user) { user.admin? },
-      }.transform_keys { |id| id.to_s.strip }.reject { |id, _| id.blank? }
+      @managed_roles ||=
+        begin
+          roles = Hash.new { |hash, key| hash[key] = [] }
+          roles[SiteSetting.discord_chat_member_role_id] << ->(_user) { true }
+          roles[SiteSetting.discord_chat_moderator_role_id] << ->(user) { user.staff? }
+          roles[SiteSetting.discord_chat_admin_role_id] << ->(user) { user.admin? }
+          pairs(SiteSetting.discord_chat_trust_level_roles).each do |level, role_id|
+            roles[role_id] << ->(user) { user.trust_level == level.to_i }
+          end
+          group_ids = Group.where(name: pairs(SiteSetting.discord_chat_group_roles).map(&:first))
+          group_ids = group_ids.pluck(:name, :id).to_h
+          pairs(SiteSetting.discord_chat_group_roles).each do |name, role_id|
+            id = group_ids[name]
+            roles[role_id] << ->(user) { @groups[user.id]&.include?(id) } if id
+          end
+          pairs(SiteSetting.discord_chat_badge_roles).each do |badge_id, role_id|
+            roles[role_id] << ->(user) { @badges[user.id]&.include?(badge_id.to_i) }
+          end
+          roles.transform_keys { |id| id.to_s.strip }.reject { |id, _| id.blank? }
+        end
+    end
+
+    # "key:role id" entries of a list setting
+    def pairs(value)
+      value
+        .to_s
+        .split("|")
+        .filter_map do |entry|
+          key, role_id = entry.split(":", 2).map { |part| part.to_s.strip }
+          [key, role_id] if key.present? && role_id.present?
+        end
+    end
+
+    # Group and badge lookups for every linked member at once.
+    def preload(users)
+      ids = users.compact.map(&:id)
+      @groups = GroupUser.where(user_id: ids).pluck(:user_id, :group_id).group_by(&:first)
+      @groups.transform_values! { |rows| rows.map(&:last).to_set }
+      badge_ids = pairs(SiteSetting.discord_chat_badge_roles).map { |id, _| id.to_i }
+      @badges =
+        UserBadge
+          .where(user_id: ids, badge_id: badge_ids)
+          .distinct
+          .pluck(:user_id, :badge_id)
+          .group_by(&:first)
+      @badges.transform_values! { |rows| rows.map(&:last).to_set }
+    end
+
+    def supporter_role_id
+      SiteSetting.discord_chat_supporter_role_id.to_s.strip.presence
+    end
+
+    # Buying the Supporter product is permanent, so the group is only ever
+    # added to, never taken away here.
+    def add_supporter(user)
+      return if supporter_role_id.nil?
+      group = supporter_group
+      return if group.nil? || @groups[user.id]&.include?(group.id)
+      group.add(user)
+      (@groups[user.id] ||= Set.new) << group.id
+    end
+
+    def supporter_group
+      return @supporter_group if defined?(@supporter_group)
+      name = SiteSetting.discord_chat_supporter_group.to_s.strip
+      @supporter_group = name.present? ? Group.find_by(name: name) : nil
     end
 
     def all_members
