@@ -13,7 +13,7 @@ module DiscourseVideoPostSchema
 
   def self.image_url(post)
     return if post.nil? || post.hidden || post.image_url.present? || post.cooked.blank?
-    return unless post.cooked.include?("video-placeholder-container")
+    return if post.cooked.exclude?("video-placeholder-container")
 
     Nokogiri::HTML5
       .fragment(post.cooked)
