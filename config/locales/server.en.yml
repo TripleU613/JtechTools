@@ -230,6 +230,12 @@ en:
       loads the category again with everything, so editing is unchanged;
       turn this off to send the full definitions again.
 
+    jtech_video_post_schema_image: Give search engines the first video's
+      thumbnail as the image of a topic whose first post is only videos.
+      Core marks the post up with no text, image or video in that case (a
+      video is a placeholder until the browser loads it), and Google Search
+      Console reports the topic as an invalid discussion forum item.
+
     jtech_trust_level_flair: Show each member's trust level as their avatar
       flair when they haven't picked one, using the flair of their highest
       trust level group that has one (set the flair on the trust level groups
