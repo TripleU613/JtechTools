@@ -49,6 +49,11 @@ jtech:
   jtech_lean_category_types:
     default: true
     client: false
+  # A topic that opens with only videos gets its first video's thumbnail as
+  # the image in the page's search data (lib/discourse_video_post_schema.rb).
+  jtech_video_post_schema_image:
+    default: true
+    client: false
   # Members without a flair of their own show their trust level group's
   # (lib/discourse_trust_level_flair.rb). Off by default: it sets users' flair.
   jtech_trust_level_flair:
